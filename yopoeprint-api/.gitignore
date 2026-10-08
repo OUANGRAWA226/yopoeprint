@@ -1,0 +1,15 @@
+# ── Dépendances ──────────────────────────────────────────
+node_modules/
+
+# ── Compilation NestJS ───────────────────────────────────
+dist/
+
+# ── Secrets & Variables locales ──────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Tests & Debug ────────────────────────────────────────
+*.log
+test_*.js
+.DS_Store

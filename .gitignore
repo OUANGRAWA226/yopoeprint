@@ -1,0 +1,54 @@
+# ── Dépendances ──────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Builds & Sorties ──────────────────────────────────────
+.next/
+out/
+build/
+dist/
+coverage/
+
+# ── Variables d'environnement & Secrets (CRITIQUE) ────────
+.env
+.env.*
+.env.local
+.env.*.local
+!.env.example
+!.env.*.example
+
+# ── Logs & Debug ──────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Systèmes & Fichiers temporaires ───────────────────────
+.DS_Store
+Thumbs.db
+*.pem
+*.key
+scratch.tsx
+test_*.js
+test_db.js
+test_fetch.js
+
+# ── Cache TypeScript & Next.js ────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Vercel & Déploiements ─────────────────────────────────
+.vercel/
+
+# ── PWA fichiers générés ──────────────────────────────────
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/swe-worker-*.js
+public/swe-worker-*.js.map
+
+# ── Outils d'agents & IA locaux ───────────────────────────
+.agents/
+.continue/

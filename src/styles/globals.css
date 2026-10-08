@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 146 100% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 146 100% 26%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 146 100% 26%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border box-border;
+  }
+
+  /* ── Critical: prevent any horizontal overflow ── */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Prevent text size adjust on iOS when rotating */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Prevent iOS input zoom (font-size must be >= 16px) */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better tap highlight */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* ── Hide scrollbar but keep scroll functionality ── */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Utility classes ── */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-xl cursor-pointer transition-all duration-150 ease-out shadow-sm min-h-[48px] active:scale-95;
+  }
+  .btn-primary:hover {
+    @apply opacity-90;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 bg-secondary text-secondary-foreground font-medium px-6 py-3 rounded-xl transition-all duration-150 ease-out cursor-pointer min-h-[48px] active:scale-95;
+  }
+  .btn-secondary:hover {
+    @apply opacity-80;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center gap-2 bg-transparent text-foreground font-medium px-5 py-3 rounded-xl border border-border transition-all duration-150 ease-out cursor-pointer min-h-[48px] active:scale-95;
+  }
+  .btn-outline:hover {
+    @apply border-primary text-primary bg-primary/5;
+  }
+
+  .section-title {
+    @apply font-display text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight;
+  }
+
+  .gold-bar {
+    @apply w-10 h-1 bg-primary mb-4 md:mb-6;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md bg-card border border-border active:scale-95;
+  }
+
+  .price-display {
+    @apply font-display text-2xl font-bold leading-none;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider;
+  }
+
+  .badge-popular { @apply bg-primary/10 text-primary; }
+  .badge-new { @apply bg-emerald-100 text-emerald-800; }
+  .badge-promo { @apply bg-red-100 text-red-800; }
+
+  /* Touch-friendly minimum sizes */
+  .touch-target {
+    @apply min-h-[48px] min-w-[48px] flex items-center justify-center;
+  }
+
+  /* Safe area support for bottom nav */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

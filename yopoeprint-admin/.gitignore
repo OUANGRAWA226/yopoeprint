@@ -1,0 +1,20 @@
+# ── Dépendances ──────────────────────────────────────────
+node_modules/
+
+# ── Next.js ──────────────────────────────────────────────
+.next/
+out/
+build/
+
+# ── Secrets & Variables locales ──────────────────────────
+.env
+.env.*
+.env.local
+.env.*.local
+!.env.example
+
+# ── Debug & Divers ───────────────────────────────────────
+*.log
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts

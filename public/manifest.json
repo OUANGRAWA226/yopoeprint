@@ -1,0 +1,19 @@
+{
+  "name": "YopoePrint",
+  "short_name": "YopoePrint",
+  "description": "L'imprimerie en ligne n°1 au Burkina Faso",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#FF6B00",
+  "background_color": "#F8F8F8",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/?source=pwa"
+}
