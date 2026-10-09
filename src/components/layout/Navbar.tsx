@@ -431,7 +431,25 @@ export function Navbar() {
             ROW 2: CATEGORY NAV BAR (Desktop) + scroll (Mobile)
             Desktop → hover triggers mega menu
             Mobile  → simple scroll (no mega)
-        ══════════════              {/* All-products mega: shows Apple bento grid of categories */}
+        ══════════════════════════════════════════════════════ */}
+        <nav className="border-t border-white/[0.08] bg-[#161617]/95 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-stretch">
+
+            {/* ── "Tous les produits" with mega on hover ── */}
+            <div
+              className="relative hidden md:flex shrink-0"
+              onMouseEnter={() => { setAllProductsHover(true); setActiveMega(null) }}
+              onMouseLeave={() => setAllProductsHover(false)}
+            >
+              <Link
+                href="/catalogue"
+                className="flex items-center gap-2 py-2.5 px-3.5 text-[12.5px] font-semibold text-white bg-white/[0.08] hover:bg-emerald-600 transition-all border-r border-white/10 shrink-0"
+              >
+                <LayoutGrid size={15} />
+                <span>Tous les produits</span>
+              </Link>
+
+              {/* All-products mega: shows Apple bento grid of categories */}
               {allProductsHover && (
                 <div
                   className="absolute left-0 top-full z-50 w-[680px] bg-[#1D1D1F]/98 backdrop-blur-2xl border border-white/[0.1] rounded-[28px] shadow-[0_30px_70px_rgba(0,0,0,0.55)] p-5 overflow-hidden text-white transition-all animate-in fade-in slide-in-from-top-1 duration-200"
