@@ -431,47 +431,55 @@ export function Navbar() {
             ROW 2: CATEGORY NAV BAR (Desktop) + scroll (Mobile)
             Desktop → hover triggers mega menu
             Mobile  → simple scroll (no mega)
-        ══════════════════════════════════════════════════════ */}
-        <nav className="border-t border-white/[0.08] bg-[#161617]/95 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-stretch">
-
-            {/* ── "Tous les produits" with mega on hover ── */}
-            <div
-              className="relative hidden md:flex shrink-0"
-              onMouseEnter={() => { setAllProductsHover(true); setActiveMega(null) }}
-              onMouseLeave={() => setAllProductsHover(false)}
-            >
-              <Link
-                href="/catalogue"
-                className="flex items-center gap-1.5 py-2 px-3 text-[13px] font-bold text-white bg-white/10 hover:bg-primary transition-colors border-r border-white/10 shrink-0"
-              >
-                <LayoutGrid size={15} />
-                Tous les produits
-              </Link>
-
-              {/* All-products mega: shows full 2-col list */}
+        ══════════════              {/* All-products mega: shows Apple bento grid of categories */}
               {allProductsHover && (
                 <div
-                  className="absolute left-0 top-full z-50 w-[600px] bg-white shadow-2xl border border-gray-100 rounded-b-xl overflow-hidden"
+                  className="absolute left-0 top-full z-50 w-[680px] bg-[#1D1D1F]/98 backdrop-blur-2xl border border-white/[0.1] rounded-[28px] shadow-[0_30px_70px_rgba(0,0,0,0.55)] p-5 overflow-hidden text-white transition-all animate-in fade-in slide-in-from-top-1 duration-200"
                   onMouseEnter={() => setAllProductsHover(true)}
                   onMouseLeave={() => setAllProductsHover(false)}
                 >
-                  <div className="grid grid-cols-2 gap-0">
+                  <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-white/[0.08]">
+                    <span className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">
+                      Catalogue Général YopoePrint
+                    </span>
+                    <Link
+                      href="/catalogue"
+                      className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                    >
+                      Voir tout le catalogue (200+ références) <ArrowRight size={13} />
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
                     {NAV_DATA.map((cat) => (
                       <Link
                         key={cat.href}
                         href={cat.href}
-                        className="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors group border-b border-gray-50"
+                        className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.04] hover:border-white/[0.12] transition-all group"
                       >
-                        <span className="text-xl">{cat.emoji}</span>
-                        <span className="text-[13px] font-medium group-hover:font-semibold">{cat.label}</span>
-                        <ChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-primary" />
+                        <span className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-xl group-hover:scale-105 transition-transform shrink-0">
+                          {cat.emoji}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[13px] font-semibold text-white/95 group-hover:text-emerald-400 transition-colors block truncate">
+                            {cat.label}
+                          </span>
+                          <span className="text-[11px] text-[#86868B] block truncate font-normal">
+                            {cat.featured.sub}
+                          </span>
+                        </div>
+                        <ChevronRight size={14} className="text-[#86868B] group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
                       </Link>
                     ))}
                   </div>
-                  <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
-                    <Link href="/catalogue" className="flex items-center gap-2 text-primary font-bold text-sm hover:underline underline-offset-4">
-                      Voir tout le catalogue → {' '}
+
+                  <div className="mt-3.5 pt-3.5 border-t border-white/[0.06] flex items-center justify-between text-xs text-[#86868B]">
+                    <Link href="/entreprises" className="hover:text-amber-300 transition-colors flex items-center gap-1.5 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                      Espace Entreprises (Factures DGI)
+                    </Link>
+                    <Link href="/devis" className="hover:text-white transition-colors font-medium">
+                      Devis personnalisé express →
                     </Link>
                   </div>
                 </div>
@@ -494,10 +502,10 @@ export function Navbar() {
                   >
                     <Link
                       href={cat.href}
-                      className={`flex items-center gap-1.5 py-2 px-2 text-[12.5px] font-semibold whitespace-nowrap transition-colors border-b-2
+                      className={`flex items-center gap-1.5 py-2.5 px-3 text-[12.5px] font-medium whitespace-nowrap transition-all border-b-2
                         ${isActive
-                          ? 'text-primary border-primary'
-                          : 'text-gray-300 hover:text-white border-transparent hover:border-white/30'}`}
+                          ? 'text-emerald-400 border-emerald-400 font-semibold'
+                          : 'text-white/70 hover:text-white border-transparent hover:border-white/30'}`}
                     >
                       {cat.label}
                     </Link>
@@ -507,7 +515,7 @@ export function Navbar() {
 
               {/* Mobile: all categories scrollable */}
               <div className="flex md:hidden items-stretch overflow-x-auto">
-                <Link href="/catalogue" className="shrink-0 flex items-center gap-1.5 py-2 px-2 text-[12px] font-bold text-primary whitespace-nowrap border-r border-white/10">
+                <Link href="/catalogue" className="shrink-0 flex items-center gap-1.5 py-2 px-2.5 text-[12px] font-bold text-emerald-400 whitespace-nowrap border-r border-white/10">
                   Tous
                 </Link>
                 {NAV_DATA.map((cat) => {
@@ -516,8 +524,8 @@ export function Navbar() {
                     <Link
                       key={cat.href}
                       href={cat.href}
-                      className={`shrink-0 flex items-center py-2 px-2 text-[12px] font-medium whitespace-nowrap transition-colors border-b-2
-                        ${isActive ? 'text-primary border-primary' : 'text-gray-400 hover:text-gray-200 border-transparent'}`}
+                      className={`shrink-0 flex items-center py-2 px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors border-b-2
+                        ${isActive ? 'text-emerald-400 border-emerald-400' : 'text-gray-400 hover:text-gray-200 border-transparent'}`}
                     >
                       {cat.label}
                     </Link>
@@ -528,92 +536,124 @@ export function Navbar() {
               {/* Entreprises B2B Link */}
               <Link
                 href="/entreprises"
-                className="shrink-0 hidden lg:flex items-center ml-auto py-2 px-3 text-[12px] font-bold text-amber-400 hover:text-white border-l border-white/10 whitespace-nowrap transition-colors gap-1.5"
+                className="shrink-0 hidden lg:flex items-center ml-auto py-2.5 px-3.5 text-[12px] font-bold text-amber-400 hover:text-white border-l border-white/10 whitespace-nowrap transition-colors gap-1.5"
               >
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                 Espace Entreprises
               </Link>
 
               {/* Devis CTA */}
-              <Link href="/devis" className="shrink-0 hidden md:flex items-center lg:ml-0 ml-auto py-2 px-3 text-[12.5px] font-bold text-primary hover:text-white border-l border-white/10 whitespace-nowrap transition-colors">
+              <Link href="/devis" className="shrink-0 hidden md:flex items-center lg:ml-0 ml-auto py-2.5 px-3.5 text-[12px] font-bold text-emerald-400 hover:text-white border-l border-white/10 whitespace-nowrap transition-colors">
                 Devis gratuit →
               </Link>
             </div>
           </div>
 
-          {/* ══ MEGA MENU DROPDOWN (Desktop only) ══ */}
+          {/* ══ MEGA MENU DROPDOWN APPLE LIQUID GLASS (Desktop only) ══ */}
           {activeCat && (
-            <div
-              className="hidden md:block absolute left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-2xl"
-              onMouseEnter={handleMegaEnter}
-              onMouseLeave={handleMegaLeave}
-            >
-              <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-12 gap-8">
+            <>
+              {/* Fond estompé Apple */}
+              <div
+                className="fixed inset-0 top-[110px] bg-black/40 backdrop-blur-xs z-40 pointer-events-none transition-opacity duration-200"
+              />
 
-                {/* Left: Category title + breadcrumb */}
-                <div className="col-span-3 border-r border-gray-100 pr-8">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-4xl">{activeCat.emoji}</span>
-                    <h3 className="font-display font-extrabold text-gray-900 text-lg leading-tight">
-                      {activeCat.label}
-                    </h3>
-                  </div>
-                  <Link
-                    href={activeCat.href}
-                    className="inline-flex items-center gap-2 bg-primary text-white font-bold text-sm px-4 py-2.5 rounded-lg hover:bg-primary/90 transition-colors w-full justify-center mb-3"
-                  >
-                    Voir tous les {activeCat.label} <ArrowRight size={14} />
-                  </Link>
-                  <Link href="/devis" className="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-primary font-medium underline-offset-4 hover:underline">
-                    Demander un devis →
-                  </Link>
-                </div>
+              <div
+                className="hidden md:block absolute left-0 right-0 z-50 bg-[#1D1D1F]/98 backdrop-blur-2xl border-t border-b border-white/[0.08] shadow-[0_30px_70px_rgba(0,0,0,0.55)] text-white transition-all animate-in fade-in slide-in-from-top-1 duration-200"
+                onMouseEnter={handleMegaEnter}
+                onMouseLeave={handleMegaLeave}
+              >
+                <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-12 gap-8">
 
-                {/* Center: Sub-columns */}
-                <div className="col-span-6 grid grid-cols-2 gap-8">
-                  {activeCat.subCols.map((col) => (
-                     <div key={col.title}>
-                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                        {col.title}
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {col.items.map((item) => (
-                          <li key={item.label}>
-                            <Link
-                              href={item.href}
-                              className="flex items-center gap-2 text-[13.5px] text-gray-700 font-medium hover:text-primary hover:translate-x-0.5 transition-all group py-0.5"
-                            >
-                              <ChevronRight size={12} className="text-gray-300 group-hover:text-primary transition-colors shrink-0" />
-                              {item.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* Left: Category Card Bento */}
+                  <div className="col-span-3 border-r border-white/[0.08] pr-8 flex flex-col justify-between">
+                    <div>
+                      <div className="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.1] flex items-center justify-center text-3xl shadow-xs mb-4">
+                        {activeCat.emoji}
+                      </div>
+                      <h3 className="font-display font-semibold text-white text-xl leading-tight">
+                        {activeCat.label}
+                      </h3>
+                      <p className="text-xs text-[#86868B] mt-1.5 font-normal leading-relaxed">
+                        Confection industrielle certifiée 300 DPI avec contrôle PAO offert avant mise sous presse.
+                      </p>
                     </div>
-                  ))}
-                </div>
 
-                {/* Right: Featured card */}
-                <div className="col-span-3">
-                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-5 flex flex-col items-center text-center h-full justify-center">
-                    <span className="text-5xl mb-4">{activeCat.featured.emoji}</span>
-                    <h4 className="font-display font-bold text-gray-900 text-base mb-1">
-                      {activeCat.featured.text}
-                    </h4>
-                    <p className="text-gray-400 text-xs mb-5">{activeCat.featured.sub}</p>
-                    <Link
-                      href={activeCat.featured.href}
-                      className="w-full py-2.5 bg-gray-900 text-white font-bold text-sm rounded-lg hover:bg-primary transition-colors text-center"
-                    >
-                      Commander →
-                    </Link>
-                    <Link href="/devis" className="mt-3 text-xs text-gray-400 hover:text-primary font-medium transition-colors">
-                      Ou demander un devis gratuit
-                    </Link>
+                    <div className="space-y-2 mt-6">
+                      <Link
+                        href={activeCat.href}
+                        className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-5 py-3 rounded-full transition-all w-full justify-center shadow-xs active:scale-95"
+                      >
+                        Voir tout dans {activeCat.label} <ArrowRight size={14} />
+                      </Link>
+                      <Link
+                        href="/devis"
+                        className="inline-flex items-center gap-1.5 text-xs text-[#86868B] hover:text-white font-medium transition-colors justify-center w-full pt-1"
+                      >
+                        Demander un chiffrage sur mesure →
+                      </Link>
+                    </div>
                   </div>
+
+                  {/* Center: Sub-columns */}
+                  <div className="col-span-6 grid grid-cols-2 gap-8 py-1">
+                    {activeCat.subCols.map((col) => (
+                      <div key={col.title}>
+                        <h4 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-3.5">
+                          {col.title}
+                        </h4>
+                        <ul className="space-y-1">
+                          {col.items.map((item) => (
+                            <li key={item.label}>
+                              <Link
+                                href={item.href}
+                                className="flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] text-white/85 hover:text-white hover:bg-white/[0.06] transition-all group font-medium"
+                              >
+                                <span>{item.label}</span>
+                                <ChevronRight size={13} className="text-[#86868B] group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all opacity-0 group-hover:opacity-100" />
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Right: Featured card Bento Apple */}
+                  <div className="col-span-3">
+                    <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] border border-white/[0.08] rounded-[24px] p-6 flex flex-col items-center text-center h-full justify-between backdrop-blur-md relative overflow-hidden group">
+                      <div className="w-full flex flex-col items-center">
+                        <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-3 self-center">
+                          Offre Vedette
+                        </span>
+                        <span className="text-5xl mb-3 transform group-hover:scale-105 transition-transform duration-300">
+                          {activeCat.featured.emoji}
+                        </span>
+                        <h4 className="font-semibold text-white text-base mb-1 tracking-tight">
+                          {activeCat.featured.text}
+                        </h4>
+                        <p className="text-[#86868B] text-xs font-normal">{activeCat.featured.sub}</p>
+                      </div>
+
+                      <div className="w-full space-y-2 mt-4">
+                        <Link
+                          href={activeCat.featured.href}
+                          className="w-full py-2.5 bg-white text-[#1D1D1F] hover:bg-[#F5F5F7] font-semibold text-xs rounded-full transition-all text-center block shadow-xs active:scale-95"
+                        >
+                          Configurer le produit →
+                        </Link>
+                        <Link
+                          href="/devis"
+                          className="text-[11px] text-[#86868B] hover:text-white transition-colors block text-center"
+                        >
+                          Ou demander un devis gratuit
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-            </div>
+            </>
           )}
         </nav>
       </header>
@@ -709,7 +749,7 @@ export function Navbar() {
       {mobileMenuOpen && (
         <>
           <div className="fixed inset-0 z-[60] bg-black/60 md:hidden" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed top-0 right-0 bottom-0 z-[70] w-[85vw] max-w-sm bg-gray-900 md:hidden flex flex-col shadow-2xl">
+          <div className="fixed top-0 right-0 bottom-0 z-[70] w-[85vw] max-w-sm bg-[#1D1D1F]/98 backdrop-blur-2xl border-l border-white/[0.08] md:hidden flex flex-col shadow-2xl">
 
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <span className="font-display text-lg font-bold text-white">Menu</span>
@@ -778,9 +818,9 @@ export function Navbar() {
 
             <div className="p-5 border-t border-white/10">
               <Link href="/devis" onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center w-full py-3.5 bg-primary text-white font-bold rounded-xl text-sm active:scale-95 transition-transform"
+                className="flex items-center justify-center w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-full text-sm active:scale-95 transition-all shadow-xs"
               >
-                Devis gratuit
+                Devis gratuit →
               </Link>
             </div>
           </div>
