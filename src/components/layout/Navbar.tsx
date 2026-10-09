@@ -312,13 +312,13 @@ export function Navbar() {
       {/* ══════════════════════════════════════════════════════
           TOP HEADER — Logo + Search + Account + Cart
       ══════════════════════════════════════════════════════ */}
-      <header className="bg-gray-900 sticky top-0 z-50">
+      <header className="bg-[#1D1D1F]/95 backdrop-blur-xl sticky top-0 z-50 border-b border-white/[0.08]">
         {/* Row 1: Logo / Search / Icons */}
         <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center h-14 gap-2 md:gap-5">
 
           {/* Logo */}
-          <Link href="/" className="font-display text-xl md:text-2xl font-extrabold text-white tracking-tight shrink-0 mr-1 md:mr-3">
-            Yopoe<span className="text-primary">Print</span>
+          <Link href="/" className="font-display text-xl md:text-2xl font-semibold text-white tracking-tight shrink-0 mr-1 md:mr-3">
+            Yopoe<span className="text-emerald-400">Print</span>
           </Link>
 
           {/* Desktop Search */}
@@ -330,9 +330,9 @@ export function Navbar() {
                 value={navSearch}
                 onChange={(e) => setNavSearch(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
-                className="w-full bg-white/10 border border-white/20 rounded-lg py-2 pl-4 pr-12 text-sm text-white placeholder:text-gray-400 outline-none focus:border-primary focus:bg-white/15 transition-all"
+                className="w-full bg-white/[0.08] border border-white/[0.12] rounded-full py-2 pl-4 pr-12 text-sm text-white placeholder:text-[#86868B] outline-none focus:border-white/30 focus:bg-white/[0.12] transition-all"
               />
-              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-500 transition-colors">
                 {searchLoading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
               </button>
             </form>
@@ -432,7 +432,7 @@ export function Navbar() {
             Desktop → hover triggers mega menu
             Mobile  → simple scroll (no mega)
         ══════════════════════════════════════════════════════ */}
-        <nav className="border-t border-white/10">
+        <nav className="border-t border-white/[0.08] bg-[#161617]/95 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-stretch">
 
             {/* ── "Tous les produits" with mega on hover ── */}
