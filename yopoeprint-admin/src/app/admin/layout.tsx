@@ -7,16 +7,18 @@ import { adminAuthService } from '@/lib/auth-admin.service'
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
   Tag, FileText, Settings, LogOut, Menu, X,
-  ChevronRight, Bell, Search
+  ChevronRight, Bell, Search, ClipboardList
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/admin',           icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-  { href: '/admin/produits',  icon: <Package size={18} />,         label: 'Produits' },
-  { href: '/admin/commandes', icon: <ShoppingCart size={18} />,    label: 'Commandes' },
-  { href: '/admin/clients',   icon: <Users size={18} />,           label: 'Clients' },
-  { href: '/admin/promotions',icon: <Tag size={18} />,             label: 'Promotions' },
-  { href: '/admin/blog',      icon: <FileText size={18} />,        label: 'Blog' },
+  { href: '/admin',            icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+  { href: '/admin/produits',   icon: <Package size={18} />,         label: 'Produits' },
+  { href: '/admin/commandes',  icon: <ShoppingCart size={18} />,    label: 'Commandes' },
+  { href: '/admin/devis',      icon: <ClipboardList size={18} />,    label: 'Devis' },
+  { href: '/admin/clients',    icon: <Users size={18} />,           label: 'Clients' },
+  { href: '/admin/promotions', icon: <Tag size={18} />,             label: 'Promotions' },
+  { href: '/admin/blog',       icon: <FileText size={18} />,        label: 'Blog' },
+  { href: '/admin/parametres', icon: <Settings size={18} />,        label: 'Paramètres' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

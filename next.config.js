@@ -21,6 +21,21 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  async redirects() {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://yopoeprint-admin.vercel.app'
+    return [
+      {
+        source: '/admin/:path*',
+        destination: `${adminBase}/admin/:path*`,
+        permanent: false,
+      },
+      {
+        source: '/admin',
+        destination: `${adminBase}/admin`,
+        permanent: false,
+      },
+    ]
+  },
 }
 
 module.exports = withPWA(nextConfig)

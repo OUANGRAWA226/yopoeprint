@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Search, 
-  Filter, 
-  MoreVertical, 
   Clock, 
   CheckCircle, 
   XCircle, 
@@ -15,9 +13,7 @@ import {
   X,
   ChevronDown
 } from 'lucide-react'
-
 import { quotesService, Quote } from '@/lib/quotes.service'
-import { useEffect } from 'react'
 
 const STATUSES = [
   { id: 'all', label: 'Toutes les demandes' },
@@ -50,13 +46,11 @@ export default function AdminDevisPage() {
   }, [])
 
   const handleStatusChange = async (id: string, newStatus: string) => {
-    // Optimistic update
     setDevis(devis.map(d => d.id === id || d._id === id ? { ...d, status: newStatus } : d))
     try {
       await quotesService.updateStatus(id, { status: newStatus })
     } catch (err) {
       console.error('Erreur mise à jour', err)
-      // Rollback would happen here in a real prod app
     }
   }
 
@@ -102,14 +96,14 @@ export default function AdminDevisPage() {
             placeholder="Rechercher par référence, client, sujet..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
           />
         </div>
         <div className="relative">
           <select 
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="appearance-none w-full sm:w-64 pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all cursor-pointer"
+            className="appearance-none w-full sm:w-64 pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer"
           >
             {STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
@@ -175,7 +169,7 @@ export default function AdminDevisPage() {
                           <select
                             value={d.status}
                             onChange={(e) => handleStatusChange(d.id || d._id, e.target.value)}
-                            className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer"
+                            className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:border-blue-500 outline-none cursor-pointer"
                           >
                             <option value="new">À traiter</option>
                             <option value="processing">En étude</option>
@@ -187,7 +181,7 @@ export default function AdminDevisPage() {
                         </div>
                         <button 
                           onClick={() => setSelectedDevis(d)}
-                          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Lire la demande"
                         >
                           <Eye size={18} />
@@ -256,11 +250,8 @@ export default function AdminDevisPage() {
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-sm text-gray-500">Statut: <strong>{STATUSES.find(s => s.id === selectedDevis.status)?.label}</strong></span>
               <div className="flex gap-3">
-                <button className="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors">
+                <button onClick={() => setSelectedDevis(null)} className="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors">
                   Fermer
-                </button>
-                <button className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-primary transition-colors flex items-center gap-2">
-                  <Send size={16} /> Envoyer un message
                 </button>
               </div>
             </div>

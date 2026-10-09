@@ -7,8 +7,8 @@ import {
   Bell, 
   ShieldCheck, 
   Save, 
-  Loader2,
-  CheckCircle
+  Loader2, 
+  CheckCircle 
 } from 'lucide-react'
 
 export default function AdminParametresPage() {
@@ -56,7 +56,7 @@ export default function AdminParametresPage() {
         <button 
           onClick={handleSave}
           disabled={loading}
-          className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary transition-all disabled:opacity-50"
+          className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-600 transition-all disabled:opacity-50"
         >
           {loading ? <><Loader2 size={16} className="animate-spin" /> Enregistrement...</> : <><Save size={16} /> Enregistrer</>}
         </button>
@@ -71,10 +71,10 @@ export default function AdminParametresPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* ── COLONNE NAVIGATION (optionnelle si on voulait faire des tabs, ici statique) ── */}
+        {/* ── COLONNE NAVIGATION ── */}
         <div className="hidden md:block col-span-1 space-y-2 sticky top-24">
           <button className="w-full flex items-center gap-3 px-4 py-3 bg-white text-gray-900 font-bold rounded-xl border border-gray-200 shadow-sm text-sm">
-            <Store size={18} className="text-primary" /> Informations Générales
+            <Store size={18} className="text-blue-600" /> Informations Générales
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-white hover:text-gray-900 font-medium rounded-xl transition-colors text-sm">
             <Settings size={18} /> E-Commerce & Livraison
@@ -104,7 +104,7 @@ export default function AdminParametresPage() {
                   name="shopName"
                   value={form.shopName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
                 />
               </div>
 
@@ -116,7 +116,7 @@ export default function AdminParametresPage() {
                     name="contactEmail"
                     value={form.contactEmail}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -126,7 +126,7 @@ export default function AdminParametresPage() {
                     name="contactPhone"
                     value={form.contactPhone}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
                   />
                 </div>
               </div>
@@ -148,7 +148,7 @@ export default function AdminParametresPage() {
                     name="shippingFee"
                     value={form.shippingFee}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -158,7 +158,7 @@ export default function AdminParametresPage() {
                     name="freeShippingThreshold"
                     value={form.freeShippingThreshold}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
                   />
                 </div>
               </div>
@@ -180,7 +180,7 @@ export default function AdminParametresPage() {
                     name="orderNotifications"
                     checked={form.orderNotifications}
                     onChange={handleChange}
-                    className="w-5 h-5 accent-primary border-gray-300 rounded cursor-pointer"
+                    className="w-5 h-5 accent-blue-600 border-gray-300 rounded cursor-pointer"
                   />
                 </div>
                 <div>

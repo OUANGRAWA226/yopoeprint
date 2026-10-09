@@ -16,8 +16,8 @@ export default function EmailConfirmationPreview() {
           <strong className="text-gray-900 block mb-1">Prévisualisation de l'email</strong>
           Sujet : 📦 Votre commande YopoePrint #YP-4098 est confirmée !
         </div>
-        <Link href="/admin" className="text-primary font-bold hover:underline">
-          Retour Admin
+        <Link href="/mon-compte" className="text-primary font-bold hover:underline">
+          Mon Compte
         </Link>
       </div>
 
