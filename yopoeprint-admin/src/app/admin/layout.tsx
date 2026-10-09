@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAuthenticated(true)
       setUser(adminAuthService.getCurrentUser())
     }
-  }, [])
+  }, [router])
 
   const pageTitle = NAV.find((n) => n.href === pathname)?.label
     ?? NAV.find((n) => pathname.startsWith(n.href) && n.href !== '/admin')?.label
