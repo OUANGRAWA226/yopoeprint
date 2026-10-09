@@ -15,17 +15,33 @@ async function bootstrap() {
   app.setGlobalPrefix(prefix)
 
   // ── CORS ───────────────────────────────────────────────────
-  const frontendUrl = config.get('app.frontendUrl') || 'http://localhost:3000'
-  const corsOrigins = [
+  const frontendUrl = config.get<string>('app.frontendUrl') || 'http://localhost:3000'
+  const adminUrl    = config.get<string>('app.adminUrl') || 'http://localhost:3002'
+  const extraOrigins = config.get<string[]>('app.allowedOrigins') || []
+  const corsOrigins = Array.from(new Set([
     frontendUrl,
-    'http://localhost:3000',  // Frontend client
-    'http://localhost:3002',  // Admin dashboard
+    adminUrl,
+    'http://localhost:3000',
+    'http://localhost:3002',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3002',
-  ]
+    ...extraOrigins,
+  ]))
   
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      // Autoriser les requêtes sans header origin (app mobile, curl, serveurs)
+      if (!origin) return callback(null, true)
+      if (
+        corsOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('yopoeprint') ||
+        config.get('app.nodeEnv') !== 'production'
+      ) {
+        return callback(null, true)
+      }
+      return callback(null, true)
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
