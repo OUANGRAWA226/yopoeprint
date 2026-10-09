@@ -32,6 +32,7 @@ export default function PanierPage() {
 
   const applyPromo = () => {
     const CODES: Record<string, number> = {
+      'YOPPRINT15': 0.15,
       'YOPOE10': 0.10,
       'PROMO20': 0.20,
       'BURKINA': 0.15,
@@ -268,7 +269,7 @@ export default function PanierPage() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Ex: YOPOE10"
+                      placeholder="Ex: YOPPRINT15"
                       value={promo}
                       onChange={(e) => setPromo(e.target.value.toUpperCase())}
                       onKeyDown={(e) => e.key === 'Enter' && applyPromo()}
