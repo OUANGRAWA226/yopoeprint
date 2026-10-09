@@ -525,8 +525,17 @@ export function Navbar() {
                 })}
               </div>
 
+              {/* Entreprises B2B Link */}
+              <Link
+                href="/entreprises"
+                className="shrink-0 hidden lg:flex items-center ml-auto py-2 px-3 text-[12px] font-bold text-amber-400 hover:text-white border-l border-white/10 whitespace-nowrap transition-colors gap-1.5"
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                Espace Entreprises
+              </Link>
+
               {/* Devis CTA */}
-              <Link href="/devis" className="shrink-0 hidden md:flex items-center ml-auto py-2 px-3 text-[12.5px] font-bold text-primary hover:text-white border-l border-white/10 whitespace-nowrap transition-colors">
+              <Link href="/devis" className="shrink-0 hidden md:flex items-center lg:ml-0 ml-auto py-2 px-3 text-[12.5px] font-bold text-primary hover:text-white border-l border-white/10 whitespace-nowrap transition-colors">
                 Devis gratuit →
               </Link>
             </div>
@@ -753,6 +762,7 @@ export function Navbar() {
               <div className="h-px bg-white/10 my-3 mx-5" />
               <p className="px-5 text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Services</p>
               {[
+                { label: '🏢 Espace Entreprises & B2B', href: '/entreprises' },
                 { label: 'Demander un devis', href: '/devis' },
                 { label: 'Suivre ma commande', href: '/suivi' },
                 { label: 'Aide & FAQ', href: '/faq' },
