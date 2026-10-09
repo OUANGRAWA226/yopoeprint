@@ -9,8 +9,9 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import {
  Search, Package, CheckCircle, Truck,
  Clock, AlertCircle, MapPin, Phone,
- ChevronRight, RotateCcw, Copy
+ ChevronRight, RotateCcw, Copy, ShieldCheck, Eye, Sparkles
 } from 'lucide-react'
+import { BatInteractiveModal } from '@/components/orders/BatInteractiveModal'
 
 // ─── Config statuts ───────────────────────────────────────────
 const STATUSES = [
@@ -20,6 +21,13 @@ const STATUSES = [
  icon: <CheckCircle size={20} />,
  desc: 'Votre commande a été reçue et validée',
  color: 'blue',
+ },
+ {
+ key: 'bat_pending',
+ label: 'BAT en validation',
+ icon: <ShieldCheck size={20} />,
+ desc: 'Épreuve Bon À Tirer en attente de votre accord',
+ color: 'amber',
  },
  {
  key: 'in_production',
@@ -53,6 +61,7 @@ const STATUSES = [
 
 const COLOR_MAP: Record<string, { bg: string; text: string; ring: string; line: string }> = {
  blue: { bg: 'bg-foreground', text: 'text-foreground', ring: 'ring-primary/20', line: 'bg-foreground' },
+ amber: { bg: 'bg-amber-500', text: 'text-amber-500', ring: 'ring-amber-500/20', line: 'bg-amber-400' },
  purple: { bg: 'bg-purple-500', text: 'text-purple-500', ring: 'ring-purple-500/20', line: 'bg-purple-400' },
  green: { bg: 'bg-green-500', text: 'text-green-500', ring: 'ring-green-500/20', line: 'bg-green-400' },
 }
@@ -143,8 +152,15 @@ function SuiviContent() {
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState('')
  const [searched, setSearched] = useState(false)
+ const [isBatModalOpen, setIsBatModalOpen] = useState(false)
  const searchParams = useSearchParams()
  const toast = useToast()
+
+ const handleBatSuccess = () => {
+   if (order?.orderNumber) {
+     handleSearchWithValue(order.orderNumber)
+   }
+ }
 
  // Auto-recherche si ?ref= est dans l'URL (ex: depuis email de confirmation)
  useEffect(() => {
@@ -357,6 +373,74 @@ function SuiviContent() {
  </div>
  )}
 
+ {/* Bannière Bon À Tirer (BAT) interactif */}
+ {(order.batUrl || order.status === 'bat_pending') && (
+ <div className="mb-6">
+   {order.batStatus === 'approved' ? (
+     <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+       <div className="flex items-center gap-3">
+         <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+           <CheckCircle size={20} />
+         </div>
+         <div>
+           <p className="font-bold text-emerald-950 text-sm">Bon À Tirer (BAT) Validé ✅</p>
+           <p className="text-emerald-700 text-xs mt-0.5">Votre accord a été enregistré. Vos fichiers sont en cours de tirage.</p>
+         </div>
+       </div>
+       <button
+         onClick={() => setIsBatModalOpen(true)}
+         className="px-4 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors shrink-0"
+       >
+         Revoir le BAT
+       </button>
+     </div>
+   ) : order.batStatus === 'rejected' ? (
+     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+       <div className="flex items-center gap-3">
+         <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+           <AlertCircle size={20} />
+         </div>
+         <div>
+           <p className="font-bold text-amber-950 text-sm">Modifications demandées sur le BAT 🛠️</p>
+           <p className="text-amber-700 text-xs mt-0.5">Notre atelier graphique corrige votre épreuve selon vos consignes.</p>
+         </div>
+       </div>
+       <button
+         onClick={() => setIsBatModalOpen(true)}
+         className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700 transition-colors shrink-0"
+       >
+         Consulter l&apos;épreuve
+       </button>
+     </div>
+   ) : (
+     <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-5 shadow-xl border border-blue-500/30">
+       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+         <div className="flex items-start gap-3.5">
+           <div className="w-12 h-12 rounded-2xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-blue-300 shrink-0 shadow-inner">
+             <ShieldCheck size={24} />
+           </div>
+           <div>
+             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-gray-900 mb-1.5">
+               <Sparkles size={11} /> Action requise de votre part
+             </div>
+             <h3 className="font-bold text-white text-base">Votre Bon À Tirer (BAT) est prêt !</h3>
+             <p className="text-white/70 text-xs mt-0.5 leading-relaxed max-w-lg">
+               Vérifiez vos repères de coupe, textes et visuels sur notre visualiseur haute définition pour lancer l&apos;impression.
+             </p>
+           </div>
+         </div>
+         <button
+           onClick={() => setIsBatModalOpen(true)}
+           className="px-5 py-3.5 bg-primary text-gray-900 rounded-xl font-bold text-xs hover:bg-primary/90 transition-all shadow-lg shrink-0 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95"
+         >
+           <Eye size={16} /> Examiner & Valider mon BAT →
+         </button>
+       </div>
+     </div>
+   )}
+ </div>
+ )}
+
  {/* Timeline */}
  {!['cancelled', 'pending'].includes(order.status) && (
  <ProgressTimeline
@@ -521,6 +605,24 @@ function SuiviContent() {
  ))}
  </div>
  )}
+
+ {/* Modal BAT Interactif */}
+ {order && (order.batUrl || order.status === 'bat_pending') && (
+   <BatInteractiveModal
+     isOpen={isBatModalOpen}
+     onClose={() => setIsBatModalOpen(false)}
+     orderId={order.id || order._id}
+     orderNumber={order.orderNumber}
+     batUrl={order.batUrl}
+     batVersoUrl={order.batVersoUrl}
+     batStatus={order.batStatus}
+     batNotes={order.batNotes}
+     batApprovedAt={order.batApprovedAt}
+     isPublicMode={true}
+     onSuccess={handleBatSuccess}
+   />
+ )}
+
  </div>
  </div>
  )

@@ -4,7 +4,10 @@ import {
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { OrdersService } from './orders.service'
-import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './order.dto'
+import {
+  CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto,
+  UploadBatDto, ApproveBatDto, RejectBatDto,
+} from './order.dto'
 import { JwtAuthGuard }  from '../../common/guards/jwt-auth.guard'
 import { AdminGuard }    from '../../common/guards/admin.guard'
 import { CurrentUser }   from '../../common/decorators/current-user.decorator'
@@ -19,6 +22,24 @@ export class OrdersController {
   @ApiOperation({ summary: 'Suivre une commande (sans connexion)' })
   track(@Param('orderNumber') orderNumber: string) {
     return this.ordersService.findByOrderNumber(orderNumber)
+  }
+
+  @Post('track/:orderNumber/bat/approve')
+  @ApiOperation({ summary: 'Valider le BAT depuis le lien de suivi public' })
+  trackApproveBat(
+    @Param('orderNumber') orderNumber: string,
+    @Body() dto: ApproveBatDto,
+  ) {
+    return this.ordersService.approveBatByOrderNumber(orderNumber, dto)
+  }
+
+  @Post('track/:orderNumber/bat/reject')
+  @ApiOperation({ summary: 'Demander des corrections BAT depuis le lien de suivi public' })
+  trackRejectBat(
+    @Param('orderNumber') orderNumber: string,
+    @Body() dto: RejectBatDto,
+  ) {
+    return this.ordersService.rejectBatByOrderNumber(orderNumber, dto)
   }
 
   // ── Authenticated client routes ────────────────────────────
@@ -47,6 +68,30 @@ export class OrdersController {
     return this.ordersService.findById(id)
   }
 
+  @Post(':id/bat/approve')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Valider le BAT (Client connecté)' })
+  approveBat(
+    @Param('id') id: string,
+    @CurrentUser() user,
+    @Body() dto: ApproveBatDto,
+  ) {
+    return this.ordersService.approveBat(id, user, dto)
+  }
+
+  @Post(':id/bat/reject')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Demander des corrections sur le BAT (Client connecté)' })
+  rejectBat(
+    @Param('id') id: string,
+    @CurrentUser() user,
+    @Body() dto: RejectBatDto,
+  ) {
+    return this.ordersService.rejectBat(id, user, dto)
+  }
+
   // ── Admin routes ───────────────────────────────────────────
 
   @Get()
@@ -64,4 +109,16 @@ export class OrdersController {
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.ordersService.updateStatus(id, dto)
   }
+
+  @Post(':id/bat')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Déposer / Mettre à disposition le BAT client' })
+  uploadBat(
+    @Param('id') id: string,
+    @Body() dto: UploadBatDto,
+  ) {
+    return this.ordersService.uploadBat(id, dto)
+  }
 }
+

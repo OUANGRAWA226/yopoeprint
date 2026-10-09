@@ -92,6 +92,73 @@ export class MailService {
     return this.sendMail(email, subject, html);
   }
 
+  async sendBatReadyEmail(email: string, orderNumber: string, batNotes?: string) {
+    const subject = `🎨 Action requise : Bon À Tirer (BAT) prêt pour la commande ${orderNumber} - YopoePrint`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111827; color: white; padding: 40px; border-radius: 12px;">
+        <h1 style="color: #ffffff; font-size: 22px; margin-bottom: 8px;">Votre Bon À Tirer (BAT) est disponible ! 🎨</h1>
+        <p style="color: #9ca3af; font-size: 15px; line-height: 1.6;">
+          Notre équipe pré-presse a préparé votre épreuve numérique pour la commande <strong>${orderNumber}</strong>.
+        </p>
+
+        ${batNotes ? `
+        <div style="background-color: #1f2937; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin: 20px 0;">
+          <p style="margin: 0 0 6px 0; font-size: 13px; color: #9ca3af; font-weight: bold;">Note de notre studio graphique :</p>
+          <p style="margin: 0; font-size: 14px; color: #ffffff;">${batNotes}</p>
+        </div>
+        ` : ''}
+
+        <p style="color: #9ca3af; font-size: 14px; margin: 24px 0;">
+          Merci de vérifier attentivement le cadrage, les marges de coupe et les textes sur notre visualiseur interactif avant de confirmer pour impression.
+        </p>
+
+        <a href="https://yopoeprint.com/suivi?ref=${orderNumber}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 15px;">
+          Examiner et Valider mon BAT en ligne →
+        </a>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
+
+  async sendBatApprovedEmail(email: string, orderNumber: string) {
+    const subject = `✅ BAT Validé ! Commande ${orderNumber} lancée en impression`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
+        <h1 style="color: #111827; font-size: 20px; margin-bottom: 12px;">BAT confirmé avec succès 🎉</h1>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Votre validation pour la commande <strong>${orderNumber}</strong> a bien été enregistrée. Vos fichiers ont été transmis à nos presses d'impression.
+        </p>
+        <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 16px; border-radius: 8px; margin: 24px 0;">
+          <p style="margin: 0; font-size: 14px; color: #065f46; font-weight: bold;">Statut : En cours de production 🖨️</p>
+        </div>
+        <a href="https://yopoeprint.com/suivi?ref=${orderNumber}" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+          Suivre l'impression
+        </a>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
+
+  async sendBatRejectedEmail(email: string, orderNumber: string, reason: string) {
+    const subject = `🛠️ Demande de correction reçue pour le BAT ${orderNumber}`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
+        <h1 style="color: #111827; font-size: 20px; margin-bottom: 12px;">Corrections demandées bien reçues</h1>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Vous avez demandé des corrections pour le BAT de la commande <strong>${orderNumber}</strong> :
+        </p>
+        <div style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; font-size: 14px; color: #991b1b;">"${reason}"</p>
+        </div>
+        <p style="color: #4b5563; font-size: 14px;">
+          Notre équipe graphique ajuste vos fichiers et vous soumettra une nouvelle version du BAT sous 24h ouvrées.
+        </p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
+
+
   private async sendMail(to: string, subject: string, html: string) {
     if (!this.isConfigured) {
       this.logger.log(`[Simulation Email] À: ${to} | Sujet: ${subject}`);

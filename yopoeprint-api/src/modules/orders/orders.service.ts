@@ -1,11 +1,14 @@
 import {
-  Injectable, NotFoundException, BadRequestException,
+  Injectable, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Order, OrderStatus, PaymentStatus, OrderItem } from './order.entity'
 import { User } from '../users/user.entity'
-import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './order.dto'
+import {
+  CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto,
+  UploadBatDto, ApproveBatDto, RejectBatDto,
+} from './order.dto'
 import { ProductsService } from '../products/products.service'
 import { MailService } from '../mail/mail.service'
 
@@ -166,19 +169,176 @@ export class OrdersService {
   async findByOrderNumber(orderNumber: string) {
     const order = await this.orderRepo.findOne({ where: { orderNumber } })
     if (!order) throw new NotFoundException('Commande introuvable')
-    // Return limited info for public tracking
+    // Return tracking info including BAT data
     return {
-      orderNumber:    order.orderNumber,
-      status:         order.status,
-      paymentStatus:  order.paymentStatus,
-      estimatedDelivery: order.estimatedDelivery,
-      createdAt:      order.createdAt,
-      items:          order.items.map((i) => ({
+      id:                   order.id,
+      orderNumber:          order.orderNumber,
+      status:               order.status,
+      paymentStatus:        order.paymentStatus,
+      paymentMethod:        order.paymentMethod,
+      estimatedDelivery:    order.estimatedDelivery,
+      deliveredAt:          order.deliveredAt,
+      createdAt:            order.createdAt,
+      subtotal:             order.subtotal,
+      deliveryCost:         order.deliveryCost,
+      discount:             order.discount,
+      total:                order.total,
+      deliveryAddress:      order.deliveryAddress,
+      // BAT fields
+      batUrl:               order.batUrl,
+      batVersoUrl:          order.batVersoUrl,
+      batStatus:            order.batStatus,
+      batNotes:             order.batNotes,
+      batApprovedAt:        order.batApprovedAt,
+      batApprovedBy:        order.batApprovedBy,
+      batRejectedReason:    order.batRejectedReason,
+      batCorrectionFileUrl: order.batCorrectionFileUrl,
+      batHistory:           order.batHistory,
+      items:                order.items.map((i) => ({
         productName:  i.productName,
+        productId:    i.productId,
+        productEmoji: i.productEmoji,
+        format:       i.format,
+        paper:        i.paper,
+        finish:       i.finish,
+        rectoverso:   i.rectoverso,
         quantity:     i.quantity,
         totalPrice:   i.totalPrice,
       })),
     }
+  }
+
+  // ─── BAT: Déposer / Assigner un BAT (Admin) ───────────────
+  async uploadBat(id: string, dto: UploadBatDto) {
+    const order = await this.findById(id)
+
+    const historyEntry = {
+      action: 'bat_submitted',
+      date: new Date().toISOString(),
+      notes: dto.batNotes || 'BAT déposé par l\'atelier pré-presse',
+    }
+
+    const batHistory = Array.isArray(order.batHistory) ? [...order.batHistory, historyEntry] : [historyEntry]
+
+    await this.orderRepo.update(id, {
+      batUrl: dto.batUrl,
+      batVersoUrl: dto.batVersoUrl || null,
+      batNotes: dto.batNotes || null,
+      batStatus: 'pending',
+      status: OrderStatus.BAT_PENDING,
+      batHistory,
+    })
+
+    const updated = await this.findById(id)
+
+    try {
+      const user = await this.userRepo.findOne({ where: { id: order.userId } })
+      if (user && user.email) {
+        await this.mailService.sendBatReadyEmail(user.email, order.orderNumber, dto.batNotes)
+      }
+    } catch (err) {
+      console.error('Erreur silencieuse notification email BAT prêt', err)
+    }
+
+    return updated
+  }
+
+  // ─── BAT: Valider le BAT (Client ou Admin) ────────────────
+  async approveBat(id: string, user: { id: string; role?: string }, dto: ApproveBatDto) {
+    const order = await this.findById(id)
+
+    if (user.role !== 'admin' && order.userId !== user.id) {
+      throw new ForbiddenException('Vous n\'êtes pas autorisé à valider ce BAT')
+    }
+
+    if (!order.batUrl) {
+      throw new BadRequestException('Aucun BAT n\'a été généré pour cette commande')
+    }
+
+    const historyEntry = {
+      action: 'bat_approved',
+      date: new Date().toISOString(),
+      notes: dto.comments || 'BAT approuvé pour impression',
+      actor: user.id,
+    }
+
+    const batHistory = Array.isArray(order.batHistory) ? [...order.batHistory, historyEntry] : [historyEntry]
+
+    await this.orderRepo.update(id, {
+      batStatus: 'approved',
+      batApprovedAt: new Date(),
+      batApprovedBy: user.id,
+      status: OrderStatus.IN_PRODUCTION, // Passe directement en impression
+      batHistory,
+    })
+
+    const updated = await this.findById(id)
+
+    try {
+      const customer = await this.userRepo.findOne({ where: { id: order.userId } })
+      if (customer && customer.email) {
+        await this.mailService.sendBatApprovedEmail(customer.email, order.orderNumber)
+      }
+    } catch (err) {
+      console.error('Erreur silencieuse email BAT approuvé', err)
+    }
+
+    return updated
+  }
+
+  // ─── BAT: Refuser / Demander corrections (Client) ─────────
+  async rejectBat(id: string, user: { id: string; role?: string }, dto: RejectBatDto) {
+    const order = await this.findById(id)
+
+    if (user.role !== 'admin' && order.userId !== user.id) {
+      throw new ForbiddenException('Vous n\'êtes pas autorisé à refuser ce BAT')
+    }
+
+    if (!dto.reason || dto.reason.trim().length === 0) {
+      throw new BadRequestException('Veuillez préciser la raison de votre refus ou vos corrections')
+    }
+
+    const historyEntry = {
+      action: 'bat_rejected',
+      date: new Date().toISOString(),
+      notes: dto.reason,
+      actor: user.id,
+    }
+
+    const batHistory = Array.isArray(order.batHistory) ? [...order.batHistory, historyEntry] : [historyEntry]
+
+    await this.orderRepo.update(id, {
+      batStatus: 'rejected',
+      batRejectedReason: dto.reason,
+      batCorrectionFileUrl: dto.correctionFileUrl || null,
+      batHistory,
+    })
+
+    const updated = await this.findById(id)
+
+    try {
+      const customer = await this.userRepo.findOne({ where: { id: order.userId } })
+      if (customer && customer.email) {
+        await this.mailService.sendBatRejectedEmail(customer.email, order.orderNumber, dto.reason)
+      }
+    } catch (err) {
+      console.error('Erreur silencieuse email BAT rejeté', err)
+    }
+
+    return updated
+  }
+
+  // ─── BAT via numéro de commande (Suivi public) ────────────
+  async approveBatByOrderNumber(orderNumber: string, dto: ApproveBatDto) {
+    const order = await this.orderRepo.findOne({ where: { orderNumber } })
+    if (!order) throw new NotFoundException('Commande introuvable')
+    return this.approveBat(order.id, { id: order.userId, role: 'customer' }, dto)
+  }
+
+  async rejectBatByOrderNumber(orderNumber: string, dto: RejectBatDto) {
+    const order = await this.orderRepo.findOne({ where: { orderNumber } })
+    if (!order) throw new NotFoundException('Commande introuvable')
+    return this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto)
   }
 
   // ─── Update order status (admin) ──────────────────────────

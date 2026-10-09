@@ -8,6 +8,7 @@ import { User } from '../users/user.entity'
 export enum OrderStatus {
   PENDING       = 'pending',       // En attente de paiement
   CONFIRMED     = 'confirmed',     // Paiement confirmé
+  BAT_PENDING   = 'bat_pending',   // Bon à Tirer en attente de validation client
   IN_PRODUCTION = 'in_production', // En cours de production
   READY         = 'ready',         // Prêt, en attente livraison
   SHIPPED       = 'shipped',       // En livraison
@@ -109,6 +110,39 @@ export class Order {
   // Notes du client
   @Column({ name: 'customer_notes', type: 'text', nullable: true })
   customerNotes: string
+
+  // ── Bon À Tirer (BAT) interactif ─────────────────────────
+  @Column({ name: 'bat_url', nullable: true })
+  batUrl: string
+
+  @Column({ name: 'bat_verso_url', nullable: true })
+  batVersoUrl: string
+
+  @Column({ name: 'bat_status', nullable: true, default: null })
+  batStatus: 'pending' | 'approved' | 'rejected' | null
+
+  @Column({ name: 'bat_notes', type: 'text', nullable: true })
+  batNotes: string
+
+  @Column({ name: 'bat_approved_at', nullable: true })
+  batApprovedAt: Date
+
+  @Column({ name: 'bat_approved_by', nullable: true })
+  batApprovedBy: string
+
+  @Column({ name: 'bat_rejected_reason', type: 'text', nullable: true })
+  batRejectedReason: string
+
+  @Column({ name: 'bat_correction_file_url', nullable: true })
+  batCorrectionFileUrl: string
+
+  @Column({ name: 'bat_history', type: 'jsonb', default: [] })
+  batHistory: Array<{
+    action: string
+    date: string
+    notes?: string
+    actor?: string
+  }>
 
   // Dates
   @Column({ name: 'estimated_delivery', nullable: true })

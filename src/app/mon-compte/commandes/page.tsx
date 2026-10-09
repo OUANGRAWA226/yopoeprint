@@ -6,12 +6,14 @@ import { ordersService } from '@/lib/orders.service'
 import {
   ShoppingBag, Clock, CheckCircle, Truck,
   Package, ChevronRight, Search, Filter,
-  ArrowRight
+  ArrowRight, ShieldCheck, Eye, Sparkles
 } from 'lucide-react'
+import { BatInteractiveModal } from '@/components/orders/BatInteractiveModal'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: 'En attente', color: 'text-yellow-700', bg: 'bg-yellow-50' },
   confirmed: { label: 'Confirmée', color: 'text-blue-700', bg: 'bg-blue-50' },
+  bat_pending: { label: 'BAT à valider', color: 'text-amber-800', bg: 'bg-amber-100 border border-amber-200' },
   in_production: { label: 'En production', color: 'text-purple-700', bg: 'bg-purple-50'},
   ready: { label: 'Prête', color: 'text-green-700', bg: 'bg-green-50' },
   shipped: { label: 'Expédiée', color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -21,7 +23,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 }
 
 // Étapes de progression de la commande
-const ORDER_STEPS = ['confirmed', 'in_production', 'ready', 'shipped', 'delivered']
+const ORDER_STEPS = ['confirmed', 'bat_pending', 'in_production', 'ready', 'shipped', 'delivered']
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n)
@@ -35,7 +37,7 @@ function OrderProgress({ status }: { status: string }) {
   const currentStep = ORDER_STEPS.indexOf(status)
   if (currentStep === -1) return null
 
-  const labels = ['Confirmée', 'Production', 'Prête', 'Expédiée', 'Livrée']
+  const labels = ['Confirmée', 'BAT', 'Production', 'Prête', 'Expédiée', 'Livrée']
 
   return (
     <div className="mt-4 px-1">
@@ -77,6 +79,13 @@ export default function CommandesPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [selectedBatOrder, setSelectedBatOrder] = useState<any | null>(null)
+
+  const reloadOrders = () => {
+    ordersService.getMyOrders()
+      .then((res) => setOrders(res.data || []))
+      .catch(() => {})
+  }
 
   useEffect(() => {
     ordersService.getMyOrders()
@@ -127,6 +136,7 @@ export default function CommandesPage() {
         <div className="flex gap-2 flex-wrap flex-1 md:justify-end">
           {[
             { value: 'all', label: 'Toutes' },
+            { value: 'bat_pending', label: '🎨 BAT à valider' },
             { value: 'in_progress', label: 'En cours' },
             { value: 'delivered', label: 'Livrées' },
             { value: 'cancelled', label: 'Annulées' },
@@ -220,13 +230,36 @@ export default function CommandesPage() {
                     )}
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Link href={`/mon-compte/commandes/${order.id}`} className="flex-1 bg-white border border-gray-200 text-gray-900 font-bold text-xs py-2.5 rounded-xl text-center hover:border-gray-300 transition-colors">
-                      Détails
-                    </Link>
-                    <button className="flex-1 bg-primary text-white font-bold text-xs py-2.5 rounded-xl text-center hover:bg-primary/90 transition-colors">
-                      Recommander
-                    </button>
+                  <div className="space-y-2">
+                    {/* Bouton BAT si disponible */}
+                    {(order.batUrl || order.status === 'bat_pending') && (
+                      <button
+                        onClick={() => setSelectedBatOrder(order)}
+                        className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
+                          order.batStatus === 'approved'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                            : order.batStatus === 'rejected'
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md'
+                        }`}
+                      >
+                        <ShieldCheck size={14} />
+                        {order.batStatus === 'approved'
+                          ? 'Consulter le BAT (Validé)'
+                          : order.batStatus === 'rejected'
+                          ? 'BAT en correction'
+                          : 'Examiner et Valider mon BAT →'}
+                      </button>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Link href={`/suivi?ref=${order.orderNumber || order.id}`} className="flex-1 bg-white border border-gray-200 text-gray-900 font-bold text-xs py-2.5 rounded-xl text-center hover:border-gray-300 transition-colors">
+                        Suivi détaillé
+                      </Link>
+                      <button className="flex-1 bg-primary text-white font-bold text-xs py-2.5 rounded-xl text-center hover:bg-primary/90 transition-colors">
+                        Recommander
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -234,6 +267,25 @@ export default function CommandesPage() {
             )
           })}
         </div>
+      )}
+
+      {/* Modal BAT Interactif */}
+      {selectedBatOrder && (
+        <BatInteractiveModal
+          isOpen={true}
+          onClose={() => setSelectedBatOrder(null)}
+          orderId={selectedBatOrder.id || selectedBatOrder._id}
+          orderNumber={selectedBatOrder.orderNumber || selectedBatOrder.id}
+          batUrl={selectedBatOrder.batUrl}
+          batVersoUrl={selectedBatOrder.batVersoUrl}
+          batStatus={selectedBatOrder.batStatus}
+          batNotes={selectedBatOrder.batNotes}
+          batApprovedAt={selectedBatOrder.batApprovedAt}
+          onSuccess={() => {
+            reloadOrders()
+            setSelectedBatOrder(null)
+          }}
+        />
       )}
     </div>
   )

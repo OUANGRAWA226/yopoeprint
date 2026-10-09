@@ -1,33 +1,35 @@
 'use client'
 
-import { FileText, RotateCw, CheckCircle2, Package, Clock, Truck, Star, MapPin } from 'lucide-react'
+import { FileText, RotateCw, CheckCircle2, Package, Clock, Truck, Star, MapPin, ShieldCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { ordersService } from '@/lib/orders.service'
 import { SkeletonOrderCard } from '@/components/ui/Skeleton'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
+import { BatInteractiveModal } from '@/components/orders/BatInteractiveModal'
 import { useToast } from '@/context/ToastContext'
 
 export default function CompteCommandes() {
   const [downloading, setDownloading] = useState<string | null>(null)
   const [reordering, setReordering] = useState<string | null>(null)
   const [reviewTarget, setReviewTarget] = useState<{ orderId: string; orderNumber: string } | null>(null)
+  const [selectedBatOrder, setSelectedBatOrder] = useState<any | null>(null)
   const toast = useToast()
   
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const data = await ordersService.getMyOrders()
-        // Gérer la réponse paginée { data: [...] } ou le tableau direct
-        setOrders(Array.isArray(data) ? data : data.data || [])
-      } catch (err) {
-        console.error('Erreur lors du chargement des commandes', err)
-      } finally {
-        setLoading(false)
-      }
+  const fetchOrders = async () => {
+    try {
+      const data = await ordersService.getMyOrders()
+      setOrders(Array.isArray(data) ? data : data.data || [])
+    } catch (err) {
+      console.error('Erreur lors du chargement des commandes', err)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchOrders()
   }, [])
 
@@ -47,7 +49,9 @@ export default function CompteCommandes() {
   const getStatusConfig = (status: string) => {
     switch(status) {
       case 'pending': return { label: 'En attente', color: 'bg-yellow-50 text-yellow-700 border-yellow-100', icon: Clock }
-      case 'in_progress': return { label: 'En Impression', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: RotateCw }
+      case 'bat_pending': return { label: 'BAT à valider', color: 'bg-amber-50 text-amber-800 border-amber-200', icon: ShieldCheck }
+      case 'in_progress':
+      case 'in_production': return { label: 'En Impression', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: RotateCw }
       case 'shipped': return { label: 'Expédié', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: Truck }
       case 'delivered': return { label: 'Livré', color: 'bg-green-50 text-green-700 border-green-100', icon: CheckCircle2 }
       default: return { label: 'Inconnu', color: 'bg-gray-50 text-gray-700 border-gray-100', icon: Package }
@@ -124,6 +128,27 @@ export default function CompteCommandes() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-100">
+                  {/* Bouton BAT si disponible */}
+                  {(order.batUrl || order.status === 'bat_pending') && (
+                    <button
+                      onClick={() => setSelectedBatOrder(order)}
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all shadow-sm ${
+                        order.batStatus === 'approved'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                          : order.batStatus === 'rejected'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md'
+                      }`}
+                    >
+                      <ShieldCheck size={16} />
+                      {order.batStatus === 'approved'
+                        ? 'Consulter le BAT (Validé)'
+                        : order.batStatus === 'rejected'
+                        ? 'BAT en correction'
+                        : 'Valider mon BAT →'}
+                    </button>
+                  )}
+
                   <button 
                     onClick={() => handleDownload(order.id || order._id)}
                     disabled={downloading === (order.id || order._id)}
@@ -176,6 +201,25 @@ export default function CompteCommandes() {
           onClose={() => setReviewTarget(null)}
           orderId={reviewTarget.orderId}
           orderNumber={reviewTarget.orderNumber}
+        />
+      )}
+
+      {/* Modal BAT interactif */}
+      {selectedBatOrder && (
+        <BatInteractiveModal
+          isOpen={true}
+          onClose={() => setSelectedBatOrder(null)}
+          orderId={selectedBatOrder.id || selectedBatOrder._id}
+          orderNumber={selectedBatOrder.orderNumber || selectedBatOrder.id}
+          batUrl={selectedBatOrder.batUrl}
+          batVersoUrl={selectedBatOrder.batVersoUrl}
+          batStatus={selectedBatOrder.batStatus}
+          batNotes={selectedBatOrder.batNotes}
+          batApprovedAt={selectedBatOrder.batApprovedAt}
+          onSuccess={() => {
+            fetchOrders()
+            setSelectedBatOrder(null)
+          }}
         />
       )}
     </>

@@ -112,3 +112,38 @@ export class OrderQueryDto {
   @IsOptional()
   limit?: string
 }
+
+export class UploadBatDto {
+  @ApiProperty({ description: 'URL du fichier BAT Recto ou principal', example: 'https://res.cloudinary.com/.../bat-recto.png' })
+  @IsString()
+  batUrl: string
+
+  @ApiPropertyOptional({ description: 'URL du fichier BAT Verso (si produit recto/verso)', example: 'https://res.cloudinary.com/.../bat-verso.png' })
+  @IsOptional()
+  @IsString()
+  batVersoUrl?: string
+
+  @ApiPropertyOptional({ description: 'Remarques techniques pré-presse pour le client', example: 'Bords perdus ajustés de 3mm. Vérifiez bien l\'orthographe du numéro de téléphone.' })
+  @IsOptional()
+  @IsString()
+  batNotes?: string
+}
+
+export class ApproveBatDto {
+  @ApiPropertyOptional({ description: 'Commentaire facultatif du client lors de la validation', example: 'BAT validé, conforme à nos attentes.' })
+  @IsOptional()
+  @IsString()
+  comments?: string
+}
+
+export class RejectBatDto {
+  @ApiProperty({ description: 'Motif de refus ou détails des corrections souhaitées', example: 'Veuillez corriger le logo et décaler le numéro de téléphone vers la droite.' })
+  @IsString()
+  reason: string
+
+  @ApiPropertyOptional({ description: 'URL d\'un nouveau fichier ou capture d\'écran annotée', example: 'https://res.cloudinary.com/.../correction-notes.png' })
+  @IsOptional()
+  @IsString()
+  correctionFileUrl?: string
+}
+
