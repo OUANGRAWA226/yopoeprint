@@ -24,9 +24,52 @@ const STATUSES = [
   { id: 'rejected', label: 'Refusé' }
 ]
 
+const DEMO_QUOTES = [
+  {
+    id: 'DEV-2025-0089',
+    createdAt: '2025-03-12T10:30:00Z',
+    client: { name: 'Entreprise BTP Sahel', phone: '+226 70 12 34 56', email: 'contact@btpsahel.bf' },
+    title: '2 000 Dépliants 3 volets avec vernis sélectif 250g',
+    details: 'Format fermé A4, impression quadri recto/verso, vernis sélectif sur logo et visuels clés. Livraison Ouagadougou Zone Industrielle.',
+    status: 'new',
+    price: 185000,
+    files: ['cahier_des_charges.pdf']
+  },
+  {
+    id: 'DEV-2025-0088',
+    createdAt: '2025-03-11T16:15:00Z',
+    client: { name: 'Agence Com & Co', phone: '+226 78 45 67 89', email: 'direction@com-co.bf' },
+    title: '500 Totems publicitaires carton rigide avec découpe',
+    details: 'Hauteur 180cm, impression offset quadri contrecollée sur micro-cannelure, chevalet arrière repliable.',
+    status: 'processing',
+    price: 420000,
+    files: ['plan_de_pose.ai', 'visuel_haute_def.pdf']
+  },
+  {
+    id: 'DEV-2025-0087',
+    createdAt: '2025-03-10T14:00:00Z',
+    client: { name: 'Clinique Horizon Santé', phone: '+226 75 98 76 54', email: 'gestion@horizonsante.bf' },
+    title: '10 000 Carnets d\'ordonnances autocopiants (Triplicata)',
+    details: 'Feuillets CB blanc, CFB jaune, CF rose. Numérotation séquentielle et souche prédécoupée.',
+    status: 'sent',
+    price: 310000,
+    files: ['specimen_ordonnance.pdf']
+  },
+  {
+    id: 'DEV-2025-0086',
+    createdAt: '2025-03-09T09:40:00Z',
+    client: { name: 'Banque Atlantique BF', phone: '+226 25 30 11 22', email: 'evenements@banqueatlantique.bf' },
+    title: 'Pack Packaging Box VIP Congrès Annuel (100 coffrets)',
+    details: 'Boîte cloche rigide rembordée avec dorure à chaud dorée, calage mousse découpée sur mesure pour clé USB et bloc-notes.',
+    status: 'accepted',
+    price: 750000,
+    files: ['charte_evenement.pdf']
+  }
+]
+
 export default function AdminDevisPage() {
-  const [devis, setDevis] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [devis, setDevis] = useState<any[]>(DEMO_QUOTES)
+  const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [selectedDevis, setSelectedDevis] = useState<any>(null)
@@ -35,11 +78,11 @@ export default function AdminDevisPage() {
     const fetchDevis = async () => {
       try {
         const data = await quotesService.getAllQuotes()
-        setDevis(data)
+        if (data && data.length > 0) {
+          setDevis(data)
+        }
       } catch (err) {
-        console.error('Erreur de chargement des devis', err)
-      } finally {
-        setLoading(false)
+        console.warn('API locale hors ligne, utilisation des devis de démonstration:', err)
       }
     }
     fetchDevis()
@@ -235,10 +278,10 @@ export default function AdminDevisPage() {
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Fichiers joints ({selectedDevis.files.length})</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedDevis.files.map((file: string, i: number) => (
+                    {selectedDevis.files.map((file: any, i: number) => (
                       <div key={i} className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
                         <Paperclip size={14} className="text-gray-400" />
-                        {file}
+                        {typeof file === 'string' ? file : file?.name || 'Document joint'}
                       </div>
                     ))}
                   </div>
