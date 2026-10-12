@@ -1848,6 +1848,12 @@
                                        "sourceType":  "github",
                                        "skillPath":  "skills/find-skills/SKILL.md",
                                        "computedHash":  "57de29b75de14893d2260574dc930caec64bc4b865b7980f2a7f433cd2ea4453"
-                                   }
+                                   },
+                   "high-end-visual-design":  {
+                                                  "source":  "leonxlnx/taste-skill",
+                                                  "sourceType":  "github",
+                                                  "skillPath":  "skills/taste-skill/SKILL.md",
+                                                  "computedHash":  "64a616484dd90d16d224d14b8c4b8898ee073ef9f4d89095d45c7b23beaed81a"
+                                              }
                }
 }
