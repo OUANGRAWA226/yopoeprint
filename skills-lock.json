@@ -1842,6 +1842,12 @@
                                                  "sourceType":  "github",
                                                  "skillPath":  "skills/web-design-guidelines/SKILL.md",
                                                  "computedHash":  "4114b64b01c30af14877037351f9a51278b97ca7029eb14e1267bb67b79931ae"
-                                             }
+                                             },
+                   "find-skills":  {
+                                       "source":  "vercel-labs/skills",
+                                       "sourceType":  "github",
+                                       "skillPath":  "skills/find-skills/SKILL.md",
+                                       "computedHash":  "57de29b75de14893d2260574dc930caec64bc4b865b7980f2a7f433cd2ea4453"
+                                   }
                }
 }
