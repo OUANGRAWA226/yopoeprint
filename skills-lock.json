@@ -1854,6 +1854,12 @@
                                                   "sourceType":  "github",
                                                   "skillPath":  "skills/taste-skill/SKILL.md",
                                                   "computedHash":  "64a616484dd90d16d224d14b8c4b8898ee073ef9f4d89095d45c7b23beaed81a"
-                                              }
+                                              },
+                   "extract-design-system":  {
+                                                 "source":  "arvindrk/extract-design-system",
+                                                 "sourceType":  "github",
+                                                 "skillPath":  "skills/extract-design-system/SKILL.md",
+                                                 "computedHash":  "39d221e9743e3a9867f696e157f78f264dea8a805670bd42231e485fc0f96aed"
+                                             }
                }
 }
