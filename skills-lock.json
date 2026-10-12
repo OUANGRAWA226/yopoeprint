@@ -1836,6 +1836,12 @@
                                                     "sourceType":  "github",
                                                     "skillPath":  "skills/design-mobile-apps/SKILL.md",
                                                     "computedHash":  "47167acc0b7893e13d585d91b60a0de817514b4612f1c111de1919d027e9cd91"
-                                                }
+                                                },
+                   "web-design-guidelines":  {
+                                                 "source":  "vercel-labs/agent-skills",
+                                                 "sourceType":  "github",
+                                                 "skillPath":  "skills/web-design-guidelines/SKILL.md",
+                                                 "computedHash":  "4114b64b01c30af14877037351f9a51278b97ca7029eb14e1267bb67b79931ae"
+                                             }
                }
 }
