@@ -1866,6 +1866,12 @@
                                    "sourceType":  "github",
                                    "skillPath":  ".agents/skills/impeccable/reference/distill.md",
                                    "computedHash":  "04728f7e742b7085292502bf39f77df89b6412815b75f0b21f952d6af34dd56b"
+                               },
+                   "delight":  {
+                                   "source":  "pbakaus/impeccable",
+                                   "sourceType":  "github",
+                                   "skillPath":  ".agents/skills/impeccable/reference/delight.md",
+                                   "computedHash":  "76c2593ffdeb8d1c69d153c262cb49285cd645bb9b975ccef1b15fcb17c4d000"
                                }
                }
 }
