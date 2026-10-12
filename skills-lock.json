@@ -1860,6 +1860,12 @@
                                                  "sourceType":  "github",
                                                  "skillPath":  "skills/extract-design-system/SKILL.md",
                                                  "computedHash":  "39d221e9743e3a9867f696e157f78f264dea8a805670bd42231e485fc0f96aed"
-                                             }
+                                             },
+                   "distill":  {
+                                   "source":  "pbakaus/impeccable",
+                                   "sourceType":  "github",
+                                   "skillPath":  ".agents/skills/impeccable/reference/distill.md",
+                                   "computedHash":  "04728f7e742b7085292502bf39f77df89b6412815b75f0b21f952d6af34dd56b"
+                               }
                }
 }
