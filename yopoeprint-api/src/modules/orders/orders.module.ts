@@ -8,9 +8,10 @@ import { ProductsModule }   from '../products/products.module'
 import { UsersModule }      from '../users/users.module'
 import { MailModule }       from '../mail/mail.module'
 import { ResellerModule }   from '../reseller/reseller.module'
+import { PromosModule }     from '../promos/promos.module'
 
 @Module({
-  imports:     [TypeOrmModule.forFeature([Order, Quote]), ProductsModule, UsersModule, MailModule, ResellerModule],
+  imports:     [TypeOrmModule.forFeature([Order, Quote]), ProductsModule, UsersModule, MailModule, ResellerModule, PromosModule],
   controllers: [OrdersController],
   providers:   [OrdersService],
   exports:     [OrdersService],

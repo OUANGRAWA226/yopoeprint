@@ -15,6 +15,7 @@ import { SettingsService } from '../settings/settings.service'
 import { MailService } from '../mail/mail.service'
 import { Quote, QuoteStatus } from '../quotes/quote.entity'
 import { ResellerService } from '../reseller/reseller.service'
+import { PromosService } from '../promos/promos.service'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -31,6 +32,7 @@ export class OrdersService {
     private mailService: MailService,
     private resellerService: ResellerService,
     private settingsService: SettingsService,
+    private promosService: PromosService,
   ) {}
 
   // ─── Create order ─────────────────────────────────────────
@@ -96,13 +98,21 @@ export class OrdersService {
       zone:         dto.deliveryZone,
     }
 
-    // Remise : code promo OU remise revendeur, la plus avantageuse (pas de cumul)
+    // Remise : code promo OU remise revendeur, la plus avantageuse (pas de cumul).
+    // Le code n'est inscrit sur la commande (et compté comme utilisé) que s'il est la remise retenue.
     let discount = 0
+    let promoCode: string | null = null
     if (dto.promoCode) {
-      discount = await this.applyPromoCode(dto.promoCode, subtotal)
+      const applied = await this.promosService.evaluate(dto.promoCode, subtotal, userId)
+      discount = applied.discount
+      promoCode = applied.promo.code
     }
     const reseller = await this.resellerService.discountFor(userId)
-    if (reseller) discount = Math.max(discount, Math.round((subtotal * reseller.rate) / 100))
+    const resellerDiscount = reseller ? Math.round((subtotal * reseller.rate) / 100) : 0
+    if (resellerDiscount > discount) {
+      discount = resellerDiscount
+      promoCode = null
+    }
 
     // Marque blanche : réservée aux revendeurs ayant configuré leur identité d'expéditeur
     if (dto.whiteLabel && !reseller) {
@@ -135,7 +145,7 @@ export class OrdersService {
       deliveryAddress,
       paymentMethod:   dto.paymentMethod,
       paymentStatus:   PaymentStatus.PENDING,
-      promoCode:       dto.promoCode,
+      promoCode,
       whiteLabel,
       whiteLabelSender,
       customerNotes:   dto.customerNotes,
@@ -630,19 +640,5 @@ export class OrdersService {
     let rand = ''
     for (let i = 0; i < 8; i++) rand += alphabet[randomInt(alphabet.length)]
     return `YP-${year}-${rand.slice(0, 4)}-${rand.slice(4)}`
-  }
-
-  private async applyPromoCode(code: string, subtotal: number): Promise<number> {
-    // Placeholder: to be replaced with a PromoCode entity
-    // Must match FALLBACK_PROMOS in src/lib/promo.service.ts (codes advertised on the storefront)
-    const promoCodes: Record<string, number> = {
-      'YOPPRINT15': 0.15,
-      'YOPOE10':    0.10,
-      'BURKINA':    0.15,
-      'PROMO20':    0.20,
-    }
-    const rate = promoCodes[code.toUpperCase()]
-    if (!rate) throw new BadRequestException('Code promo invalide')
-    return Math.round(subtotal * rate)
   }
 }

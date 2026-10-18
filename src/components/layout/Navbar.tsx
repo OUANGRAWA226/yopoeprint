@@ -17,6 +17,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { productsService } from '@/lib/products.service'
 import { Logo } from '@/components/shared/Logo'
 import { usePublicSettings, useContact } from '@/lib/settings.service'
+import { useFeaturedPromo } from '@/lib/promo.service'
 import { useCatalogue, CatalogueProduct, priceFor, referenceQuantity, productImage } from '@/lib/catalogue'
 
 // ─── Méga-menu : rubriques fixes, contenu tiré du catalogue (admin › Produits) ───
@@ -104,8 +105,11 @@ export function Navbar() {
   const masterTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const moreTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Code mis en avant dans l'admin (Promotions) ; rien n'est affiché s'il n'y en a pas
+  const featuredPromo = useFeaturedPromo()
   const handleCopyPromo = () => {
-    navigator.clipboard.writeText('YOPPRINT15')
+    if (!featuredPromo) return
+    navigator.clipboard.writeText(featuredPromo.code)
     setCopiedPromo(true)
     setTimeout(() => setCopiedPromo(false), 2200)
   }
@@ -337,10 +341,11 @@ export function Navbar() {
 
             {/* Droite : Code Promo 1-Click + Contact Hotline */}
             <div className="flex items-center gap-4 text-2xs">
+              {featuredPromo && (
               <div className="flex items-center gap-1.5">
                 <span className="text-white font-semibold inline-flex items-center gap-1">
                   <Flame size={12} className="text-amber-200 shrink-0 fill-amber-300" />
-                  -15% 1ère commande :
+                  {featuredPromo.label} :
                 </span>
                 <button
                   type="button"
@@ -356,11 +361,12 @@ export function Navbar() {
                   ) : (
                     <>
                       <Copy size={11} className="text-emerald-100" />
-                      <span>YOPPRINT15</span>
+                      <span>{featuredPromo.code}</span>
                     </>
                   )}
                 </button>
               </div>
+              )}
             </div>
 
           </div>
@@ -1082,20 +1088,22 @@ export function Navbar() {
                   <span className="text-xs font-medium text-gray-800">Vos devis d'imprimerie</span>
                 </Link>
 
-                <div
-                  onClick={() => {
-                    handleCopyPromo()
-                  }}
-                  className="flex items-center justify-between px-4 py-2.5 text-gray-700 hover:text-emerald-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                {featuredPromo && (
+                <button
+                  type="button"
+                  onClick={handleCopyPromo}
+                  aria-label={`Copier le code promo ${featuredPromo.code}`}
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 hover:text-emerald-700 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
                     <Tag size={18} className="text-gray-500 stroke-[1.8] shrink-0" />
-                    <span className="text-xs font-medium text-gray-800">Bons d'achat & Promo</span>
+                    <span className="text-xs font-medium text-gray-800">Bons d&apos;achat & Promo</span>
                   </div>
                   <span className="text-2xs font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                    {copiedPromo ? 'Copié !' : '-15% YOPPRINT15'}
+                    {copiedPromo ? 'Copié !' : `${featuredPromo.label} · ${featuredPromo.code}`}
                   </span>
-                </div>
+                </button>
+                )}
 
                 <Link
                   href="/catalogue"

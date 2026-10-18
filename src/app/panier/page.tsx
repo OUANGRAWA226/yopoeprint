@@ -307,7 +307,7 @@ export default function PanierPage() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Ex: YOPPRINT15"
+                      placeholder="Votre code promo"
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                       onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}

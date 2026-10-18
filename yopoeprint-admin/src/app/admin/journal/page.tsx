@@ -23,6 +23,9 @@ const ACTION_LABELS: Record<string, string> = {
   'banner.update': 'Bannière modifiée',
   'banner.delete': 'Bannière supprimée',
   'banner.order': 'Carrousel réordonné',
+  'promo.create': 'Code promo créé',
+  'promo.update': 'Code promo modifié',
+  'promo.delete': 'Code promo supprimé',
 }
 
 const FILTERS = [
@@ -31,6 +34,7 @@ const FILTERS = [
   { id: 'team', label: 'Équipe' },
   { id: 'product', label: 'Produits' },
   { id: 'banner', label: 'Bannières' },
+  { id: 'promo', label: 'Codes promo' },
   { id: 'order', label: 'Commandes' },
   { id: 'quote', label: 'Devis' },
   { id: 'reseller', label: 'Revendeurs' },

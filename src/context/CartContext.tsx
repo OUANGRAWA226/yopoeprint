@@ -180,7 +180,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           discount: disc,
         }
       } else {
-        return { success: false, message: 'Code promo invalide ou expiré.' }
+        return { success: false, message: result.message || 'Code promo invalide ou expiré.' }
       }
     } catch (err) {
       return { success: false, message: 'Impossible de valider ce code promo pour le moment.' }

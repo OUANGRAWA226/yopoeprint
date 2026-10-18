@@ -184,7 +184,6 @@ export default function StorefrontHomePage() {
   const activeFinishObj = currentCalc?.finishes?.find((f) => f.id === selectedFinish) ?? currentCalc?.finishes?.[0]
   const calculatedTotal = currentCalc ? priceFor(currentCalc, calcQty, activeFinishObj?.id) : 0
   const unitPrice = calcQty ? Math.round(calculatedTotal / calcQty) : 0
-  const [copiedPromo, setCopiedPromo] = useState(false)
 
   // Bannières Dynamiques Carrousel Hero (Uploadées depuis le Backoffice)
   const [banners, setBanners] = useState<BannerSlide[]>(DEFAULT_BANNERS)
@@ -233,12 +232,6 @@ export default function StorefrontHomePage() {
     if (currentCalc) router.push(`/produit/${currentCalc.slug}`)
   }
 
-  // Copie du code promo
-  const handleCopyPromo = () => {
-    navigator.clipboard.writeText('YOPPRINT15')
-    setCopiedPromo(true)
-    setTimeout(() => setCopiedPromo(false), 2500)
-  }
 
 
   return (
