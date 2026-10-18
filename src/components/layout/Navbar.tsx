@@ -17,6 +17,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { productsService } from '@/lib/products.service'
 import { Logo } from '@/components/shared/Logo'
 import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
+import { usePublicSettings } from '@/lib/settings.service'
 
 // ─── Structure de Données E-Commerce Professionnelle (Standard Helloprint & Jumia) ───
 export interface NavCategory {
@@ -439,6 +440,7 @@ export function Navbar() {
   const { user, isLoggedIn, logout } = useAuthContext()
   const pathname = usePathname()
   const router = useRouter()
+  const freeThreshold = usePublicSettings().settings?.delivery.freeThreshold ?? 0
 
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -679,10 +681,12 @@ export function Navbar() {
             
             {/* Gauche : Réassurance logistique atelier Ouaga & Bobo */}
             <div className="flex items-center gap-3 text-2xs text-emerald-50">
-              <span className="inline-flex items-center gap-1.5 text-white font-medium">
-                <Truck size={13} className="text-white shrink-0" />
-                <span>Livraison offerte dès <strong className="font-bold underline decoration-white/40">75 000 FCFA</strong> à Ouaga et Bobo</span>
-              </span>
+              {freeThreshold > 0 && (
+                <span className="inline-flex items-center gap-1.5 text-white font-medium">
+                  <Truck size={13} className="text-white shrink-0" />
+                  <span>Livraison offerte dès <strong className="font-bold underline decoration-white/40">{new Intl.NumberFormat('fr-FR').format(freeThreshold)} FCFA</strong></span>
+                </span>
+              )}
             </div>
 
             {/* Droite : Code Promo 1-Click + Contact Hotline */}

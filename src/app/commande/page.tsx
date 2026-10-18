@@ -8,6 +8,7 @@ import { useAuthContext } from '@/context/AuthContext'
 import { api } from '@/lib'
 import { paymentsService } from '@/lib/payments.service'
 import { resellerService, ResellerMe } from '@/lib/reseller.service'
+import { usePublicSettings, DeliveryZone } from '@/lib/settings.service'
 import {
   MapPin, CreditCard, CheckCircle,
   ChevronRight, ArrowRight, AlertCircle,
@@ -25,15 +26,11 @@ const STEPS = [
   { n: 3, label: 'Paiement',  icon: <CreditCard size={14} /> },
 ]
 
-const ZONES = [
-  { id: 'ouaga_centre', label: 'Ouagadougou Centre',     price: 0,    delay: '24h',  icon: '🏙️' },
-  { id: 'ouaga_periph', label: 'Ouagadougou Périphérie', price: 1500, delay: '48h',  icon: '🏘️' },
-  { id: 'bobo',         label: 'Bobo-Dioulasso',         price: 3500, delay: '3-4j', icon: '🌆' },
-  { id: 'koudougou',    label: 'Koudougou',              price: 3000, delay: '3-4j', icon: '🏡' },
-  { id: 'ouahigouya',   label: 'Ouahigouya',             price: 3500, delay: '4-5j', icon: '🏡' },
-  { id: 'other',        label: 'Autre ville',            price: 4500, delay: '5-7j', icon: '🗺️' },
-  { id: 'pickup',       label: 'Retrait atelier (Ouaga)',price: 0,    delay: 'Sur RDV', icon: '📦' },
-]
+// Les zones, frais et seuil de livraison offerte viennent des paramètres de la plateforme (admin › Paramètres)
+const ZONE_ICONS: Record<string, string> = {
+  ouaga_centre: '🏙️', ouaga_periph: '🏘️', bobo: '🌆', koudougou: '🏡', ouahigouya: '🏡', other: '🗺️', pickup: '📦',
+}
+const NO_ZONE: DeliveryZone = { id: '', label: '—', city: '', price: 0, delay: '', enabled: true, freeEligible: false }
 
 const PAYMENT_METHODS = [
   { id: 'orange_money', label: 'Orange Money', emoji: '🟠', color: 'bg-orange-50 border-orange-200', activeColor: 'border-orange-500 bg-orange-50', desc: 'Paiement instantané Orange Burkina (#144#)', badge: 'Le plus rapide' },
@@ -143,7 +140,11 @@ export default function CommandePage() {
   const [loginError, setLoginError] = useState('')
   const [showPass, setShowPass] = useState(false)
 
-  const [zone, setZone] = useState(ZONES[0])
+  const { settings, error: settingsError } = usePublicSettings()
+  const zones = settings?.delivery.zones ?? []
+  const maintenance = settings?.maintenance.enabled ? settings.maintenance : null
+  const [zoneId, setZoneId] = useState('')
+  const zone = zones.find((z) => z.id === zoneId) ?? zones[0] ?? NO_ZONE
   const [address, setAddress] = useState({
     fullName: '',
     phone: '',
@@ -170,7 +171,7 @@ export default function CommandePage() {
   // Any change to the cart or delivery invalidates the order created earlier
   useEffect(() => {
     setPendingOrder(null)
-  }, [items, zone, appliedPromo, address, payMethod])
+  }, [items, zone.id, appliedPromo, address, payMethod])
 
   // Redirection si panier vide (une fois le panier enregistré relu)
   useEffect(() => {
@@ -179,7 +180,8 @@ export default function CommandePage() {
     }
   }, [hydrated, items, router])
 
-  const deliveryCost = total >= 75000 && zone.id !== 'other' ? 0 : zone.price
+  const freeThreshold = settings?.delivery.freeThreshold ?? 0
+  const deliveryCost = freeThreshold > 0 && total >= freeThreshold && zone.freeEligible ? 0 : zone.price
   const resellerRate = reseller?.isReseller ? reseller.tier?.rate || 0 : 0
   const resellerDiscount = Math.round((total * resellerRate) / 100)
   const useResellerDiscount = resellerDiscount > discount
@@ -231,6 +233,7 @@ export default function CommandePage() {
   }
 
   const validateDelivery = () => {
+    if (!zone.id) { setError('Choisissez une zone de livraison'); return false }
     if (!address.fullName.trim()) { setError('Nom complet du destinataire requis'); return false }
     if (!address.phone.trim() || address.phone.replace(/\D/g, '').length < 8) {
       setError('Numéro de téléphone valide (8 chiffres min) requis pour la livraison'); return false
@@ -412,6 +415,16 @@ export default function CommandePage() {
               </div>
             )}
 
+            {maintenance && (
+              <div role="status" className="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-sm text-amber-900">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <span>
+                  <strong>Les commandes sont momentanément suspendues.</strong>{' '}
+                  {maintenance.message || 'Votre panier est conservé : revenez un peu plus tard pour finaliser.'}
+                </span>
+              </div>
+            )}
+
             {error && (
               <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-sm text-red-600">
                 <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -435,18 +448,26 @@ export default function CommandePage() {
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2.5">
                     Sélectionnez votre zone de réception *
                   </label>
+                  {settingsError && zones.length === 0 && (
+                    <p role="alert" className="text-sm text-red-600">Les zones de livraison n&apos;ont pas pu être chargées. Rechargez la page.</p>
+                  )}
+                  {!settings && !settingsError && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" aria-busy="true">
+                      {[0, 1, 2, 3].map((i) => <div key={i} className="h-[68px] rounded-xl bg-gray-100 animate-pulse" />)}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {ZONES.map((z) => (
+                    {zones.map((z) => (
                       <button
                         type="button"
                         key={z.id}
-                        onClick={() => setZone(z)}
+                        onClick={() => setZoneId(z.id)}
                         className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left transition-all
                           ${zone.id === z.id
                             ? 'border-gray-900 bg-gray-50/80 shadow-xs'
                             : 'border-gray-200 bg-white hover:border-gray-300'}`}
                       >
-                        <span className="text-xl shrink-0">{z.icon}</span>
+                        <span className="text-xl shrink-0" aria-hidden="true">{ZONE_ICONS[z.id] ?? '📍'}</span>
                         <div className="flex-1 min-w-0">
                           <p className={`font-bold text-sm ${zone.id === z.id ? 'text-gray-900' : 'text-gray-700'}`}>
                             {z.label}
@@ -784,7 +805,7 @@ export default function CommandePage() {
                   <button
                     type="button"
                     onClick={handlePayment}
-                    disabled={loading}
+                    disabled={loading || !!maintenance}
                     className="flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-xl font-bold text-base hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md disabled:opacity-60"
                   >
                     {loading ? (

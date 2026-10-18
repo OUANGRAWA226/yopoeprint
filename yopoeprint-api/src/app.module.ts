@@ -18,12 +18,16 @@ import { MailModule }     from './modules/mail/mail.module'
 import { UploadModule }   from './modules/upload/upload.module'
 import { QuotesModule }   from './modules/quotes/quotes.module'
 import { ResellerModule } from './modules/reseller/reseller.module'
+import { AuditModule }    from './modules/audit/audit.module'
+import { SettingsModule } from './modules/settings/settings.module'
 
 // Entities
 import { User }    from './modules/users/user.entity'
 import { Product } from './modules/products/product.entity'
 import { Order }   from './modules/orders/order.entity'
 import { Quote }   from './modules/quotes/quote.entity'
+import { AuditLog } from './modules/audit/audit-log.entity'
+import { PlatformSettingsRow } from './modules/settings/platform-settings.entity'
 
 @Module({
   imports: [
@@ -56,7 +60,7 @@ import { Quote }   from './modules/quotes/quote.entity'
         password:    cs.get('database.password'),
         database:    cs.get('database.name'),
         ssl:         cs.get('database.ssl') ? { rejectUnauthorized: false } : false,
-        entities:    [User, Product, Order, Quote],
+        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow],
         synchronize: cs.get('app.nodeEnv') === 'development', // Auto-create tables in dev
         logging:     cs.get('app.nodeEnv') === 'development',
       }),
@@ -72,6 +76,8 @@ import { Quote }   from './modules/quotes/quote.entity'
     UploadModule,
     QuotesModule,
     ResellerModule,
+    AuditModule,
+    SettingsModule,
   ],
   providers: [
     // Active le rate limiting global (et les @Throttle par route, ex. login)

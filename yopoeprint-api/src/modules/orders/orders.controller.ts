@@ -12,6 +12,7 @@ import {
 import { JwtAuthGuard }  from '../../common/guards/jwt-auth.guard'
 import { AdminGuard }    from '../../common/guards/admin.guard'
 import { CurrentUser }   from '../../common/decorators/current-user.decorator'
+import { Audit }         from '../audit/audit.decorator'
 
 @ApiTags('Commandes')
 @Controller('orders')
@@ -125,6 +126,7 @@ export class OrdersController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
+  @Audit('order.status', 'order')
   @ApiOperation({ summary: '[ADMIN] Mettre à jour le statut d\'une commande' })
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.ordersService.updateStatus(id, dto)
@@ -133,6 +135,7 @@ export class OrdersController {
   @Post(':id/bat')
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
+  @Audit('order.bat', 'order')
   @ApiOperation({ summary: '[ADMIN] Déposer / Mettre à disposition le BAT client' })
   uploadBat(
     @Param('id') id: string,

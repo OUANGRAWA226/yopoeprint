@@ -8,7 +8,8 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
 import { randomBytes, createHash } from 'crypto'
-import { User, UserRole } from '../users/user.entity'
+import { User, UserRole, BACK_OFFICE_ROLES } from '../users/user.entity'
+import { In } from 'typeorm'
 import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
 import { MailService } from '../mail/mail.service'
 import { v4 as uuidv4 } from 'uuid'
@@ -71,9 +72,9 @@ export class AuthService {
 
   // ─── Setup First Admin (init only) ────────────────────────
   async setupFirstAdmin(dto: RegisterDto) {
-    // Check if any admin already exists
-    const adminExists = await this.userRepo.findOne({ 
-      where: { role: UserRole.ADMIN } 
+    // Installation unique : refusée dès qu'un compte d'équipe existe
+    const adminExists = await this.userRepo.findOne({
+      where: { role: In(BACK_OFFICE_ROLES) },
     })
 
     if (adminExists) {
@@ -104,7 +105,7 @@ export class AuthService {
       email:        dto.email,
       phone:        dto.phone,
       passwordHash,
-      role:         UserRole.ADMIN, // ← CREATE AS ADMIN
+      role:         UserRole.SUPERADMIN, // le premier compte gère l'équipe et les paramètres
       loyaltyPoints: 0,
       addresses:    [],
     })
@@ -286,7 +287,7 @@ export class AuthService {
 
   // ─── System Status ─────────────────────────────────────────
   async getSystemStatus() {
-    const adminCount = await this.userRepo.count({ where: { role: UserRole.ADMIN } })
+    const adminCount = await this.userRepo.count({ where: { role: In(BACK_OFFICE_ROLES) } })
     const clientCount = await this.userRepo.count({ where: { role: UserRole.CLIENT } })
     const totalUsers = await this.userRepo.count()
 

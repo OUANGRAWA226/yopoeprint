@@ -3,10 +3,11 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Not, In, IsNull } from 'typeorm'
-import { User, UserRole } from '../users/user.entity'
+import { User, UserRole, isBackOffice } from '../users/user.entity'
 import { Order, OrderStatus, PaymentStatus } from '../orders/order.entity'
 import { MailService } from '../mail/mail.service'
-import { RESELLER_TIERS, tierFor } from './reseller-tiers'
+import { tierFor } from './reseller-tiers'
+import { SettingsService } from '../settings/settings.service'
 import { ResellerApplyDto, UpdateWhiteLabelDto, AdminResellerQueryDto } from './reseller.dto'
 
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000
@@ -21,12 +22,13 @@ export class ResellerService {
     @InjectRepository(Order)
     private orderRepo: Repository<Order>,
     private mailService: MailService,
+    private settingsService: SettingsService,
   ) {}
 
   // ─── Candidature (client connecté) ────────────────────────
   async apply(userId: string, dto: ResellerApplyDto) {
     const user = await this.getUser(userId)
-    if (user.role === UserRole.ADMIN || user.role === UserRole.STAFF) {
+    if (isBackOffice(user.role)) {
       throw new BadRequestException('Un compte administrateur ne peut pas devenir revendeur')
     }
     if (user.resellerStatus === 'approved') throw new ConflictException('Votre compte revendeur est déjà actif')
@@ -60,7 +62,8 @@ export class ResellerService {
     const user = await this.getUser(userId)
     const isReseller = user.role === UserRole.RESELLER
     const revenue = isReseller ? await this.paidRevenue12m(userId) : 0
-    const tier = isReseller ? tierFor(revenue) : null
+    const tiers = await this.settingsService.resellerTiers()
+    const tier = isReseller ? tierFor(revenue, tiers) : null
     return {
       status: user.resellerStatus,
       companyName: user.companyName,
@@ -68,7 +71,7 @@ export class ResellerService {
       isReseller,
       tier: tier ? { id: tier.current.id, label: tier.current.label, rate: tier.current.rate } : null,
       whiteLabel: user.resellerProfile?.sender || null,
-      tiers: RESELLER_TIERS,
+      tiers,
     }
   }
 
@@ -97,7 +100,7 @@ export class ResellerService {
     })
 
     const revenue12m = Number(sums.revenue12m) || 0
-    const tier = tierFor(revenue12m)
+    const tier = tierFor(revenue12m, await this.settingsService.resellerTiers())
 
     return {
       companyName: user.companyName,
@@ -127,7 +130,7 @@ export class ResellerService {
   async discountFor(userId: string): Promise<{ rate: number; tier: string; sender: User['resellerProfile']['sender'] | null } | null> {
     const user = await this.userRepo.findOne({ where: { id: userId } })
     if (!user || user.role !== UserRole.RESELLER || user.resellerStatus !== 'approved') return null
-    const tier = tierFor(await this.paidRevenue12m(userId)).current
+    const tier = tierFor(await this.paidRevenue12m(userId), await this.settingsService.resellerTiers()).current
     return { rate: tier.rate, tier: tier.label, sender: user.resellerProfile?.sender || null }
   }
 
@@ -139,10 +142,11 @@ export class ResellerService {
       order: { resellerAppliedAt: 'DESC' },
     })
     const revenues = await this.revenueByUser(users.map((u) => u.id))
+    const tiers = await this.settingsService.resellerTiers()
     return users
       .map((u) => {
         const revenue = revenues.get(u.id) || 0
-        const tier = tierFor(revenue).current
+        const tier = tierFor(revenue, tiers).current
         return {
           id: u.id,
           firstName: u.firstName,
@@ -167,7 +171,7 @@ export class ResellerService {
   async decide(id: string, action: 'approve' | 'reject' | 'suspend') {
     const user = await this.getUser(id)
     if (!user.resellerStatus) throw new BadRequestException('Cet utilisateur n\'a pas demandé à devenir revendeur')
-    if (user.role === UserRole.ADMIN || user.role === UserRole.STAFF) {
+    if (isBackOffice(user.role)) {
       throw new BadRequestException('Un compte administrateur ne peut pas être revendeur')
     }
 
@@ -186,7 +190,7 @@ export class ResellerService {
 
     if (action === 'approve') {
       try {
-        await this.mailService.sendResellerApproved(user.email, user.firstName, user.companyName || '', RESELLER_TIERS[0].rate)
+        await this.mailService.sendResellerApproved(user.email, user.firstName, user.companyName || '', (await this.settingsService.resellerTiers())[0].rate)
       } catch (err: any) {
         this.logger.warn(`Email d'activation revendeur non envoyé : ${err?.message || err}`)
       }

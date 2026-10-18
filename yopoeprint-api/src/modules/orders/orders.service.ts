@@ -1,17 +1,17 @@
 import {
-  Injectable, NotFoundException, BadRequestException, ForbiddenException,
+  Injectable, NotFoundException, BadRequestException, ForbiddenException, ServiceUnavailableException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Not, Repository, QueryFailedError, Brackets } from 'typeorm'
 import { randomInt } from 'crypto'
 import { Order, OrderStatus, PaymentStatus, OrderItem } from './order.entity'
-import { User, UserRole } from '../users/user.entity'
+import { User, UserRole, isBackOffice } from '../users/user.entity'
 import {
   CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto,
   UploadBatDto, ApproveBatDto, RejectBatDto,
 } from './order.dto'
 import { ProductsService } from '../products/products.service'
-import { DELIVERY_ZONES, computeDeliveryCost } from './delivery'
+import { SettingsService } from '../settings/settings.service'
 import { MailService } from '../mail/mail.service'
 import { Quote, QuoteStatus } from '../quotes/quote.entity'
 import { ResellerService } from '../reseller/reseller.service'
@@ -30,10 +30,18 @@ export class OrdersService {
     private productsService: ProductsService,
     private mailService: MailService,
     private resellerService: ResellerService,
+    private settingsService: SettingsService,
   ) {}
 
   // ─── Create order ─────────────────────────────────────────
   async create(userId: string, dto: CreateOrderDto) {
+    const settings = await this.settingsService.get()
+    if (settings.maintenance.enabled) {
+      throw new ServiceUnavailableException(settings.maintenance.message || 'Les commandes sont momentanément suspendues')
+    }
+    const zone = await this.settingsService.findZone(dto.deliveryZone)
+    if (!zone) throw new BadRequestException('Zone de livraison indisponible')
+
     // Build order items with real prices
     if (dto.deliveryZone !== 'pickup' && !dto.deliveryAddress.street?.trim()) {
       throw new BadRequestException('Adresse de livraison (rue ou secteur) requise')
@@ -79,12 +87,12 @@ export class OrdersService {
       subtotal += total
     }
 
-    const deliveryCost = computeDeliveryCost(dto.deliveryZone, subtotal)
+    const deliveryCost = await this.settingsService.deliveryCost(zone, subtotal)
     const deliveryAddress = {
       ...dto.deliveryAddress,
       street:       dto.deliveryAddress.street?.trim() || (dto.deliveryZone === 'pickup' ? 'Retrait atelier' : ''),
       neighborhood: dto.deliveryAddress.neighborhood || '',
-      city:         DELIVERY_ZONES[dto.deliveryZone].city,
+      city:         zone.city,
       zone:         dto.deliveryZone,
     }
 
@@ -346,7 +354,7 @@ export class OrdersService {
   // ─── Get order by ID, restricted to its owner (or staff) ───
   async findByIdForUser(id: string, user: { id: string; role?: string }) {
     const order = await this.findById(id)
-    const isStaff = user.role === UserRole.ADMIN || user.role === UserRole.STAFF
+    const isStaff = isBackOffice(user.role)
     if (!isStaff && order.userId !== user.id) {
       // 404 rather than 403 so order IDs cannot be probed
       throw new NotFoundException('Commande introuvable')

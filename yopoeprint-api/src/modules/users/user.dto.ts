@@ -4,6 +4,7 @@ import {
 } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { UserRole } from './user.entity'
 
 const trim = ({ value }) => (typeof value === 'string' ? value.trim() : value)
 // "+226 70 00 00 00" → "+22670000000" ; "" → null (efface le numéro)
@@ -149,4 +150,56 @@ export class AdminUpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean
+}
+
+// ─── Équipe back-office (superadmin) ──────────────────────────
+const TEAM_ROLES = [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.STAFF]
+
+export class CreateTeamMemberDto {
+  @ApiProperty()
+  @Transform(trim)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  firstName: string
+
+  @ApiProperty()
+  @Transform(trim)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  lastName: string
+
+  @ApiProperty()
+  @Transform(trim)
+  @IsEmail({}, { message: 'Adresse email invalide' })
+  email: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(normalizePhone)
+  @Matches(/^\+?[0-9]{8,15}$/, { message: 'Numéro de téléphone invalide' })
+  phone?: string
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(10, { message: "Mot de passe trop court (10 caractères minimum pour un compte d'équipe)" })
+  @MaxLength(100)
+  password: string
+
+  @ApiProperty({ enum: TEAM_ROLES })
+  @IsIn(TEAM_ROLES)
+  role: UserRole
+}
+
+export class SetTeamRoleDto {
+  @ApiProperty({ enum: [...TEAM_ROLES, UserRole.CLIENT], description: "client = retirer de l'équipe" })
+  @IsIn([...TEAM_ROLES, UserRole.CLIENT])
+  role: UserRole
+}
+
+export class SetTeamActiveDto {
+  @ApiProperty()
+  @IsBoolean()
+  isActive: boolean
 }

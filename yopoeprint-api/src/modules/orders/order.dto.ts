@@ -5,7 +5,6 @@ import {
 import { Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { PaymentMethod, OrderStatus } from './order.entity'
-import { DELIVERY_ZONE_IDS, DeliveryZoneId } from './delivery'
 
 export class OrderItemDto {
   @ApiProperty()
@@ -73,9 +72,11 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items: OrderItemDto[]
 
-  @ApiProperty({ enum: DELIVERY_ZONE_IDS, example: 'ouaga_centre' })
-  @IsIn(DELIVERY_ZONE_IDS)
-  deliveryZone: DeliveryZoneId
+  // Zones gérées dans les paramètres de la plateforme (vérifiées à la création)
+  @ApiProperty({ example: 'ouaga_centre' })
+  @IsString()
+  @MaxLength(30)
+  deliveryZone: string
 
   @ApiProperty({ type: DeliveryAddressDto })
   @ValidateNested()

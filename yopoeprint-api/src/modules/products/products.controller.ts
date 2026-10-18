@@ -12,10 +12,11 @@ import {
 } from './product.dto'
 import { JwtAuthGuard }         from '../../common/guards/jwt-auth.guard'
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard'
-import { AdminGuard }           from '../../common/guards/admin.guard'
+import { ManagerGuard }         from '../../common/guards/admin.guard'
 import { CurrentUser }          from '../../common/decorators/current-user.decorator'
-import { UserRole }             from '../users/user.entity'
+import { isBackOffice }         from '../users/user.entity'
 import { CloudinaryService }    from '../upload/cloudinary.service'
+import { Audit }                from '../audit/audit.decorator'
 import {
   UploadedFileData, MAX_IMAGE_FILE_SIZE, IMAGE_FILE_KINDS,
   extensionFilter, validateUploadedFile,
@@ -35,7 +36,7 @@ export class ProductsController {
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Lister tous les produits (filtrage possible)' })
   findAll(@Query() query: ProductQueryDto, @CurrentUser() user) {
-    const isStaff = user?.role === UserRole.ADMIN || user?.role === UserRole.STAFF
+    const isStaff = isBackOffice(user?.role)
     return this.productsService.findAll(query, isStaff && query.includeInactive === 'true')
   }
 
@@ -61,39 +62,43 @@ export class ProductsController {
   // ── Admin routes ───────────────────────────────────────────
 
   @Post()
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
   @ApiBearerAuth()
+  @Audit('product.create', 'product')
   @ApiOperation({ summary: '[ADMIN] Créer un produit' })
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto)
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
   @ApiBearerAuth()
+  @Audit('product.update', 'product')
   @ApiOperation({ summary: '[ADMIN] Modifier un produit' })
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productsService.update(id, dto)
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
   @ApiBearerAuth()
+  @Audit('product.update', 'product')
   @ApiOperation({ summary: '[ADMIN] Modifier partiellement un produit (dont active / isActive)' })
   patch(@Param('id', ParseUUIDPipe) id: string, @Body() dto: PatchProductDto) {
     return this.productsService.patch(id, dto)
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
   @ApiBearerAuth()
+  @Audit('product.delete', 'product')
   @ApiOperation({ summary: '[ADMIN] Retirer un produit du catalogue (désactivation douce)' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productsService.softDelete(id)
   }
 
   @Post(':id/image')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
   @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('image', {
     limits:     { fileSize: MAX_IMAGE_FILE_SIZE, files: 1 },
@@ -101,6 +106,7 @@ export class ProductsController {
   }))
   @ApiConsumes('multipart/form-data')
   @ApiBody({ schema: { type: 'object', properties: { image: { type: 'string', format: 'binary' } } } })
+  @Audit('product.image', 'product')
   @ApiOperation({ summary: "[ADMIN] Envoyer l'image principale d'un produit (JPG/PNG, 10 Mo max)" })
   async uploadImage(@Param('id', ParseUUIDPipe) id: string, @UploadedFile() file: UploadedFileData) {
     await this.productsService.findById(id) // 404 avant d'envoyer quoi que ce soit à Cloudinary
@@ -114,8 +120,9 @@ export class ProductsController {
   }
 
   @Patch(':id/toggle')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
   @ApiBearerAuth()
+  @Audit('product.toggle', 'product')
   @ApiOperation({ summary: '[ADMIN] Activer/Désactiver un produit' })
   toggle(@Param('id') id: string) {
     return this.productsService.toggleActive(id)

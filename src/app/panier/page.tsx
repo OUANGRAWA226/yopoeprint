@@ -11,12 +11,13 @@ import {
 } from 'lucide-react'
 import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
 import { useToast } from '@/context/ToastContext'
+import { usePublicSettings } from '@/lib/settings.service'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n)
 }
 
-const FREE_DELIVERY = 75000
+// Estimation affichée avant le choix de la zone (frais réels calculés au paiement)
 const DELIVERY_FEE  = 3500
 
 export default function PanierPage() {
@@ -32,10 +33,12 @@ export default function PanierPage() {
   const [promoLoading, setPromoLoading] = useState(false)
   const [isDevisOpen, setIsDevisOpen] = useState(false)
 
-  const delivery   = total >= FREE_DELIVERY ? 0 : DELIVERY_FEE
+  const { settings } = usePublicSettings()
+  const FREE_DELIVERY = settings?.delivery.freeThreshold ?? 0 // 0 : pas de livraison offerte (ou paramètres non chargés)
+  const delivery   = FREE_DELIVERY > 0 && total >= FREE_DELIVERY ? 0 : DELIVERY_FEE
   const finalTotal = Math.max(0, total - discount + delivery)
   const remaining  = FREE_DELIVERY - total
-  const progress   = Math.min((total / FREE_DELIVERY) * 100, 100)
+  const progress   = FREE_DELIVERY > 0 ? Math.min((total / FREE_DELIVERY) * 100, 100) : 0
 
   const handleApplyPromo = async () => {
     const code = promoInput.trim().toUpperCase()
@@ -148,7 +151,7 @@ export default function PanierPage() {
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-8">
 
         {/* ── Barre livraison gratuite ─────────────────────── */}
-        {remaining > 0 ? (
+        {FREE_DELIVERY <= 0 ? null : remaining > 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex items-center gap-4 shadow-xs">
             <Truck size={20} className="text-primary shrink-0" />
             <div className="flex-1 min-w-0">
@@ -343,7 +346,7 @@ export default function PanierPage() {
                     {delivery === 0 ? '🎁 Offerte' : `${fmt(delivery)} FCFA`}
                   </span>
                 </div>
-                {total < FREE_DELIVERY && (
+                {FREE_DELIVERY > 0 && total < FREE_DELIVERY && (
                   <p className="text-2xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
                     Livraison offerte dès {fmt(FREE_DELIVERY)} FCFA d&apos;achat
                   </p>

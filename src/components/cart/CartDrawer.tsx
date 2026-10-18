@@ -7,12 +7,11 @@ import { useState } from 'react'
 import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
 import { promoService, PromoCodeResult, computeDiscount } from '@/lib/promo.service'
 import { useToast } from '@/context/ToastContext'
+import { usePublicSettings } from '@/lib/settings.service'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n)
 }
-
-const FREE_DELIVERY_THRESHOLD = 75000
 
 export function CartDrawer() {
   const {
@@ -52,8 +51,10 @@ export function CartDrawer() {
     toast.info('Code promo retiré', 'Le tarif normal a été restauré.')
   }
 
-  const remaining = FREE_DELIVERY_THRESHOLD - total
-  const progress = Math.min((total / FREE_DELIVERY_THRESHOLD) * 100, 100)
+  const { settings } = usePublicSettings()
+  const freeThreshold = settings?.delivery.freeThreshold ?? 0
+  const remaining = freeThreshold - total
+  const progress = freeThreshold > 0 ? Math.min((total / freeThreshold) * 100, 100) : 0
 
   return (
     <>
@@ -92,7 +93,7 @@ export function CartDrawer() {
         </div>
 
         {/* ── Barre livraison gratuite ─────────────────────── */}
-        {items.length > 0 && (
+        {items.length > 0 && freeThreshold > 0 && (
           <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
             {remaining > 0 ? (
               <>

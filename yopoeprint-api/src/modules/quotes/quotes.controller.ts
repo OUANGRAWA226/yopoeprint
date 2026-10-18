@@ -10,6 +10,7 @@ import { JwtAuthGuard }         from '../../common/guards/jwt-auth.guard'
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard'
 import { AdminGuard }           from '../../common/guards/admin.guard'
 import { CurrentUser }          from '../../common/decorators/current-user.decorator'
+import { Audit }                from '../audit/audit.decorator'
 
 @ApiTags('Devis')
 @Controller('quotes')
@@ -54,6 +55,7 @@ export class QuotesController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
+  @Audit('quote.status', 'quote')
   @ApiOperation({ summary: '[ADMIN] Changer le statut / chiffrer un devis' })
   updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateQuoteStatusDto) {
     return this.quotesService.updateStatus(id, dto)

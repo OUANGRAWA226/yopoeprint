@@ -6,10 +6,19 @@ import { Order } from '../orders/order.entity'
 
 export enum UserRole {
   CLIENT = 'client',
-  ADMIN  = 'admin',
-  STAFF  = 'staff',
-  RESELLER = 'reseller', // agence / revendeur validé : remise automatique
+  RESELLER = 'reseller',     // agence / revendeur validé : remise automatique
+  STAFF  = 'staff',          // atelier : commandes, BAT, devis
+  ADMIN  = 'admin',          // gestion du catalogue, des clients et des revendeurs
+  SUPERADMIN = 'superadmin', // tout, plus l'équipe, les paramètres et le journal
 }
+
+// Comptes ayant accès au back-office
+export const BACK_OFFICE_ROLES: UserRole[] = [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.STAFF]
+// Gestion (catalogue, clients, revendeurs) : pas l'équipe atelier
+export const MANAGER_ROLES: UserRole[] = [UserRole.SUPERADMIN, UserRole.ADMIN]
+
+export const isBackOffice = (role?: string | null) => BACK_OFFICE_ROLES.includes(role as UserRole)
+export const isManager = (role?: string | null) => MANAGER_ROLES.includes(role as UserRole)
 
 export type ResellerStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 

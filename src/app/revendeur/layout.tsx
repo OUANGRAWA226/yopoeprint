@@ -41,7 +41,7 @@ function StatusScreen({ me }: { me: ResellerMe }) {
         </div>
         <h1 className="font-display text-2xl font-bold text-gray-900">{content?.title || 'Espace réservé aux revendeurs'}</h1>
         <p className="text-sm text-gray-600 leading-relaxed">
-          {content?.text || 'Agences et graphistes : profitez de −15 % sur tout le catalogue et de la livraison en marque blanche.'}
+          {content?.text || `Agences et graphistes : profitez de −${me.tiers?.[0]?.rate ?? 15} % sur tout le catalogue et de la livraison en marque blanche.`}
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
           {!me.status && <Link href="/revendeurs" className="btn-primary">Devenir revendeur</Link>}

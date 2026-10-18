@@ -41,9 +41,9 @@ export const adminAuthService = {
       console.log('[AdminAuth] Réponse:', response)
       
       // Vérifier que c'est un admin
-      // L'API renvoie les rôles en minuscules ('admin', 'staff', 'client')
+      // L'API renvoie les rôles en minuscules ('superadmin', 'admin', 'staff', 'client'…)
       const role = String(response.user?.role || '').toLowerCase()
-      if (role !== 'admin' && role !== 'staff') {
+      if (role !== 'superadmin' && role !== 'admin' && role !== 'staff') {
         console.warn('[AdminAuth] Compte n\'a pas le rôle ADMIN, rôle actuel:', response.user?.role)
         throw new Error('Ce compte n\'a pas les permissions administrateur. Contactez le support.')
       }

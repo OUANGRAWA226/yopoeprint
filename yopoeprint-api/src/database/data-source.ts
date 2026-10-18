@@ -14,5 +14,8 @@ export const AppDataSource = new DataSource({
   entities:    [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations:  [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false, // NE JAMAIS mettre true en production
+  // Une transaction par migration : une valeur d'enum ajoutée par une migration
+  // n'est utilisable qu'après validation de sa transaction (Postgres)
+  migrationsTransactionMode: 'each',
   logging:     process.env.NODE_ENV === 'development',
 })

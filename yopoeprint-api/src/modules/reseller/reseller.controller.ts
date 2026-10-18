@@ -8,9 +8,10 @@ import {
   ResellerApplyDto, UpdateWhiteLabelDto, AdminResellerQueryDto, AdminResellerDecisionDto,
 } from './reseller.dto'
 import { JwtAuthGuard }   from '../../common/guards/jwt-auth.guard'
-import { AdminGuard }     from '../../common/guards/admin.guard'
+import { AdminGuard, ManagerGuard } from '../../common/guards/admin.guard'
 import { ResellerGuard }  from '../../common/guards/reseller.guard'
 import { CurrentUser }    from '../../common/decorators/current-user.decorator'
+import { Audit }          from '../audit/audit.decorator'
 
 @ApiTags('Revendeurs')
 @Controller('reseller')
@@ -61,6 +62,8 @@ export class AdminResellerController {
   }
 
   @Patch(':id')
+  @UseGuards(ManagerGuard)
+  @Audit('reseller.decide', 'user')
   @ApiOperation({ summary: '[ADMIN] Valider, refuser ou suspendre un revendeur' })
   decide(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AdminResellerDecisionDto) {
     return this.resellerService.decide(id, dto.action)

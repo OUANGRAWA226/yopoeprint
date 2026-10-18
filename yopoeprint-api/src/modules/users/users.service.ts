@@ -1,14 +1,15 @@
 import {
-  Injectable, NotFoundException, ConflictException,
+  Injectable, NotFoundException, ConflictException, ForbiddenException,
   UnauthorizedException, BadRequestException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, Not, ILike, FindOptionsWhere } from 'typeorm'
+import { Repository, Not, ILike, FindOptionsWhere, In } from 'typeorm'
 import * as bcrypt from 'bcryptjs'
-import { User, UserRole, Address } from './user.entity'
+import { User, UserRole, Address, BACK_OFFICE_ROLES, isBackOffice } from './user.entity'
 import { Order, PaymentStatus } from '../orders/order.entity'
 import {
   UpdateProfileDto, ChangePasswordDto, AdminUsersQueryDto, AdminUpdateUserDto,
+  CreateTeamMemberDto,
 } from './user.dto'
 
 interface OrderStats { totalOrders: number; totalSpent: number; lastOrderAt: Date | null }
@@ -134,9 +135,14 @@ export class UsersService {
     }
   }
 
-  async updateForAdmin(id: string, dto: AdminUpdateUserDto, currentUserId: string) {
+  async updateForAdmin(id: string, dto: AdminUpdateUserDto, actor: { id: string; role: string }) {
     const user = await this.userRepo.findOne({ where: { id } })
     if (!user) throw new NotFoundException('Utilisateur introuvable')
+    // Les comptes de l'équipe se gèrent depuis /admin/team (superadmin)
+    if (isBackOffice(user.role) && actor.role !== UserRole.SUPERADMIN) {
+      throw new ForbiddenException("Seul le super administrateur peut modifier un compte de l'équipe")
+    }
+    const currentUserId = actor.id
 
     if (dto.isActive !== undefined) {
       if (id === currentUserId && !dto.isActive) {
@@ -148,6 +154,77 @@ export class UsersService {
 
     await this.userRepo.save(user)
     return this.findOneForAdmin(id)
+  }
+
+  // ─── Équipe back-office (superadmin) ──────────────────────
+  async listTeam() {
+    const users = await this.userRepo.find({
+      where: { role: In(BACK_OFFICE_ROLES) },
+      order: { createdAt: 'ASC' },
+    })
+    return users.map((u) => this.toTeamMember(u))
+  }
+
+  async createTeamMember(dto: CreateTeamMemberDto) {
+    const email = dto.email.trim()
+    if (await this.userRepo.findOne({ where: { email } })) {
+      throw new ConflictException('Cet email est déjà utilisé')
+    }
+    const user = this.userRepo.create({
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      email,
+      phone: dto.phone || null,
+      passwordHash: await bcrypt.hash(dto.password, 12),
+      role: dto.role,
+      loyaltyPoints: 0,
+      addresses: [],
+      isActive: true,
+    })
+    await this.userRepo.save(user)
+    return this.toTeamMember(user)
+  }
+
+  async setTeamRole(id: string, role: UserRole, actorId: string) {
+    if (id === actorId) throw new BadRequestException('Vous ne pouvez pas modifier votre propre rôle')
+    const user = await this.userRepo.findOne({ where: { id } })
+    if (!user) throw new NotFoundException('Utilisateur introuvable')
+    if (user.role === UserRole.SUPERADMIN && role !== UserRole.SUPERADMIN) await this.assertNotLastSuperAdmin(id)
+    user.role = role
+    if (!isBackOffice(role)) user.refreshToken = null // sort de l'équipe : sessions coupées au prochain refresh
+    await this.userRepo.save(user)
+    return this.toTeamMember(user)
+  }
+
+  async setTeamActive(id: string, isActive: boolean, actorId: string) {
+    if (id === actorId && !isActive) throw new BadRequestException('Vous ne pouvez pas désactiver votre propre compte')
+    const user = await this.userRepo.findOne({ where: { id } })
+    if (!user || !isBackOffice(user.role)) throw new NotFoundException("Membre de l'équipe introuvable")
+    if (!isActive && user.role === UserRole.SUPERADMIN) await this.assertNotLastSuperAdmin(id)
+    user.isActive = isActive
+    if (!isActive) user.refreshToken = null
+    await this.userRepo.save(user)
+    return this.toTeamMember(user)
+  }
+
+  private async assertNotLastSuperAdmin(exceptId: string) {
+    const others = await this.userRepo.count({
+      where: { role: UserRole.SUPERADMIN, isActive: true, id: Not(exceptId) },
+    })
+    if (!others) throw new BadRequestException('Il doit rester au moins un super administrateur actif')
+  }
+
+  private toTeamMember(u: User) {
+    return {
+      id: u.id,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      phone: u.phone,
+      role: u.role,
+      isActive: u.isActive,
+      createdAt: u.createdAt,
+    }
   }
 
   // ─── Helpers ──────────────────────────────────────────────

@@ -1,215 +1,179 @@
 'use client'
 
-import { useState } from 'react'
-import { 
-  Settings, 
-  Store, 
-  Bell, 
-  ShieldCheck, 
-  Save, 
-  Loader2, 
-  CheckCircle 
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Save, Plus, Trash2, Truck, Phone, Briefcase, Wrench, Loader2 } from 'lucide-react'
+import { adminAuthService } from '@/lib/auth-admin.service'
+import { platformService, PlatformSettings, DeliveryZone, ResellerTier } from '@/lib/platform.service'
 
-export default function AdminParametresPage() {
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+const input = 'w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-mid disabled:bg-gray-50 disabled:text-gray-600'
+const fcfa = (n: number) => `${new Intl.NumberFormat('fr-FR').format(n || 0)} FCFA`
 
-  // Mock State
-  const [form, setForm] = useState({
-    shopName: 'YopoePrint',
-    contactEmail: 'contact@yopoeprint.bf',
-    contactPhone: '+226 70 00 00 00',
-    shippingFee: 2000,
-    freeShippingThreshold: 50000,
-    maintenanceMode: false,
-    orderNotifications: true
-  })
+function Section({ icon, title, hint, children }: { icon: React.ReactNode; title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 space-y-4">
+      <div>
+        <h2 className="text-lg font-bold text-blue-deep flex items-center gap-2">{icon}{title}</h2>
+        {hint && <p className="text-xs text-gray-600 mt-1">{hint}</p>}
+      </div>
+      {children}
+    </section>
+  )
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+export default function ParametresPage() {
+  const [form, setForm] = useState<PlatformSettings | null>(null)
+  const [meta, setMeta] = useState<{ updatedAt: string | null }>({ updatedAt: null })
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [saving, setSaving] = useState(false)
+  const canEdit = String(adminAuthService.getCurrentUser()?.role || '').toLowerCase() === 'superadmin'
 
-  const handleSave = () => {
-    setLoading(true)
-    setSuccess(false)
-    setTimeout(() => {
-      setLoading(false)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
-    }, 1500)
+  useEffect(() => {
+    platformService.getSettings()
+      .then((r) => { setForm(r.settings); setMeta({ updatedAt: r.updatedAt }) })
+      .catch((e) => setError(e?.message || 'Impossible de charger les paramètres'))
+  }, [])
+
+  if (error && !form) return <div role="alert" className="p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">{error}</div>
+  if (!form) return <div className="h-64 rounded-2xl bg-white border border-gray-100 animate-pulse" aria-busy="true" />
+
+  const setContact = (k: keyof PlatformSettings['contact'], v: string) => setForm({ ...form, contact: { ...form.contact, [k]: v } })
+  const setZone = (i: number, patch: Partial<DeliveryZone>) =>
+    setForm({ ...form, delivery: { ...form.delivery, zones: form.delivery.zones.map((z, j) => (j === i ? { ...z, ...patch } : z)) } })
+  const setTier = (i: number, patch: Partial<ResellerTier>) =>
+    setForm({ ...form, resellerTiers: form.resellerTiers.map((t, j) => (j === i ? { ...t, ...patch } : t)) })
+
+  const save = async () => {
+    setSaving(true); setError(''); setNotice('')
+    try {
+      const r = await platformService.saveSettings(form)
+      setForm(r.settings)
+      setMeta({ updatedAt: r.updatedAt })
+      setNotice('Paramètres enregistrés : ils s\'appliquent immédiatement aux nouvelles commandes.')
+    } catch (e: any) {
+      setError(e?.message || 'Enregistrement impossible')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
-      
-      {/* ── HEADER ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-gray-900 mb-1">Paramètres</h1>
-          <p className="text-gray-500 text-sm">Configurez les informations générales et le comportement de votre boutique.</p>
-        </div>
-        <button 
-          onClick={handleSave}
-          disabled={loading}
-          className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-600 transition-all disabled:opacity-50"
-        >
-          {loading ? <><Loader2 size={16} className="animate-spin" /> Enregistrement...</> : <><Save size={16} /> Enregistrer</>}
-        </button>
+    <div className="max-w-5xl space-y-5 pb-16">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-sm text-gray-600">
+          {canEdit ? 'Ces réglages pilotent la boutique et l\'API.' : 'Lecture seule : seul le super administrateur peut modifier ces réglages.'}
+          {meta.updatedAt && <> Dernière modification le {new Date(meta.updatedAt).toLocaleString('fr-FR')}.</>}
+        </p>
+        {canEdit && (
+          <button onClick={save} disabled={saving}
+            className="inline-flex items-center gap-2 bg-blue-deep text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-mid disabled:opacity-60">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Enregistrer
+          </button>
+        )}
       </div>
 
-      {success && (
-        <div className="bg-green-50 text-green-700 border border-green-200 p-4 rounded-xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-top-2">
-          <CheckCircle size={18} />
-          Paramètres mis à jour avec succès.
-        </div>
-      )}
+      {notice && <div role="status" className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">{notice}</div>}
+      {error && <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* ── COLONNE NAVIGATION ── */}
-        <div className="hidden md:block col-span-1 space-y-2 sticky top-24">
-          <button className="w-full flex items-center gap-3 px-4 py-3 bg-white text-gray-900 font-bold rounded-xl border border-gray-200 shadow-sm text-sm">
-            <Store size={18} className="text-blue-600" /> Informations Générales
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-white hover:text-gray-900 font-medium rounded-xl transition-colors text-sm">
-            <Settings size={18} /> E-Commerce & Livraison
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-white hover:text-gray-900 font-medium rounded-xl transition-colors text-sm">
-            <Bell size={18} /> Notifications
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-white hover:text-gray-900 font-medium rounded-xl transition-colors text-sm">
-            <ShieldCheck size={18} /> Sécurité & Système
-          </button>
-        </div>
+      <fieldset disabled={!canEdit || saving} className="space-y-5">
+        <Section icon={<Wrench size={18} />} title="Maintenance" hint="Suspend la prise de commande (la boutique reste consultable) et affiche le message aux clients.">
+          <label className="flex items-center gap-3">
+            <input type="checkbox" className="w-4 h-4 accent-blue-mid" checked={form.maintenance.enabled}
+              onChange={(e) => setForm({ ...form, maintenance: { ...form.maintenance, enabled: e.target.checked } })} />
+            <span className="text-sm font-semibold text-gray-900">Suspendre les commandes</span>
+          </label>
+          <input className={input} placeholder="Message affiché (ex. Inventaire jusqu'à lundi 8 h)" value={form.maintenance.message}
+            onChange={(e) => setForm({ ...form, maintenance: { ...form.maintenance, message: e.target.value } })} aria-label="Message de maintenance" />
+        </Section>
 
-        {/* ── COLONNE CONTENU ── */}
-        <div className="col-span-1 md:col-span-2 space-y-8">
-
-          {/* Section Informations */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Store size={20} className="text-gray-400" /> Informations Générales
-            </h2>
-            
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Nom de la boutique</label>
-                <input 
-                  type="text" 
-                  name="shopName"
-                  value={form.shopName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Email public de contact</label>
-                  <input 
-                    type="email" 
-                    name="contactEmail"
-                    value={form.contactEmail}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Téléphone (Service Client)</label>
-                  <input 
-                    type="text" 
-                    name="contactPhone"
-                    value={form.contactPhone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section E-Commerce */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Settings size={20} className="text-gray-400" /> E-Commerce & Livraison
-            </h2>
-            
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Frais de livraison par défaut (FCFA)</label>
-                  <input 
-                    type="number" 
-                    name="shippingFee"
-                    value={form.shippingFee}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Livraison gratuite à partir de (FCFA)</label>
-                  <input 
-                    type="number" 
-                    name="freeShippingThreshold"
-                    value={form.freeShippingThreshold}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Système & Sécurité */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <ShieldCheck size={20} className="text-gray-400" /> Système & Sécurité
-            </h2>
-            
-            <div className="space-y-5">
-              
-              <label className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors group">
-                <div className="mt-0.5">
-                  <input 
-                    type="checkbox" 
-                    name="orderNotifications"
-                    checked={form.orderNotifications}
-                    onChange={handleChange}
-                    className="w-5 h-5 accent-blue-600 border-gray-300 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">Notifications de commandes</p>
-                  <p className="text-gray-500 text-xs mt-1">Recevoir un email à chaque nouvelle commande ou demande de devis.</p>
-                </div>
+        <Section icon={<Phone size={18} />} title="Coordonnées" hint="Exposées à la boutique via /settings/public.">
+          <div className="grid sm:grid-cols-2 gap-3">
+            {([
+              ['phone', 'Téléphone'], ['whatsapp', 'WhatsApp'], ['email', 'Email de contact'], ['address', 'Adresse de l\'atelier'],
+            ] as const).map(([k, label]) => (
+              <label key={k} className="text-xs font-semibold text-gray-700 space-y-1">
+                <span>{label}</span>
+                <input className={input} value={form.contact[k]} onChange={(e) => setContact(k, e.target.value)} />
               </label>
-
-              <label className="flex items-start gap-4 p-4 border border-orange-200 bg-orange-50/50 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors group">
-                <div className="mt-0.5">
-                  <input 
-                    type="checkbox" 
-                    name="maintenanceMode"
-                    checked={form.maintenanceMode}
-                    onChange={handleChange}
-                    className="w-5 h-5 accent-orange-500 border-orange-300 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <p className="font-bold text-orange-900 text-sm">Mode Maintenance</p>
-                  <p className="text-orange-700 text-xs mt-1">Activer ce mode bloque l'accès au site public pour les clients. Utile lors d'une grosse mise à jour du catalogue.</p>
-                </div>
-              </label>
-
-            </div>
+            ))}
           </div>
+        </Section>
 
-        </div>
-      </div>
+        <Section icon={<Truck size={18} />} title="Livraison" hint="Zones proposées au client, frais et livraison offerte. L'API recalcule chaque commande avec ces valeurs.">
+          <label className="text-xs font-semibold text-gray-700 space-y-1 block max-w-xs">
+            <span>Livraison offerte à partir de (FCFA, 0 = jamais)</span>
+            <input type="number" min={0} className={input} value={form.delivery.freeThreshold}
+              onChange={(e) => setForm({ ...form, delivery: { ...form.delivery, freeThreshold: Number(e.target.value) || 0 } })} />
+          </label>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs font-bold text-gray-500 uppercase tracking-wide">
+                  <th className="py-2 pr-2">Identifiant</th><th className="py-2 pr-2">Libellé</th><th className="py-2 pr-2">Ville</th>
+                  <th className="py-2 pr-2">Frais (FCFA)</th><th className="py-2 pr-2">Délai</th><th className="py-2 pr-2">Active</th>
+                  <th className="py-2 pr-2">Offerte au-delà du seuil</th><th />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {form.delivery.zones.map((z, i) => (
+                  <tr key={i}>
+                    <td className="py-2 pr-2 w-32"><input className={`${input} font-mono text-xs`} value={z.id} onChange={(e) => setZone(i, { id: e.target.value })} aria-label="Identifiant" /></td>
+                    <td className="py-2 pr-2"><input className={input} value={z.label} onChange={(e) => setZone(i, { label: e.target.value })} aria-label="Libellé" /></td>
+                    <td className="py-2 pr-2"><input className={input} value={z.city} onChange={(e) => setZone(i, { city: e.target.value })} aria-label="Ville" /></td>
+                    <td className="py-2 pr-2 w-28"><input type="number" min={0} className={input} value={z.price} onChange={(e) => setZone(i, { price: Number(e.target.value) || 0 })} aria-label="Frais" /></td>
+                    <td className="py-2 pr-2 w-24"><input className={input} value={z.delay} onChange={(e) => setZone(i, { delay: e.target.value })} aria-label="Délai" /></td>
+                    <td className="py-2 pr-2 text-center"><input type="checkbox" className="w-4 h-4 accent-blue-mid" checked={z.enabled} onChange={(e) => setZone(i, { enabled: e.target.checked })} aria-label="Active" /></td>
+                    <td className="py-2 pr-2 text-center"><input type="checkbox" className="w-4 h-4 accent-blue-mid" checked={z.freeEligible} onChange={(e) => setZone(i, { freeEligible: e.target.checked })} aria-label="Livraison offerte" /></td>
+                    <td className="py-2">
+                      <button type="button" aria-label={`Supprimer la zone ${z.label}`} className="p-2 text-gray-400 hover:text-red-600"
+                        onClick={() => setForm({ ...form, delivery: { ...form.delivery, zones: form.delivery.zones.filter((_, j) => j !== i) } })}>
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <button type="button" className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-mid hover:underline"
+            onClick={() => setForm({ ...form, delivery: { ...form.delivery, zones: [...form.delivery.zones, { id: '', label: '', city: '', price: 0, delay: '', enabled: true, freeEligible: true }] } })}>
+            <Plus size={15} /> Ajouter une zone
+          </button>
+        </Section>
+
+        <Section icon={<Briefcase size={18} />} title="Paliers revendeurs" hint="Calculés sur le CA payé des 12 derniers mois. Le premier palier commence à 0 FCFA ; la remise doit augmenter avec le palier.">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs font-bold text-gray-500 uppercase tracking-wide">
+                <th className="py-2 pr-2">Identifiant</th><th className="py-2 pr-2">Nom</th><th className="py-2 pr-2">Remise (%)</th><th className="py-2 pr-2">À partir de (FCFA)</th><th />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {form.resellerTiers.map((t, i) => (
+                <tr key={i}>
+                  <td className="py-2 pr-2 w-32"><input className={`${input} font-mono text-xs`} value={t.id} onChange={(e) => setTier(i, { id: e.target.value })} aria-label="Identifiant" /></td>
+                  <td className="py-2 pr-2"><input className={input} value={t.label} onChange={(e) => setTier(i, { label: e.target.value })} aria-label="Nom" /></td>
+                  <td className="py-2 pr-2 w-28"><input type="number" min={0} max={50} className={input} value={t.rate} onChange={(e) => setTier(i, { rate: Number(e.target.value) || 0 })} aria-label="Remise" /></td>
+                  <td className="py-2 pr-2 w-40">
+                    <input type="number" min={0} className={input} value={t.minRevenue} onChange={(e) => setTier(i, { minRevenue: Number(e.target.value) || 0 })} aria-label="Seuil" />
+                    <span className="text-[11px] text-gray-500">{fcfa(t.minRevenue)}</span>
+                  </td>
+                  <td className="py-2">
+                    <button type="button" aria-label={`Supprimer le palier ${t.label}`} className="p-2 text-gray-400 hover:text-red-600"
+                      onClick={() => setForm({ ...form, resellerTiers: form.resellerTiers.filter((_, j) => j !== i) })}>
+                      <Trash2 size={15} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button type="button" className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-mid hover:underline"
+            onClick={() => setForm({ ...form, resellerTiers: [...form.resellerTiers, { id: '', label: '', rate: 0, minRevenue: 0 }] })}>
+            <Plus size={15} /> Ajouter un palier
+          </button>
+        </Section>
+      </fieldset>
     </div>
   )
 }

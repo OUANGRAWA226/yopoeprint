@@ -8,20 +8,30 @@ import {
 import { useAuthContext } from '@/context/AuthContext'
 import { resellerService, ResellerMe, ResellerApplication } from '@/lib/reseller.service'
 import { Alert } from '@/components/ui/Alert'
+import { usePublicSettings, PublicTier } from '@/lib/settings.service'
 
-// Miroir des paliers de l'API (yopoeprint-api/src/modules/reseller/reseller-tiers.ts) pour les visiteurs non connectés
-const TIERS = [
-  { label: 'Partenaire', rate: 15, from: 'Dès la validation' },
-  { label: 'Gold', rate: 18, from: '1 000 000 FCFA payés sur 12 mois' },
-  { label: 'Platinum', rate: 20, from: '3 000 000 FCFA payés sur 12 mois' },
+// Paliers par défaut, affichés le temps de lire ceux de la plateforme (admin › Paramètres)
+const DEFAULT_TIERS: PublicTier[] = [
+  { id: 'partenaire', label: 'Partenaire', rate: 15, minRevenue: 0 },
+  { id: 'gold', label: 'Gold', rate: 18, minRevenue: 1_000_000 },
+  { id: 'platinum', label: 'Platinum', rate: 20, minRevenue: 3_000_000 },
 ]
 
-const PERKS = [
-  { icon: BadgePercent, title: '−15 % sur tout le catalogue', desc: 'La remise s\'applique automatiquement à chaque commande, dès la validation de votre compte.' },
-  { icon: TrendingUp, title: 'Jusqu\'à −20 % avec les paliers', desc: 'Plus vous commandez, plus la remise augmente : calcul sur vos commandes payées des 12 derniers mois.' },
-  { icon: PackageOpen, title: 'Livraison en marque blanche', desc: 'Colis neutre, bordereau à votre nom : vos clients ne voient jamais YopoePrint.' },
-  { icon: Headphones, title: 'Suivi dédié', desc: 'Un interlocuteur pour vos devis complexes et la validation de vos fichiers.' },
-]
+const tierCondition = (t: PublicTier) =>
+  t.minRevenue > 0 ? `${new Intl.NumberFormat('fr-FR').format(t.minRevenue)} FCFA payés sur 12 mois` : 'Dès la validation'
+
+function perks(tiers: PublicTier[]) {
+  const first = tiers[0]?.rate ?? 0
+  const best = tiers[tiers.length - 1]?.rate ?? first
+  return [
+    { icon: BadgePercent, title: `−${first} % sur tout le catalogue`, desc: 'La remise s\'applique automatiquement à chaque commande, dès la validation de votre compte.' },
+    ...(best > first
+      ? [{ icon: TrendingUp, title: `Jusqu'à −${best} % avec les paliers`, desc: 'Plus vous commandez, plus la remise augmente : calcul sur vos commandes payées des 12 derniers mois.' }]
+      : []),
+    { icon: PackageOpen, title: 'Livraison en marque blanche', desc: 'Colis neutre, bordereau à votre nom : vos clients ne voient jamais YopoePrint.' },
+    { icon: Headphones, title: 'Suivi dédié', desc: 'Un interlocuteur pour vos devis complexes et la validation de vos fichiers.' },
+  ]
+}
 
 const inputCls = 'w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-primary focus:bg-white transition-colors text-sm'
 
@@ -31,6 +41,9 @@ export default function RevendeursPage() {
   const [form, setForm] = useState<ResellerApplication>({ companyName: '', contactName: '', phone: '', volume: 'medium', message: '' })
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const loadedTiers = usePublicSettings().settings?.resellerTiers
+  const TIERS = [...(loadedTiers?.length ? loadedTiers : DEFAULT_TIERS)].sort((a, b) => a.minRevenue - b.minRevenue)
+  const PERKS = perks(TIERS)
 
   useEffect(() => {
     if (!isLoggedIn) { setMe(null); return }
@@ -204,10 +217,10 @@ export default function RevendeursPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {TIERS.map((t) => (
-                      <tr key={t.label}>
+                      <tr key={t.id}>
                         <td className="px-5 py-3 font-bold text-gray-900">{t.label}</td>
                         <td className="px-5 py-3 font-bold text-emerald-700 tabular-nums">−{t.rate} %</td>
-                        <td className="px-5 py-3 text-gray-600">{t.from}</td>
+                        <td className="px-5 py-3 text-gray-600">{tierCondition(t)}</td>
                       </tr>
                     ))}
                   </tbody>
