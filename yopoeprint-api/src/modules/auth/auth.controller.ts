@@ -1,11 +1,12 @@
 import {
-  Controller, Post, Get, Body, Delete,
-  UseGuards, Request, HttpCode, HttpStatus,
+  Controller, Post, Get, Body,
+  UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
 import { RegisterDto, LoginDto, RefreshTokenDto } from './auth.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { AdminGuard } from '../../common/guards/admin.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { Throttle } from '@nestjs/throttler'
 
@@ -15,6 +16,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Créer un nouveau compte client' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto)
@@ -22,6 +24,7 @@ export class AuthController {
 
   @Post('setup-first-admin')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: '[INIT ONLY] Créer le premier administrateur du système' })
   async setupFirstAdmin(@Body() dto: RegisterDto) {
     return this.authService.setupFirstAdmin(dto)
@@ -37,10 +40,11 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @ApiOperation({ summary: 'Renouveler le token d\'accès' })
-  async refresh(@Body() dto: RefreshTokenDto, @Request() req) {
-    // userId from a limited JWT
-    return this.authService.refreshTokens(req.user?.sub, dto.refreshToken)
+  async refresh(@Body() dto: RefreshTokenDto) {
+    // userId is read from the refresh token itself, verified with the refresh secret
+    return this.authService.refreshTokens(dto.refreshToken)
   }
 
   @Post('logout')
@@ -61,15 +65,10 @@ export class AuthController {
   }
 
   @Get('system-status')
-  @ApiOperation({ summary: 'Vérifier l\'état du système (dev only)' })
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Vérifier l\'état du système' })
   async getSystemStatus() {
     return this.authService.getSystemStatus()
-  }
-
-  @Delete('reset-admins')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: '[DEV ONLY] Supprimer tous les admins pour reconfiguration' })
-  async resetAdmins() {
-    return this.authService.resetAdmins()
   }
 }

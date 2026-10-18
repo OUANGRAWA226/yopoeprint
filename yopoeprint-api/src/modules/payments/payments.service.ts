@@ -1,11 +1,27 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common'
+import { Injectable, BadRequestException, ForbiddenException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
 import axios from 'axios'
-import { Order } from '../orders/order.entity'
+import { createHmac, timingSafeEqual } from 'crypto'
+import { PaymentStatus } from '../orders/order.entity'
 import { OrdersService } from '../orders/orders.service'
 import { v4 as uuidv4 } from 'uuid'
+
+const PAYMENT_CURRENCY = 'XOF' // Franc CFA BCEAO
+
+// Fields concatenated (in this order) to compute CinetPay's x-token HMAC
+const CINETPAY_TOKEN_FIELDS = [
+  'cpm_site_id', 'cpm_trans_id', 'cpm_trans_date', 'cpm_amount', 'cpm_currency',
+  'signature', 'payment_method', 'cel_phone_num', 'cpm_phone_prefixe',
+  'cpm_language', 'cpm_version', 'cpm_payment_config', 'cpm_page_action',
+  'cpm_custom', 'cpm_designation', 'cpm_error_message',
+]
+
+interface CinetPayCheckResult {
+  code:      string
+  status?:   string // ACCEPTED | REFUSED | PENDING ...
+  amount?:   number
+  currency?: string
+}
 
 export interface InitPaymentResult {
   paymentUrl:   string
@@ -30,6 +46,9 @@ export class PaymentsService {
     if (order.userId !== userId) {
       throw new BadRequestException('Accès refusé à cette commande')
     }
+    if (order.paymentStatus === PaymentStatus.PAID) {
+      throw new BadRequestException('Cette commande est déjà payée')
+    }
 
     const transactionId = `YP-${uuidv4().replace(/-/g, '').toUpperCase().slice(0, 12)}`
     const frontendUrl   = this.configService.get('app.frontendUrl')
@@ -42,7 +61,7 @@ export class PaymentsService {
       site_id:          siteId,
       transaction_id:   transactionId,
       amount:           order.total,
-      currency:         'XOF', // Franc CFA BCEAO
+      currency:         PAYMENT_CURRENCY,
       description:      `Commande YopoePrint ${order.orderNumber}`,
       customer_name:    order.deliveryAddress.fullName,
       customer_phone:   order.deliveryAddress.phone,
@@ -70,10 +89,7 @@ export class PaymentsService {
       }
 
       // Save token on order
-      await this.ordersService['orderRepo'].update(orderId, {
-        cinetpayToken:        data.data.payment_token,
-        paymentTransactionId: transactionId,
-      })
+      await this.ordersService.setPaymentInit(orderId, data.data.payment_token, transactionId)
 
       this.logger.log(`Payment initiated: ${transactionId} for order ${order.orderNumber}`)
 
@@ -90,39 +106,74 @@ export class PaymentsService {
   }
 
   // ─── CinetPay Webhook ─────────────────────────────────────
-  async handleWebhook(payload: any) {
-    const { cpm_trans_id, cpm_result, cpm_error_message, cpm_custom } = payload
+  // The payload is never trusted: the order is looked up by the transaction ID
+  // we generated at init, and amount/currency/status come from /payment/check.
+  async handleWebhook(payload: any, xToken?: string) {
+    this.verifyWebhookToken(payload, xToken)
 
-    this.logger.log(`Webhook received: ${cpm_trans_id} — result: ${cpm_result}`)
+    const transactionId = typeof payload?.cpm_trans_id === 'string' ? payload.cpm_trans_id : ''
+    if (!transactionId) {
+      throw new BadRequestException('cpm_trans_id manquant')
+    }
 
-    if (cpm_result !== '00') {
-      this.logger.warn(`Payment failed: ${cpm_trans_id} — ${cpm_error_message}`)
+    this.logger.log(`Webhook received: ${transactionId}`)
+
+    const order = await this.ordersService.findByPaymentTransactionId(transactionId)
+    if (!order) {
+      this.logger.warn(`Webhook for unknown transaction: ${transactionId}`)
+      return { status: 'unknown_transaction' }
+    }
+
+    // Idempotency: replayed or duplicate notifications are no-ops
+    if (order.paymentStatus === PaymentStatus.PAID) {
+      return { status: 'already_paid' }
+    }
+
+    const check = await this.checkTransaction(transactionId)
+    if (!check || check.code !== '00' || check.status !== 'ACCEPTED') {
+      this.logger.warn(`Payment not accepted: ${transactionId} — ${check?.status ?? 'check failed'}`)
+      if (check?.status === 'REFUSED') {
+        await this.ordersService.markPaymentFailed(order.id)
+      }
       return { status: 'failed' }
     }
 
-    // Verify the payment with CinetPay
-    const isValid = await this.verifyPayment(cpm_trans_id)
-    if (!isValid) {
-      this.logger.error(`Payment verification failed: ${cpm_trans_id}`)
-      return { status: 'invalid' }
+    if (check.amount !== order.total || check.currency !== PAYMENT_CURRENCY) {
+      this.logger.error(
+        `Payment mismatch for ${order.orderNumber}: paid ${check.amount} ${check.currency}, ` +
+        `expected ${order.total} ${PAYMENT_CURRENCY}`,
+      )
+      return { status: 'amount_mismatch' }
     }
 
-    // Extract orderId from metadata
-    try {
-      const metadata = JSON.parse(cpm_custom || '{}')
-      if (metadata.orderId) {
-        await this.ordersService.confirmPayment(metadata.orderId, cpm_trans_id)
-        this.logger.log(`Order confirmed: ${metadata.orderId}`)
-      }
-    } catch (e) {
-      this.logger.error('Error processing webhook metadata:', e)
-    }
+    const confirmed = await this.ordersService.confirmPayment(order.id, transactionId)
+    if (!confirmed) return { status: 'already_paid' }
 
+    this.logger.log(`Order confirmed: ${order.orderNumber} (${transactionId})`)
     return { status: 'success' }
   }
 
-  // ─── Verify payment with CinetPay ─────────────────────────
-  async verifyPayment(transactionId: string): Promise<boolean> {
+  // ─── Verify CinetPay x-token HMAC ─────────────────────────
+  private verifyWebhookToken(payload: any, xToken?: string) {
+    const secretKey = this.configService.get<string>('cinetpay.secretKey')
+    if (!secretKey) {
+      this.logger.warn('CINETPAY_SECRET_KEY absent : en-tête x-token non vérifié')
+      return
+    }
+
+    const data = CINETPAY_TOKEN_FIELDS.map((field) => payload?.[field] ?? '').join('')
+    const expected = createHmac('sha256', secretKey).update(data).digest('hex')
+
+    const received = Buffer.from(String(xToken ?? ''), 'utf8')
+    const wanted   = Buffer.from(expected, 'utf8')
+    if (received.length !== wanted.length || !timingSafeEqual(received, wanted)) {
+      this.logger.warn(`Invalid x-token on webhook ${payload?.cpm_trans_id ?? ''}`)
+      throw new ForbiddenException('Signature du webhook invalide')
+    }
+  }
+
+  // ─── Check a transaction with CinetPay ────────────────────
+  private async checkTransaction(transactionId: string): Promise<CinetPayCheckResult | null> {
     try {
       const apiKey  = this.configService.get('cinetpay.apiKey')
       const siteId  = this.configService.get('cinetpay.siteId')
@@ -134,15 +185,28 @@ export class PaymentsService {
         transaction_id: transactionId,
       })
 
-      return response.data.code === '00'
-    } catch {
-      return false
+      const { code, data } = response.data ?? {}
+      return {
+        code:     String(code),
+        status:   data?.status,
+        amount:   data?.amount !== undefined ? Number(data.amount) : undefined,
+        currency: data?.currency,
+      }
+    } catch (error) {
+      this.logger.error(`CinetPay check failed for ${transactionId}: ${error.message}`)
+      return null
     }
   }
 
+  // ─── Verify payment with CinetPay ─────────────────────────
+  async verifyPayment(transactionId: string): Promise<boolean> {
+    const check = await this.checkTransaction(transactionId)
+    return check?.code === '00' && check.status === 'ACCEPTED'
+  }
+
   // ─── Get payment status ───────────────────────────────────
-  async getPaymentStatus(orderId: string) {
-    const order = await this.ordersService.findById(orderId)
+  async getPaymentStatus(orderId: string, user: { id: string; role?: string }) {
+    const order = await this.ordersService.findByIdForUser(orderId, user)
     return {
       orderId:       order.id,
       orderNumber:   order.orderNumber,

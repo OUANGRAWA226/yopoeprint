@@ -55,6 +55,7 @@ export class AuthService {
 
     // Generate tokens
     const tokens = await this.generateTokens(user)
+    await this.storeRefreshToken(user.id, tokens.refreshToken)
 
     return {
       ...tokens,
@@ -106,6 +107,7 @@ export class AuthService {
 
     // Generate tokens
     const tokens = await this.generateTokens(user)
+    await this.storeRefreshToken(user.id, tokens.refreshToken)
 
     return {
       ...tokens,
@@ -128,10 +130,7 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens(user)
-
-    // Save hashed refresh token
-    const hashedRefresh = await bcrypt.hash(tokens.refreshToken, 10)
-    await this.userRepo.update(user.id, { refreshToken: hashedRefresh })
+    await this.storeRefreshToken(user.id, tokens.refreshToken)
 
     return {
       ...tokens,
@@ -140,19 +139,31 @@ export class AuthService {
   }
 
   // ─── Refresh Tokens ───────────────────────────────────────
-  async refreshTokens(userId: string, refreshToken: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } })
+  async refreshTokens(refreshToken: string) {
+    let payload: { sub?: string; typ?: string }
+    try {
+      payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get('jwt.refreshSecret'),
+      })
+    } catch {
+      throw new UnauthorizedException('Token invalide ou expiré')
+    }
+    if (!payload?.sub || payload.typ !== 'refresh') {
+      throw new UnauthorizedException('Token invalide')
+    }
 
-    if (!user || !user.refreshToken) {
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } })
+
+    if (!user || !user.isActive || !user.refreshToken) {
       throw new UnauthorizedException('Accès refusé')
     }
 
+    // Must match the last issued refresh token (rotation; logout revokes it)
     const matches = await bcrypt.compare(refreshToken, user.refreshToken)
     if (!matches) throw new UnauthorizedException('Token invalide')
 
     const tokens = await this.generateTokens(user)
-    const hashedRefresh = await bcrypt.hash(tokens.refreshToken, 10)
-    await this.userRepo.update(user.id, { refreshToken: hashedRefresh })
+    await this.storeRefreshToken(user.id, tokens.refreshToken)
 
     return tokens
   }
@@ -179,13 +190,18 @@ export class AuthService {
         secret:    this.configService.get('jwt.secret'),
         expiresIn: this.configService.get('jwt.expiresIn'),
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync({ ...payload, typ: 'refresh' }, {
         secret:    this.configService.get('jwt.refreshSecret'),
         expiresIn: this.configService.get('jwt.refreshExpires'),
       }),
     ])
 
     return { accessToken, refreshToken }
+  }
+
+  private async storeRefreshToken(userId: string, refreshToken: string) {
+    const hashedRefresh = await bcrypt.hash(refreshToken, 10)
+    await this.userRepo.update(userId, { refreshToken: hashedRefresh })
   }
 
   private sanitizeUser(user: User) {
@@ -224,25 +240,6 @@ export class AuthService {
       message: adminCount > 0 
         ? `Système initialisé. ${adminCount} administrateur(s) trouvé(s).`
         : 'Système non initialisé. Créez un administrateur pour commencer.',
-    }
-  }
-
-  // ─── Reset Admins (dev only) ──────────────────────────────
-  async resetAdmins() {
-    if (this.configService.get('app.nodeEnv') !== 'development') {
-      throw new Error('Cette action est réservée au développement')
-    }
-
-    const admins = await this.userRepo.find({ where: { role: UserRole.ADMIN } })
-    
-    for (const admin of admins) {
-      await this.userRepo.remove(admin)
-    }
-
-    return {
-      success: true,
-      message: `${admins.length} administrateur(s) supprimé(s). Vous pouvez maintenant créer un nouveau compte admin.`,
-      deletedAdmins: admins.length,
     }
   }
 }

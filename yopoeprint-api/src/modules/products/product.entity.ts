@@ -101,12 +101,14 @@ export interface ProductFormat {
   id: string
   label: string
   dimensions: string
+  multiplier?: number // price multiplier vs. the base format (default 1)
 }
 
 export interface ProductPaper {
   id: string
   label: string
   description: string
+  priceExtra?: number // flat surcharge in FCFA (default 0)
 }
 
 export interface ProductFinish {

@@ -3,9 +3,10 @@ import {
   Body, Param, Query, UseGuards,
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { OrdersService } from './orders.service'
 import {
-  CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto,
+  CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto, AttachDesignFileDto,
   UploadBatDto, ApproveBatDto, RejectBatDto,
 } from './order.dto'
 import { JwtAuthGuard }  from '../../common/guards/jwt-auth.guard'
@@ -19,12 +20,14 @@ export class OrdersController {
 
   // ── Public: track by order number ─────────────────────────
   @Get('track/:orderNumber')
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // anti-énumération
   @ApiOperation({ summary: 'Suivre une commande (sans connexion)' })
   track(@Param('orderNumber') orderNumber: string) {
     return this.ordersService.findByOrderNumber(orderNumber)
   }
 
   @Post('track/:orderNumber/bat/approve')
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // anti-énumération
   @ApiOperation({ summary: 'Valider le BAT depuis le lien de suivi public' })
   trackApproveBat(
     @Param('orderNumber') orderNumber: string,
@@ -34,6 +37,7 @@ export class OrdersController {
   }
 
   @Post('track/:orderNumber/bat/reject')
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // anti-énumération
   @ApiOperation({ summary: 'Demander des corrections BAT depuis le lien de suivi public' })
   trackRejectBat(
     @Param('orderNumber') orderNumber: string,
@@ -64,8 +68,16 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Détail d\'une commande' })
-  findOne(@Param('id') id: string) {
-    return this.ordersService.findById(id)
+  findOne(@Param('id') id: string, @CurrentUser() user) {
+    return this.ordersService.findByIdForUser(id, user)
+  }
+
+  @Patch('my-orders/:id/design-file')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Joindre le fichier d'impression aux articles qui n'en ont pas" })
+  attachDesignFile(@Param('id') id: string, @CurrentUser() user, @Body() dto: AttachDesignFileDto) {
+    return this.ordersService.attachDesignFile(id, user, dto.designFileUrl)
   }
 
   @Post(':id/bat/approve')

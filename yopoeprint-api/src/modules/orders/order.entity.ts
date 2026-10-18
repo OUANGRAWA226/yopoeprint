@@ -179,4 +179,5 @@ export interface DeliveryAddress {
   street: string
   neighborhood: string
   city: string
+  zone?: string
 }

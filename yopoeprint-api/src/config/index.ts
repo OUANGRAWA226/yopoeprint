@@ -1,13 +1,20 @@
 import { registerAs } from '@nestjs/config'
 
 // ─── App Config ───────────────────────────────────────────────
+// NODE_ENV absent => production : jamais de synchronize/Swagger/routes dev par accident
+const nodeEnv = process.env.NODE_ENV || 'production'
+
 export const appConfig = registerAs('app', () => ({
-  nodeEnv:   process.env.NODE_ENV || 'development',
+  nodeEnv,
   port:      parseInt(process.env.PORT, 10) || 3001,
   prefix:    process.env.API_PREFIX || 'api/v1',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   adminUrl:    process.env.ADMIN_URL || 'http://localhost:3002',
   allowedOrigins: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()) : [],
+  // Nombre de proxys devant l'API (Render = 1). 0 = désactivé.
+  trustProxy: process.env.TRUST_PROXY !== undefined
+    ? parseInt(process.env.TRUST_PROXY, 10) || 0
+    : (nodeEnv === 'production' ? 1 : 0),
 }))
 
 // ─── Database Config ──────────────────────────────────────────

@@ -105,6 +105,8 @@ export class ProductsService {
     // Find finish modifier
     const finish      = product.finishes.find((f) => f.id === dto.finishId)
     const finishPrice = finish?.priceModifier || 0
+    const format      = product.formats.find((f) => f.id === dto.formatId)
+    const paper       = product.papers.find((p) => p.id === dto.paperId)
 
     const { total, unitPrice } = this.computePrice(
       product.basePrice,
@@ -112,6 +114,8 @@ export class ProductsService {
       dto.quantity,
       finishPrice,
       dto.rectoverso,
+      format?.multiplier || 1,
+      paper?.priceExtra || 0,
     )
 
     // Find delivery days
@@ -134,16 +138,18 @@ export class ProductsService {
     quantity: number,
     finishModifier = 0,
     rectoverso = false,
+    formatMultiplier = 1,
+    paperExtra = 0,
   ): { total: number; unitPrice: number } {
-    // Degressive pricing formula
+    // Degressive pricing formula — must match computePrice in src/lib/data.ts (storefront)
     const multiplier = quantity / minQuantity
-    let total = basePrice * Math.pow(multiplier, 0.75)
+    let total = basePrice * Math.pow(multiplier, 0.75) * formatMultiplier
 
     // Recto/verso +60%
     if (rectoverso) total *= 1.6
 
-    // Add finish cost
-    total += finishModifier
+    // Add finish and paper costs
+    total += finishModifier + paperExtra
 
     // Round to nearest 100 FCFA
     total = Math.round(total / 100) * 100

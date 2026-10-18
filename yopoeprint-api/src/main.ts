@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core'
+import { NestExpressApplication } from '@nestjs/platform-express'
 import { ValidationPipe, Logger } from '@nestjs/common'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
@@ -6,7 +7,7 @@ import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 
 async function bootstrap() {
-  const app    = await NestFactory.create(AppModule)
+  const app    = await NestFactory.create<NestExpressApplication>(AppModule)
   const config = app.get(ConfigService)
   const logger = new Logger('Bootstrap')
 
@@ -14,33 +15,43 @@ async function bootstrap() {
   const prefix = config.get('app.prefix') || 'api/v1'
   app.setGlobalPrefix(prefix)
 
+  // ── Reverse proxy (Render) : vraie IP client pour le rate limiting ──
+  const trustProxy = config.get<number>('app.trustProxy')
+  if (trustProxy) app.set('trust proxy', trustProxy)
+
   // ── CORS ───────────────────────────────────────────────────
+  const isProduction = config.get('app.nodeEnv') === 'production'
   const frontendUrl = config.get<string>('app.frontendUrl') || 'http://localhost:3000'
   const adminUrl    = config.get<string>('app.adminUrl') || 'http://localhost:3002'
   const extraOrigins = config.get<string[]>('app.allowedOrigins') || []
-  const corsOrigins = Array.from(new Set([
-    frontendUrl,
-    adminUrl,
+  const productionOrigins = [
+    'https://yopoeprint.bf',
+    'https://www.yopoeprint.bf',
+    'https://admin.yopoeprint.bf',
+    'https://yopoeprint.com',
+    'https://www.yopoeprint.com',
+    'https://admin.yopoeprint.com',
+    'https://yopoeprint.vercel.app',
+  ]
+  const devOrigins = [
     'http://localhost:3000',
     'http://localhost:3002',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3002',
+  ]
+  const corsOrigins = new Set([
+    frontendUrl,
+    adminUrl,
     ...extraOrigins,
-  ]))
-  
+    ...productionOrigins,
+    ...(isProduction ? [] : devOrigins),
+  ])
+
   app.enableCors({
     origin: (origin, callback) => {
-      // Autoriser les requêtes sans header origin (app mobile, curl, serveurs)
+      // Requêtes sans header Origin (curl, serveurs, webhook CinetPay) : CORS ne s'applique pas
       if (!origin) return callback(null, true)
-      if (
-        corsOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.includes('yopoeprint') ||
-        config.get('app.nodeEnv') !== 'production'
-      ) {
-        return callback(null, true)
-      }
-      return callback(null, true)
+      return callback(null, corsOrigins.has(origin))
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

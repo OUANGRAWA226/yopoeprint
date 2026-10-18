@@ -1,7 +1,8 @@
 import {
-  Controller, Get, Post, Body, Param,
+  Controller, Get, Post, Body, Param, Headers,
   UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common'
+import { SkipThrottle } from '@nestjs/throttler'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { PaymentsService } from './payments.service'
 import { JwtAuthGuard }  from '../../common/guards/jwt-auth.guard'
@@ -26,16 +27,26 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Statut du paiement d\'une commande' })
-  getStatus(@Param('orderId') orderId: string) {
-    return this.paymentsService.getPaymentStatus(orderId)
+  getStatus(@Param('orderId') orderId: string, @CurrentUser() user) {
+    return this.paymentsService.getPaymentStatus(orderId, user)
   }
 
   // ── CinetPay Webhook (called by CinetPay server) ──────────
+  // Not throttled: CinetPay calls from a few shared IPs and retries on failure
   @Post('webhook')
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Webhook CinetPay — ne pas appeler manuellement' })
-  webhook(@Body() payload: any) {
-    return this.paymentsService.handleWebhook(payload)
+  webhook(@Body() payload: any, @Headers('x-token') xToken?: string) {
+    return this.paymentsService.handleWebhook(payload, xToken)
+  }
+
+  // CinetPay pings notify_url with GET to check it is reachable
+  @Get('webhook')
+  @SkipThrottle()
+  @ApiOperation({ summary: 'Ping de disponibilité du webhook CinetPay' })
+  webhookPing() {
+    return { status: 'ok' }
   }
 
   // ── Manual verify ─────────────────────────────────────────

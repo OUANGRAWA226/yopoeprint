@@ -2,14 +2,16 @@ import {
   Injectable, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Not, Repository, QueryFailedError } from 'typeorm'
+import { randomInt } from 'crypto'
 import { Order, OrderStatus, PaymentStatus, OrderItem } from './order.entity'
-import { User } from '../users/user.entity'
+import { User, UserRole } from '../users/user.entity'
 import {
   CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto,
   UploadBatDto, ApproveBatDto, RejectBatDto,
 } from './order.dto'
 import { ProductsService } from '../products/products.service'
+import { DELIVERY_ZONES, computeDeliveryCost } from './delivery'
 import { MailService } from '../mail/mail.service'
 
 @Injectable()
@@ -26,11 +28,17 @@ export class OrdersService {
   // ─── Create order ─────────────────────────────────────────
   async create(userId: string, dto: CreateOrderDto) {
     // Build order items with real prices
+    if (dto.deliveryZone !== 'pickup' && !dto.deliveryAddress.street?.trim()) {
+      throw new BadRequestException('Adresse de livraison (rue ou secteur) requise')
+    }
+
     const items: OrderItem[] = []
     let subtotal = 0
+    let maxProductionDays = 0
 
     for (const itemDto of dto.items) {
       const product = await this.productsService.findById(itemDto.productId)
+      maxProductionDays = Math.max(maxProductionDays, product.deliveryDays || 0)
 
       const finish      = product.finishes.find((f) => f.id === itemDto.finishId)
       const format      = product.formats.find((f)  => f.id === itemDto.formatId)
@@ -42,6 +50,8 @@ export class OrdersService {
         itemDto.quantity,
         finish?.priceModifier || 0,
         itemDto.rectoverso,
+        format?.multiplier || 1,
+        paper?.priceExtra || 0,
       )
 
       items.push({
@@ -62,8 +72,14 @@ export class OrdersService {
       subtotal += total
     }
 
-    // Delivery cost (free above 75 000 FCFA)
-    const deliveryCost = subtotal >= 75000 ? 0 : 2000
+    const deliveryCost = computeDeliveryCost(dto.deliveryZone, subtotal)
+    const deliveryAddress = {
+      ...dto.deliveryAddress,
+      street:       dto.deliveryAddress.street?.trim() || (dto.deliveryZone === 'pickup' ? 'Retrait atelier' : ''),
+      neighborhood: dto.deliveryAddress.neighborhood || '',
+      city:         DELIVERY_ZONES[dto.deliveryZone].city,
+      zone:         dto.deliveryZone,
+    }
 
     // Apply promo code (placeholder — à enrichir)
     let discount = 0
@@ -73,18 +89,14 @@ export class OrdersService {
 
     const total = subtotal + deliveryCost - discount
 
-    // Generate readable order number
-    const orderNumber = await this.generateOrderNumber()
+    // Generate readable, non-guessable order number
+    let orderNumber = this.generateOrderNumber()
 
     // Estimated delivery (production days + 1 delivery day)
-    const maxDeliveryDays = Math.max(...items.map(async (i) => {
-      const p = await this.productsService.findById(i.productId)
-      return p.deliveryDays
-    }).map(() => 3)) // simplified
     const estimatedDelivery = new Date()
-    estimatedDelivery.setDate(estimatedDelivery.getDate() + maxDeliveryDays + 1)
+    estimatedDelivery.setDate(estimatedDelivery.getDate() + (maxProductionDays || 3) + 1)
 
-    const order = this.orderRepo.create({
+    const orderData = {
       orderNumber,
       userId,
       status:          OrderStatus.PENDING,
@@ -93,15 +105,26 @@ export class OrdersService {
       deliveryCost,
       discount,
       total,
-      deliveryAddress: dto.deliveryAddress,
+      deliveryAddress,
       paymentMethod:   dto.paymentMethod,
       paymentStatus:   PaymentStatus.PENDING,
       promoCode:       dto.promoCode,
       customerNotes:   dto.customerNotes,
       estimatedDelivery,
-    })
+    }
 
-    const savedOrder = await this.orderRepo.save(order)
+    // Retry on the (very unlikely) unique-constraint collision of the random suffix
+    let savedOrder: Order
+    for (let attempt = 1; ; attempt++) {
+      try {
+        savedOrder = await this.orderRepo.save(this.orderRepo.create({ ...orderData, orderNumber }))
+        break
+      } catch (err) {
+        const isUniqueViolation = err instanceof QueryFailedError && (err as any).driverError?.code === '23505'
+        if (!isUniqueViolation || attempt >= 5) throw err
+        orderNumber = this.generateOrderNumber()
+      }
+    }
 
     // Envoyer l'email de confirmation (si l'utilisateur a un compte)
     try {
@@ -163,6 +186,33 @@ export class OrdersService {
     })
     if (!order) throw new NotFoundException('Commande introuvable')
     return order
+  }
+
+  // ─── Get order by ID, restricted to its owner (or staff) ───
+  async findByIdForUser(id: string, user: { id: string; role?: string }) {
+    const order = await this.findById(id)
+    const isStaff = user.role === UserRole.ADMIN || user.role === UserRole.STAFF
+    if (!isStaff && order.userId !== user.id) {
+      // 404 rather than 403 so order IDs cannot be probed
+      throw new NotFoundException('Commande introuvable')
+    }
+    return order
+  }
+
+  // ─── Attach a late design file (customer) ─────────────────
+  async attachDesignFile(id: string, user: { id: string; role?: string }, designFileUrl: string) {
+    const order = await this.findByIdForUser(id, user)
+    const items = order.items.map((item) => ({
+      ...item,
+      designFileUrl: item.designFileUrl || designFileUrl,
+    }))
+    await this.orderRepo.update(id, { items })
+    return this.findById(id)
+  }
+
+  // ─── Get order by CinetPay transaction ID (webhook) ───────
+  async findByPaymentTransactionId(transactionId: string) {
+    return this.orderRepo.findOne({ where: { paymentTransactionId: transactionId } })
   }
 
   // ─── Get order by number (public tracking) ────────────────
@@ -330,15 +380,24 @@ export class OrdersService {
 
   // ─── BAT via numéro de commande (Suivi public) ────────────
   async approveBatByOrderNumber(orderNumber: string, dto: ApproveBatDto) {
-    const order = await this.orderRepo.findOne({ where: { orderNumber } })
-    if (!order) throw new NotFoundException('Commande introuvable')
+    const order = await this.findOrderForPublicBat(orderNumber)
     return this.approveBat(order.id, { id: order.userId, role: 'customer' }, dto)
   }
 
   async rejectBatByOrderNumber(orderNumber: string, dto: RejectBatDto) {
+    const order = await this.findOrderForPublicBat(orderNumber)
+    return this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto)
+  }
+
+  // Legacy sequential numbers (YP-2025-000123) are guessable: their BAT can only
+  // be handled from the authenticated customer area, not from the public link.
+  private async findOrderForPublicBat(orderNumber: string) {
+    if (OrdersService.LEGACY_ORDER_NUMBER.test(orderNumber)) {
+      throw new ForbiddenException('Connectez-vous à votre espace client pour valider ce BAT')
+    }
     const order = await this.orderRepo.findOne({ where: { orderNumber } })
     if (!order) throw new NotFoundException('Commande introuvable')
-    return this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto)
+    return order
   }
 
   // ─── Update order status (admin) ──────────────────────────
@@ -366,30 +425,55 @@ export class OrdersService {
     return updatedOrder
   }
 
-  // ─── Confirm payment ──────────────────────────────────────
-  async confirmPayment(orderId: string, transactionId: string) {
-    await this.orderRepo.update(orderId, {
-      paymentStatus:        PaymentStatus.PAID,
-      paymentTransactionId: transactionId,
-      status:               OrderStatus.CONFIRMED,
-    })
-    return this.findById(orderId)
+  // ─── Save CinetPay init data ──────────────────────────────
+  async setPaymentInit(orderId: string, cinetpayToken: string, transactionId: string) {
+    await this.orderRepo.update(orderId, { cinetpayToken, paymentTransactionId: transactionId })
+  }
+
+  // ─── Confirm payment (idempotent) ─────────────────────────
+  // Returns true only for the call that actually flipped the order to PAID,
+  // so concurrent/replayed webhooks cannot confirm twice.
+  async confirmPayment(orderId: string, transactionId: string): Promise<boolean> {
+    const result = await this.orderRepo.update(
+      { id: orderId, paymentStatus: Not(PaymentStatus.PAID) },
+      {
+        paymentStatus:        PaymentStatus.PAID,
+        paymentTransactionId: transactionId,
+        status:               OrderStatus.CONFIRMED,
+      },
+    )
+    return (result.affected ?? 0) > 0
+  }
+
+  async markPaymentFailed(orderId: string) {
+    await this.orderRepo.update(
+      { id: orderId, paymentStatus: PaymentStatus.PENDING },
+      { paymentStatus: PaymentStatus.FAILED },
+    )
   }
 
   // ─── Helpers ──────────────────────────────────────────────
-  private async generateOrderNumber(): Promise<string> {
-    const year  = new Date().getFullYear()
-    const count = await this.orderRepo.count()
-    const seq   = String(count + 1).padStart(6, '0')
-    return `YP-${year}-${seq}`
+  private static readonly LEGACY_ORDER_NUMBER = /^YP-\d{4}-\d{6}$/
+  // Crockford-like alphabet: no 0/O/1/I/L to stay readable over the phone
+  private static readonly ORDER_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+
+  // YP-2025-7KQ4-M9XC : 8 random chars (~39 bits), not derived from a counter
+  private generateOrderNumber(): string {
+    const year = new Date().getFullYear()
+    const alphabet = OrdersService.ORDER_ALPHABET
+    let rand = ''
+    for (let i = 0; i < 8; i++) rand += alphabet[randomInt(alphabet.length)]
+    return `YP-${year}-${rand.slice(0, 4)}-${rand.slice(4)}`
   }
 
   private async applyPromoCode(code: string, subtotal: number): Promise<number> {
     // Placeholder: to be replaced with a PromoCode entity
+    // Must match FALLBACK_PROMOS in src/lib/promo.service.ts (codes advertised on the storefront)
     const promoCodes: Record<string, number> = {
-      'PROMO10':   0.10,
-      'WELCOME15': 0.15,
-      'BF2025':    0.20,
+      'YOPPRINT15': 0.15,
+      'YOPOE10':    0.10,
+      'BURKINA':    0.15,
+      'PROMO20':    0.20,
     }
     const rate = promoCodes[code.toUpperCase()]
     if (!rate) throw new BadRequestException('Code promo invalide')

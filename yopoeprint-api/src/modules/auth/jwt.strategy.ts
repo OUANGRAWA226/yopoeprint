@@ -21,6 +21,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    // A refresh token must never be usable as an access token (even if both secrets are equal)
+    if (payload?.typ === 'refresh') {
+      throw new UnauthorizedException('Token invalide')
+    }
     const user = await this.userRepo.findOne({ where: { id: payload.sub } })
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Compte introuvable ou désactivé')

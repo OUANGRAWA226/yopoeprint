@@ -1,10 +1,11 @@
 import {
-  IsString, IsArray, IsInt, IsEnum,
+  IsString, IsArray, IsInt, IsEnum, IsIn, ArrayMinSize,
   IsOptional, IsBoolean, ValidateNested, Min,
 } from 'class-validator'
 import { Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { PaymentMethod, OrderStatus } from './order.entity'
+import { DELIVERY_ZONE_IDS, DeliveryZoneId } from './delivery'
 
 export class OrderItemDto {
   @ApiProperty()
@@ -24,9 +25,10 @@ export class OrderItemDto {
   @IsString()
   paperId: string
 
-  @ApiProperty({ example: 'none' })
+  @ApiPropertyOptional({ example: 'none' })
+  @IsOptional()
   @IsString()
-  finishId: string
+  finishId?: string
 
   @ApiProperty()
   @IsBoolean()
@@ -47,25 +49,33 @@ export class DeliveryAddressDto {
   @IsString()
   phone: string
 
-  @ApiProperty({ example: 'Rue 14.57, Secteur 15' })
+  @ApiPropertyOptional({ example: 'Rue 14.57, Secteur 15', description: 'Requis sauf retrait atelier' })
+  @IsOptional()
   @IsString()
-  street: string
+  street?: string
 
-  @ApiProperty({ example: 'Wemtenga' })
+  @ApiPropertyOptional({ example: 'Wemtenga' })
+  @IsOptional()
   @IsString()
-  neighborhood: string
+  neighborhood?: string
 
-  @ApiProperty({ example: 'Ouagadougou' })
+  @ApiPropertyOptional({ example: 'Ouagadougou', description: 'Déduite de la zone de livraison' })
+  @IsOptional()
   @IsString()
-  city: string
+  city?: string
 }
 
 export class CreateOrderDto {
   @ApiProperty({ type: [OrderItemDto] })
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[]
+
+  @ApiProperty({ enum: DELIVERY_ZONE_IDS, example: 'ouaga_centre' })
+  @IsIn(DELIVERY_ZONE_IDS)
+  deliveryZone: DeliveryZoneId
 
   @ApiProperty({ type: DeliveryAddressDto })
   @ValidateNested()
@@ -76,7 +86,7 @@ export class CreateOrderDto {
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod
 
-  @ApiPropertyOptional({ example: 'PROMO10' })
+  @ApiPropertyOptional({ example: 'YOPPRINT15' })
   @IsOptional()
   @IsString()
   promoCode?: string
@@ -111,6 +121,12 @@ export class OrderQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   limit?: string
+}
+
+export class AttachDesignFileDto {
+  @ApiProperty({ description: 'URL Cloudinary du fichier design' })
+  @IsString()
+  designFileUrl: string
 }
 
 export class UploadBatDto {
