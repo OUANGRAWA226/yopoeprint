@@ -6,7 +6,7 @@ import {
   CheckCircle2, ArrowRight, Download, Calculator,
   Briefcase, Layers, Printer, BarChart3, Star
 } from 'lucide-react'
-import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
+import { getServerContact } from '@/lib/contact'
 
 export const metadata = {
   title: 'Espace Entreprises & Grands Comptes — YopoePrint Burkina Faso',
@@ -124,7 +124,8 @@ const SECTORS = [
   { name: 'Agences de Communication', desc: 'Partenaire marque blanche avec expédition neutre chez le client final' },
 ]
 
-export default function EntreprisesPage() {
+export default async function EntreprisesPage() {
+  const contact = await getServerContact()
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
 
@@ -197,8 +198,8 @@ export default function EntreprisesPage() {
                     <Phone size={18} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs text-gray-400">Ligne directe Entreprises :</p>
-                      <a href={`tel:${CONTACT_PHONE}`} className="font-bold text-white hover:text-emerald-300 tabular-nums text-base">
-                        {CONTACT_PHONE_DISPLAY}
+                      <a href={`tel:${contact.phone}`} className="font-bold text-white hover:text-emerald-300 tabular-nums text-base">
+                        {contact.phoneDisplay}
                       </a>
                     </div>
                   </div>
@@ -443,7 +444,7 @@ export default function EntreprisesPage() {
             </Link>
 
             <a
-              href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20pour%20un%20compte%20entreprise.`}
+              href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20pour%20un%20compte%20entreprise.`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-4 rounded-xl text-sm sm:text-base border border-white/20 transition-all"
@@ -453,7 +454,7 @@ export default function EntreprisesPage() {
           </div>
 
           <p className="text-xs text-gray-400 pt-6">
-            YopoePrint — Ouagadougou, Secteur 15 Ouaga 2000 & Zone Industrielle Gounghin · Tél : {CONTACT_PHONE_DISPLAY}
+            YopoePrint — {contact.address} · Tél : {contact.phoneDisplay}
           </p>
         </div>
       </section>

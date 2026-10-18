@@ -15,173 +15,9 @@ import {
 } from 'lucide-react'
 import { ProductCard } from '@/components/product/ProductCard'
 import { bannersService, BannerSlide, DEFAULT_BANNERS } from '@/lib/banners.service'
+import { useCatalogue, priceFor, referenceQuantity, productImage } from '@/lib/catalogue'
 import { ProductScrollRail } from '@/components/product/ProductScrollRail'
-import { CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
-
-// ── 0.1 Ventes Flash de l'Imprimerie (Jumia Style) ──────────────────────────
-interface FlashSaleItem {
-  id: string
-  title: string
-  spec: string
-  qty: number
-  price: number
-  image: string
-  href: string
-}
-
-const FLASH_SALE_ITEMS: FlashSaleItem[] = [
-  {
-    id: 'flash-cartes-dorure',
-    title: 'Cartes de Visite 350g Dorure à Chaud',
-    spec: '500 cartes · 85×55mm · Soft Touch',
-    qty: 500,
-    price: 10500,
-    image: '/images/products/cartes-visite.jpg',
-    href: '/catalogue/cartes',
-  },
-  {
-    id: 'flash-rollup-alu',
-    title: 'Roll-Up Stand Aluminium 85×200cm',
-    spec: 'Structure alu renforcée + Housse + Bâche HD',
-    qty: 1,
-    price: 28000,
-    image: '/images/products/rollup-salons.jpg',
-    href: '/catalogue/roll-up',
-  },
-  {
-    id: 'flash-flyers-a5',
-    title: 'Flyers A5 Quadri Recto/Verso (1 000 ex.)',
-    spec: 'Papier couché 135g · Impression HD offset',
-    qty: 1000,
-    price: 19500,
-    image: '/images/products/flyers-depliants.jpg',
-    href: '/catalogue/flyers',
-  },
-  {
-    id: 'flash-sacs-kraft',
-    title: 'Sacs Shopping Kraft avec Logo (Lot 100)',
-    spec: 'Kraft brun résistant · Poignées torsadées',
-    qty: 100,
-    price: 36000,
-    image: '/images/products/packaging-kraft.jpg',
-    href: '/catalogue/sacs',
-  },
-  {
-    id: 'flash-bache-pro',
-    title: 'Bâche Publicitaire HD 510g (3×1m)',
-    spec: 'Oeillets métalliques tous les 50cm · Anti-UV',
-    qty: 1,
-    price: 22500,
-    image: '/images/products/affiches-baches.jpg',
-    href: '/catalogue/baches',
-  },
-  {
-    id: 'flash-textile-polo',
-    title: 'Polos & T-Shirts Sérigraphiés (Lot 20)',
-    spec: 'Coton 190g premium · Marquage poitrine',
-    qty: 20,
-    price: 48000,
-    image: '/images/products/textile-pro.jpg',
-    href: '/catalogue/textile',
-  },
-]
-
-// ── 1. Données du Calculateur Express Helloprint ─────────────────────────────
-interface CalcProduct {
-  id: string
-  name: string
-  spec: string
-  leadTime: string
-  popularQty: number
-  quantities: number[]
-  finishes: { id: string; label: string; desc: string; extra: number }[]
-  pricing: Record<number, number>
-  image: string
-  slug: string
-}
-
-const CALC_PRODUCTS: Record<string, CalcProduct> = {
-  cartes: {
-    id: 'cartes',
-    name: 'Cartes de Visite 85×55mm',
-    spec: 'Papier Couché 350g · Recto/Verso Quadri',
-    leadTime: 'Livrable en 24h à 48h',
-    popularQty: 500,
-    quantities: [100, 250, 500, 1000, 2500],
-    finishes: [
-      { id: 'standard', label: 'Couché Mat 350g Standard', desc: 'Rendu sobre & soigné', extra: 0 },
-      { id: 'brillant', label: 'Pelliculage Brillant Intense', desc: 'Couleurs vives & éclatantes', extra: 1500 },
-      { id: 'soft_touch', label: 'Pelliculage Soft Touch (Velours)', desc: 'Toucher soyeux de prestige', extra: 3000 },
-      { id: 'vernis_3d', label: 'Vernis Sélectif 3D Relief', desc: 'Relief tactile haute précision', extra: 5000 },
-    ],
-    pricing: { 100: 4500, 250: 6500, 500: 10500, 1000: 17500, 2500: 36000 },
-    image: '/images/products/cartes-visite.jpg',
-    slug: 'carte-de-visite-standard',
-  },
-  flyers: {
-    id: 'flyers',
-    name: 'Flyers A5 Commercial (14,8×21cm)',
-    spec: 'Papier Couché 135g à 250g · Impression Quadri HD',
-    leadTime: 'Livrable en 48h',
-    popularQty: 1000,
-    quantities: [250, 500, 1000, 2500, 5000],
-    finishes: [
-      { id: 'standard', label: 'Couché 135g Brillant (Éco)', desc: 'Idéal distribution de masse', extra: 0 },
-      { id: 'mat_170', label: 'Couché 170g Satiné (Élégant)', desc: 'Tenue renforcée premium', extra: 2500 },
-      { id: 'mat_250', label: 'Couché 250g Semi-Rigide', desc: 'Support cartonné d’exception', extra: 5000 },
-    ],
-    pricing: { 250: 9500, 500: 14000, 1000: 19500, 2500: 42000, 5000: 72000 },
-    image: '/images/products/flyers-depliants.jpg',
-    slug: 'flyer-a5-classique',
-  },
-  rollup: {
-    id: 'rollup',
-    name: 'Roll-Up Stand Pro 85×200cm',
-    spec: 'Structure Aluminium + Housse matelassée incluse',
-    leadTime: 'Prêt en 24h chrono',
-    popularQty: 2,
-    quantities: [1, 2, 5, 10],
-    finishes: [
-      { id: 'standard', label: 'Bâche PVC 440g Résistante', desc: 'Structure aluminium classique', extra: 0 },
-      { id: 'deluxe', label: 'Bâche Anti-Reflet + Pied Lourd Deluxe', desc: 'Stabilité maximale pour salons', extra: 8000 },
-    ],
-    pricing: { 1: 28000, 2: 52000, 5: 120000, 10: 220000 },
-    image: '/images/products/rollup-salons.jpg',
-    slug: 'kakemono-roll-up',
-  },
-  tshirts: {
-    id: 'tshirts',
-    name: 'T-Shirts 190g 100% Coton avec Logo',
-    spec: 'Sérigraphie ou Broderie Cœur · Tailles S à 3XL',
-    leadTime: 'Livrable en 48h à 72h',
-    popularQty: 50,
-    quantities: [10, 25, 50, 100, 250],
-    finishes: [
-      { id: 'standard', label: 'Sérigraphie 1 Couleur Face', desc: 'Encre textile haute résistance', extra: 0 },
-      { id: 'quadri', label: 'Sérigraphie Quadri Complète', desc: 'Toutes les couleurs du logo', extra: 15000 },
-      { id: 'broderie', label: 'Broderie Cœur Haute Précision', desc: 'Finition cousue indélébile', extra: 25000 },
-    ],
-    pricing: { 10: 45000, 25: 95000, 50: 175000, 100: 320000, 250: 725000 },
-    image: '/images/products/textile-pro.jpg',
-    slug: 't-shirt-personnalise',
-  },
-  bache: {
-    id: 'bache',
-    name: 'Bâche PVC 510g avec Œillets',
-    spec: 'Micro-perforée ou Pleine · Spécial climat sahélien',
-    leadTime: 'Atelier Ouaga · Prêt en 24h',
-    popularQty: 2,
-    quantities: [1, 2, 5, 10],
-    finishes: [
-      { id: 'standard', label: 'Format 2 × 1 mètre (2 m²)', desc: 'Œillets tous les 50cm', extra: 0 },
-      { id: 'm3x1', label: 'Format 3 × 1 mètre (3 m²)', desc: 'Banderole promotionnelle', extra: 6500 },
-      { id: 'm4x2', label: 'Format 4 × 2 mètres (8 m²)', desc: 'Grand affichage de façade', extra: 32000 },
-    ],
-    pricing: { 1: 13000, 2: 24000, 5: 55000, 10: 98000 },
-    image: '/images/products/affiches-baches.jpg',
-    slug: 'affiche-a3-premium',
-  },
-}
+import { useContact } from '@/lib/settings.service'
 
 // ── 2. Les 8 Catégories Phares (Photos d'Atelier, Zéro Emojis) ───────────────
 const CATEGORIES_GRID = [
@@ -329,13 +165,25 @@ function BannerImage({ banner, priority }: { banner: BannerSlide; priority: bool
 
 // ── 5. Avis Clients d'Entreprises Vérifiés ───────────────────────────────────
 export default function StorefrontHomePage() {
+  const contact = useContact()
   const router = useRouter()
 
-  // Calculateur Express state
-  const [calcProdKey, setCalcProdKey] = useState<string>('cartes')
-  const currentCalc = CALC_PRODUCTS[calcProdKey]
-  const [selectedQty, setSelectedQty] = useState<number>(currentCalc.popularQty)
-  const [selectedFinish, setSelectedFinish] = useState<string>(currentCalc.finishes[0].id)
+  // Offres et calculateur : produits cochés dans l'admin (Produits › Configuration › Mise en avant)
+  const { products: catalogue } = useCatalogue()
+  const offers = catalogue?.filter((p) => p.isHomeOffer) ?? null
+  const calcProducts = catalogue?.filter((p) => p.inCalculator && p.quantities?.length) ?? null
+
+  // Calculateur : sans choix explicite, premier produit, quantité de référence et première finition
+  const [calcProdId, setCalcProdId] = useState<string | null>(null)
+  const [selectedQty, setSelectedQty] = useState<number | null>(null)
+  const [selectedFinish, setSelectedFinish] = useState<string | null>(null)
+  const currentCalc = calcProducts?.find((p) => p.id === calcProdId) ?? calcProducts?.[0] ?? null
+  const calcQty = currentCalc
+    ? (selectedQty && currentCalc.quantities.includes(selectedQty) ? selectedQty : referenceQuantity(currentCalc))
+    : 0
+  const activeFinishObj = currentCalc?.finishes?.find((f) => f.id === selectedFinish) ?? currentCalc?.finishes?.[0]
+  const calculatedTotal = currentCalc ? priceFor(currentCalc, calcQty, activeFinishObj?.id) : 0
+  const unitPrice = calcQty ? Math.round(calculatedTotal / calcQty) : 0
   const [copiedPromo, setCopiedPromo] = useState(false)
 
   // Bannières Dynamiques Carrousel Hero (Uploadées depuis le Backoffice)
@@ -366,32 +214,23 @@ export default function StorefrontHomePage() {
     return () => clearInterval(slideTimer)
   }, [isCarouselHovered, banners.length])
 
-  // Les offres flash ne sont pas des produits commandables tels quels :
-  // on renvoie vers la page où le client configure et dépose son fichier
-  const handleQuickAddFlash = (e: React.MouseEvent, item: FlashSaleItem) => {
+  // Une offre n'est pas commandable telle quelle : le client configure et dépose son fichier sur la fiche produit
+  const handleQuickAddFlash = (e: React.MouseEvent, slug: string) => {
     e.preventDefault()
     e.stopPropagation()
-    router.push(item.href)
+    router.push(`/produit/${slug}`)
   }
 
-  // Changement de produit dans le calculateur
-  const handleSelectCalcProduct = (key: string) => {
-    setCalcProdKey(key)
-    const prod = CALC_PRODUCTS[key]
-    setSelectedQty(prod.popularQty)
-    setSelectedFinish(prod.finishes[0].id)
+  // Changement de produit dans le calculateur : retour à sa quantité de référence et sa première finition
+  const handleSelectCalcProduct = (id: string) => {
+    setCalcProdId(id)
+    setSelectedQty(null)
+    setSelectedFinish(null)
   }
 
-  // Calcul du prix exact en FCFA
-  const calcBasePrice = currentCalc.pricing[selectedQty] || currentCalc.pricing[currentCalc.quantities[0]] || 10000
-  const activeFinishObj = currentCalc.finishes.find(f => f.id === selectedFinish)
-  const finishExtra = activeFinishObj ? activeFinishObj.extra : 0
-  const calculatedTotal = calcBasePrice + finishExtra
-  const unitPrice = Math.round(calculatedTotal / selectedQty)
-
-  // Le calculateur donne une estimation : la commande se finalise sur la fiche produit
+  // La commande se finalise sur la fiche produit
   const handleAddCalculatedToCart = () => {
-    router.push(`/produit/${currentCalc.slug}`)
+    if (currentCalc) router.push(`/produit/${currentCalc.slug}`)
   }
 
   // Copie du code promo
@@ -516,20 +355,19 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════
-          2. VENTES FLASH | CHAQUE JOUR (STYLE JUMIA PUR)
+          2. OFFRES DE L'ATELIER (produits cochés « Offre de l'atelier » dans l'admin)
       ═════════════════════════════════════════════════════════════ */}
+      {(offers === null || offers.length > 0) && (
       <section className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-2">
         {/* Bloc sombre neutre : la couleur d'action (vert) reste réservée aux boutons */}
         <div className="bg-gray-900 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-lg text-white">
-          
-          {/* En-tête Ventes Flash */}
+
           <div className="flex items-center justify-between mb-2.5">
             <div>
               <h2 className="font-display text-base sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                <span>Offres de l'atelier</span>
+                <span>Offres de l&apos;atelier</span>
               </h2>
-              <p className="text-xs text-white/80 mt-0.5">Prix de départ indicatifs, calculés au plus juste sur la fiche produit</p>
-
+              <p className="text-xs text-white/80 mt-0.5">Prix catalogue pour la quantité indiquée, en configuration de base</p>
             </div>
 
             <Link
@@ -540,67 +378,70 @@ export default function StorefrontHomePage() {
             </Link>
           </div>
 
-          {/* Rangée de Produits en Défilement Horizontal avec Boutons Fléchés Desktop & Swipe Mobile */}
+          {/* Défilement horizontal : flèches sur ordinateur, glisser sur téléphone */}
           <ProductScrollRail trackClassName="gap-2.5 sm:gap-3">
-            {FLASH_SALE_ITEMS.map((item) => (
-              <div
-                key={item.id}
-                className="w-[148px] sm:w-[168px] md:w-[185px] shrink-0 snap-start bg-white text-gray-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group transition-all"
-              >
-                {/* Zone Photo Produit */}
-                <div className="relative aspect-square w-full bg-white p-2 flex items-center justify-center">
-                  <Link href={item.href} className="relative w-full h-full block">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                      sizes="185px"
-                    />
-                  </Link>
+            {offers === null
+              ? [0, 1, 2, 3, 4].map((i) => (
+                  <div key={i} aria-hidden="true" className="w-[148px] sm:w-[168px] md:w-[185px] shrink-0 bg-white/10 rounded-xl sm:rounded-2xl aspect-[3/4] animate-pulse" />
+                ))
+              : offers.map((p) => {
+                  const qty = referenceQuantity(p)
+                  return (
+                    <div
+                      key={p.id}
+                      className="w-[148px] sm:w-[168px] md:w-[185px] shrink-0 snap-start bg-white text-gray-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group transition-all"
+                    >
+                      <div className="relative aspect-square w-full bg-white p-2 flex items-center justify-center">
+                        <Link href={`/produit/${p.slug}`} className="relative w-full h-full block">
+                          <Image
+                            src={productImage(p)}
+                            alt={p.name}
+                            fill
+                            className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                            sizes="185px"
+                          />
+                        </Link>
 
-                  {/* Badge Atelier Top-Left (Style Jumia Express) */}
-                  <span className="absolute top-2 left-2 bg-blue-600 text-white text-2xs font-extrabold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
-                    Atelier
-                  </span>
+                        <span className="absolute top-2 left-2 bg-blue-600 text-white text-2xs font-extrabold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+                          Atelier
+                        </span>
 
-                  {/* Bouton Rond Noir (+) Style Jumia Mobile */}
-                  <button
-                    onClick={(e) => handleQuickAddFlash(e, item)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-gray-900/90 hover:bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md active:scale-90 transition-transform cursor-pointer"
-                    title="Configurer"
-                    aria-label={`Configurer ${item.title}`}
-                  >
-                    <Plus size={15} strokeWidth={2.5} />
-                  </button>
-                </div>
+                        <button
+                          onClick={(e) => handleQuickAddFlash(e, p.slug)}
+                          className="absolute top-2 right-2 w-7 h-7 bg-gray-900/90 hover:bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md active:scale-90 transition-transform cursor-pointer"
+                          title="Configurer"
+                          aria-label={`Configurer ${p.name}`}
+                        >
+                          <Plus size={15} strokeWidth={2.5} />
+                        </button>
+                      </div>
 
-                {/* Corps de Carte Produit */}
-                <div className="p-2 sm:p-2.5 flex flex-col justify-between flex-1 gap-1">
-                  {/* Titre Produit (2 lignes max) */}
-                  <Link href={item.href}>
-                    <h3 className="font-semibold text-2xs sm:text-xs text-gray-900 line-clamp-2 leading-tight hover:text-primary min-h-[30px]">
-                      {item.title}
-                    </h3>
-                  </Link>
+                      <div className="p-2 sm:p-2.5 flex flex-col justify-between flex-1 gap-1">
+                        <Link href={`/produit/${p.slug}`}>
+                          <h3 className="font-semibold text-2xs sm:text-xs text-gray-900 line-clamp-2 leading-tight hover:text-primary min-h-[30px]">
+                            {p.name}
+                          </h3>
+                        </Link>
 
-                  {/* Prix en FCFA & Réduction */}
-                  <div className="pt-0.5">
-                    <span className="text-2xs text-gray-500 font-medium block leading-none">Dès</span>
-                    <div className="tabular-nums font-extrabold text-xs sm:text-sm text-gray-950">
-                      {item.price.toLocaleString('fr-FR')} FCFA
+                        <div className="pt-0.5">
+                          <span className="text-2xs text-gray-500 font-medium block leading-none">
+                            {new Intl.NumberFormat('fr-FR').format(qty)} ex.
+                          </span>
+                          <div className="tabular-nums font-extrabold text-xs sm:text-sm text-gray-950">
+                            {new Intl.NumberFormat('fr-FR').format(priceFor(p, qty))} FCFA
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-              </div>
-            ))}
+                  )
+                })}
           </ProductScrollRail>
 
         </div>
       </section>
+      )}
 
-      {/* ═════════════════════════════════════════════════════════════
+{/* ═════════════════════════════════════════════════════════════
           4. BANDEAU DE RÉASSURANCE HELLOPRINT (4 Piliers Concrets)
       ═════════════════════════════════════════════════════════════ */}
       <section className="bg-white border-b border-gray-200 py-6">
@@ -720,11 +561,13 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════
-          4. CALCULATEUR DE PRIX INSTANTANÉ (L'arme n°1 de Helloprint)
+          4. CALCULATEUR DE PRIX (produits cochés « Calculateur de prix » dans l'admin,
+             même formule que l'API : le montant affiché est celui facturé)
       ═════════════════════════════════════════════════════════════ */}
+      {(calcProducts === null || calcProducts.length > 0) && (
       <section className="py-12 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          
+
           <div className="max-w-3xl mb-8">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold mb-2">
               <Calculator size={13} /> Chiffrage En Ligne Immédiat
@@ -733,52 +576,55 @@ export default function StorefrontHomePage() {
               Calculez votre prix exact en 3 clics
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Pas besoin d'attendre un devis par email. Sélectionnez vos options et découvrez immédiatement le montant de votre tirage en FCFA.
+              Pas besoin d&apos;attendre un devis par email. Sélectionnez vos options et découvrez immédiatement le montant de votre tirage en FCFA.
             </p>
           </div>
 
+          {!currentCalc ? (
+            <div className="h-80 bg-gray-50 border border-gray-200 rounded-2xl animate-pulse" aria-busy="true" />
+          ) : (
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 sm:p-8">
-            
-            {/* Étape 1 : Onglets de choix de produit */}
+
+            {/* Étape 1 : choix du produit */}
             <div className="flex flex-wrap items-center gap-2 pb-6 border-b border-gray-200">
-              {Object.keys(CALC_PRODUCTS).map((key) => {
-                const prod = CALC_PRODUCTS[key]
-                const isActive = calcProdKey === key
+              {(calcProducts ?? []).map((prod) => {
+                const isActive = currentCalc.id === prod.id
                 return (
                   <button
-                    key={key}
+                    key={prod.id}
                     type="button"
-                    onClick={() => handleSelectCalcProduct(key)}
+                    onClick={() => handleSelectCalcProduct(prod.id)}
+                    aria-pressed={isActive}
                     className={`py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-gray-900 text-white shadow-xs'
                         : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {prod.name.split(' (')[0]}
+                    {prod.name}
                   </button>
                 )
               })}
             </div>
 
-            {/* Étape 2 : Sélecteur de Quantité & Finition */}
+            {/* Étape 2 : quantité et finition */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-6 items-center">
-              
+
               <div className="lg:col-span-7 space-y-6">
-                
-                {/* Quantité */}
+
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <p className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                     1. Choisissez le tirage (Tarifs dégressifs) :
-                  </label>
+                  </p>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     {currentCalc.quantities.map((q) => {
-                      const isSel = selectedQty === q
+                      const isSel = calcQty === q
                       return (
                         <button
                           key={q}
                           type="button"
                           onClick={() => setSelectedQty(q)}
+                          aria-pressed={isSel}
                           className={`py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border ${
                             isSel
                               ? 'bg-emerald-700 border-emerald-700 text-white shadow-xs'
@@ -792,54 +638,55 @@ export default function StorefrontHomePage() {
                   </div>
                 </div>
 
-                {/* Finitions */}
+                {currentCalc.finishes?.length > 1 && (
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                    2. Choisissez le papier ou la finition :
-                  </label>
+                  <p className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    2. Choisissez la finition :
+                  </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {currentCalc.finishes.map((f) => {
-                      const isSel = selectedFinish === f.id
+                      const isSel = activeFinishObj?.id === f.id
                       return (
                         <button
                           key={f.id}
                           type="button"
                           onClick={() => setSelectedFinish(f.id)}
+                          aria-pressed={isSel}
                           className={`p-3 rounded-xl text-left transition-all cursor-pointer border ${
                             isSel
                               ? 'bg-emerald-50/80 border-emerald-600 ring-1 ring-emerald-600'
                               : 'bg-white border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-xs text-gray-900">{f.label}</span>
-                            {f.extra > 0 && (
-                              <span className="text-2xs font-bold text-emerald-700 tabular-nums">
-                                +{new Intl.NumberFormat('fr-FR').format(f.extra)} F
+                            {f.priceModifier > 0 && (
+                              <span className="text-2xs font-bold text-emerald-700 tabular-nums shrink-0">
+                                +{new Intl.NumberFormat('fr-FR').format(f.priceModifier)} F
                               </span>
                             )}
                           </div>
-                          <p className="text-2xs text-gray-500">{f.desc}</p>
                         </button>
                       )
                     })}
                   </div>
                 </div>
+                )}
 
               </div>
 
-              {/* Colonne Résumé Tarif & Commande Directe */}
+              {/* Résumé du prix et passage à la fiche produit */}
               <div className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Total TTC Garanti
+                    Total TTC
                   </span>
                   <span className="text-2xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
-                    {currentCalc.leadTime}
+                    Production : {currentCalc.deliveryDays} j ouvré{currentCalc.deliveryDays > 1 ? 's' : ''}
                   </span>
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4" aria-live="polite">
                   <p className="font-display font-extrabold text-3xl text-gray-900 tabular-nums leading-none">
                     {new Intl.NumberFormat('fr-FR').format(calculatedTotal)} <span className="text-sm font-sans font-bold text-gray-600">FCFA</span>
                   </p>
@@ -850,16 +697,24 @@ export default function StorefrontHomePage() {
 
                 <div className="space-y-1.5 text-xs text-gray-600 mb-6 bg-gray-50 p-3 rounded-xl border border-gray-100">
                   <p className="flex items-center gap-1.5 font-medium">
-                    <Check size={14} className="text-emerald-600" /> Produit : {currentCalc.name}
+                    <Check size={14} className="text-emerald-600 shrink-0" /> Produit : {currentCalc.name}
                   </p>
                   <p className="flex items-center gap-1.5 font-medium">
-                    <Check size={14} className="text-emerald-600" /> Quantité : {new Intl.NumberFormat('fr-FR').format(selectedQty)} exemplaires
+                    <Check size={14} className="text-emerald-600 shrink-0" /> Quantité : {new Intl.NumberFormat('fr-FR').format(calcQty)} exemplaires
                   </p>
+                  {(currentCalc.formats?.[0] || currentCalc.papers?.[0]) && (
+                    <p className="flex items-center gap-1.5 font-medium">
+                      <Check size={14} className="text-emerald-600 shrink-0" />
+                      {[currentCalc.formats?.[0]?.label, currentCalc.papers?.[0]?.label].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                  {activeFinishObj && (
+                    <p className="flex items-center gap-1.5 font-medium">
+                      <Check size={14} className="text-emerald-600 shrink-0" /> Finition : {activeFinishObj.label}
+                    </p>
+                  )}
                   <p className="flex items-center gap-1.5 font-medium">
-                    <Check size={14} className="text-emerald-600" /> Finition : {activeFinishObj?.label}
-                  </p>
-                  <p className="flex items-center gap-1.5 font-medium">
-                    <Check size={14} className="text-emerald-600" /> Contrôle PAO 300 DPI inclus
+                    <Check size={14} className="text-emerald-600 shrink-0" /> Contrôle PAO 300 DPI inclus
                   </p>
                 </div>
 
@@ -873,18 +728,20 @@ export default function StorefrontHomePage() {
                 </button>
 
                 <p className="text-2xs text-center text-gray-500 mt-3">
-                  Paiement sécurisé Orange Money, Moov Money ou Virement DGI
+                  Autres formats, papiers et recto-verso sur la fiche produit
                 </p>
               </div>
 
             </div>
 
           </div>
+          )}
 
         </div>
       </section>
+      )}
 
-      {/* ═════════════════════════════════════════════════════════════
+{/* ═════════════════════════════════════════════════════════════
           6. SALONS & ÉVÉNEMENTS (Bloc Signature Helloprint)
       ═════════════════════════════════════════════════════════════ */}
       <section className="py-12 bg-white border-b border-gray-200">
@@ -1060,15 +917,15 @@ export default function StorefrontHomePage() {
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-gray-300">
-                <span>📍 Atelier Gounghin & Showroom Ouaga 2000</span>
+                <span>📍 {contact.address}</span>
                 <span>⏰ Lundi au Samedi : 08h00 — 18h30</span>
-                <span>📞 Hotline : {CONTACT_PHONE_DISPLAY}</span>
+                <span>📞 Hotline : {contact.phoneDisplay}</span>
               </div>
             </div>
 
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
               <a
-                href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20un%20renseignement%20pour%20une%20commande%20d'impression.`}
+                href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint,%20je%20souhaite%20un%20renseignement%20pour%20une%20commande%20d'impression.`}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-2"

@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Download, Printer, ShieldCheck, Phone, Mail, MapPin, FileText } from 'lucide-react'
 import { CartItem } from '@/context/CartContext'
+import { usePublicSettings, useContact } from '@/lib/settings.service'
 
 interface DevisPdfGeneratorProps {
   isOpen: boolean
@@ -43,6 +44,9 @@ function getCurrentDate() {
 
 export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }: DevisPdfGeneratorProps) {
   const printRef = useRef<HTMLDivElement>(null)
+  // Coordonnées et seuil de livraison offerte : admin › Paramètres
+  const contact = useContact()
+  const freeThreshold = usePublicSettings().settings?.delivery.freeThreshold ?? 0
   const devisNumber = generateDevisNumber()
   const tva = Math.round(total * 0.18)
   const totalHT = total - tva
@@ -234,9 +238,9 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                     <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '14px 16px' }}>
                       <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>De</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 4 }}>YopoePrint SARL</div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📍 Ouagadougou, Burkina Faso</div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📞 +226 XX XX XX XX</div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>✉️ contact@yopoeprint.bf</div>
+                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📍 {contact.address}</div>
+                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📞 {contact.phoneDisplay}</div>
+                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>✉️ {contact.email}</div>
                     </div>
                     {/* Destinataire */}
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '14px 16px' }}>
@@ -324,8 +328,10 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                   {/* ── CONDITIONS ── */}
                   <div style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.6, marginBottom: 32 }}>
                     <strong style={{ color: '#6b7280' }}>Conditions de paiement :</strong> 50% à la commande, 50% avant livraison.<br />
-                    <strong style={{ color: '#6b7280' }}>Délais de production :</strong> Variables selon le produit (2 à 7 jours ouvrables après validation du BAT).<br />
-                    <strong style={{ color: '#6b7280' }}>Livraison :</strong> Offerte à Ouagadougou pour toute commande supérieure à 50 000 FCFA.
+                    <strong style={{ color: '#6b7280' }}>Délais de production :</strong> Variables selon le produit (2 à 7 jours ouvrables après validation du BAT).
+                    {freeThreshold > 0 && (
+                      <><br /><strong style={{ color: '#6b7280' }}>Livraison :</strong> Offerte à partir de {new Intl.NumberFormat('fr-FR').format(freeThreshold)} FCFA de commande (hors zones exclues).</>
+                    )}
                   </div>
 
                   {/* ── SIGNATURE ── */}
@@ -343,10 +349,10 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                   {/* ── FOOTER ── */}
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 14, marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>
-                      🖨️ YopoePrint — Ouagadougou, Burkina Faso
+                      🖨️ YopoePrint — {contact.address}
                     </div>
                     <div style={{ fontSize: 9, color: '#d1d5db', textAlign: 'right' }}>
-                      www.yopoeprint.bf · contact@yopoeprint.bf<br />
+                      www.yopoeprint.bf · {contact.email}<br />
                       RC/BF/OUA/2024/B/XXXX · NIF : XXXXXXX
                     </div>
                   </div>

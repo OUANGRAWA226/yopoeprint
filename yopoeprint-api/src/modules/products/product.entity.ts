@@ -90,6 +90,18 @@ export class Product {
   @Column({ name: 'sort_order', default: 0 })
   sortOrder: number
 
+  // Mis en avant dans « Offres de l'atelier » (accueil) et en vedette du méga-menu de sa catégorie
+  @Column({ name: 'is_home_offer', default: false })
+  isHomeOffer: boolean
+
+  // Proposé dans le calculateur de prix de l'accueil
+  @Column({ name: 'in_calculator', default: false })
+  inCalculator: boolean
+
+  // Quantité de référence pour le prix affiché (« Dès … pour N ex. ») ; minQuantity par défaut
+  @Column({ name: 'offer_quantity', type: 'int', nullable: true })
+  offerQuantity: number | null
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 

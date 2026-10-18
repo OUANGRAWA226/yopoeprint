@@ -2,18 +2,19 @@
 
 import Link from 'next/link'
 import { Phone, Truck, Building2, HelpCircle, CheckCircle2 } from 'lucide-react'
-import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 export function Topbar() {
+  const contact = useContact()
   return (
     <div className="bg-gray-900 text-gray-300 text-xs py-2 border-b border-gray-800 hidden md:block">
       <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center gap-6 font-medium">
         
         {/* Left: Hotline & Trust */}
         <div className="flex items-center gap-6">
-          <a href={`tel:${CONTACT_PHONE}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
+          <a href={`tel:${contact.phone}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
             <Phone size={13} className="text-emerald-400 shrink-0" />
-            <span>Conseiller Atelier Ouagadougou : <strong className="text-white tabular-nums">{CONTACT_PHONE_DISPLAY}</strong></span>
+            <span>Conseiller Atelier Ouagadougou : <strong className="text-white tabular-nums">{contact.phoneDisplay}</strong></span>
           </a>
 
           <div className="flex items-center gap-1.5 text-gray-300 hidden lg:flex">

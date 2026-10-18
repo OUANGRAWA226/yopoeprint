@@ -1,13 +1,14 @@
 import React from 'react'
 import Link from 'next/link'
-import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
+import { getServerContact } from '@/lib/contact'
 
 export const metadata = {
   title: 'Prévisualisation Email - Confirmation de commande',
   robots: 'noindex, nofollow', // Ne pas indexer les pages d'emails
 }
 
-export default function EmailConfirmationPreview() {
+export default async function EmailConfirmationPreview() {
+  const contact = await getServerContact()
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 flex flex-col items-center justify-center font-sans">
       
@@ -108,12 +109,12 @@ export default function EmailConfirmationPreview() {
             Besoin d'aide avec votre commande ?
           </p>
           <p className="text-sm text-gray-600 mb-6">
-            Répondez directement à cet email ou contactez-nous sur WhatsApp au <strong>{CONTACT_PHONE_DISPLAY}</strong>.
+            Répondez directement à cet email ou contactez-nous sur WhatsApp au <strong>{contact.phoneDisplay}</strong>.
           </p>
           
           <div className="text-2xs text-gray-400 space-y-1">
             <p>© 2026 YopoePrint. Tous droits réservés.</p>
-            <p>Quartier Koulouba, Ouagadougou, Burkina Faso</p>
+            <p>{contact.address}</p>
             <p className="mt-4">
               <a href="#" className="text-gray-400 underline">Se désabonner</a>
               {' · '}

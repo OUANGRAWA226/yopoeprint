@@ -12,7 +12,7 @@ import {
  ChevronRight, RotateCcw, Copy, ShieldCheck, Eye, Sparkles
 } from 'lucide-react'
 import { BatInteractiveModal } from '@/components/orders/BatInteractiveModal'
-import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 // ─── Config statuts ───────────────────────────────────────────
 const STATUSES = [
@@ -148,6 +148,7 @@ function ProgressTimeline({ status, history }: { status: string; history?: any[]
 
 // ─── Page principale ──────────────────────────────────────────
 function SuiviContent() {
+  const contact = useContact()
  const [input, setInput] = useState('')
  const [order, setOrder] = useState<any | null>(null)
  const [loading, setLoading] = useState(false)
@@ -351,7 +352,7 @@ function SuiviContent() {
  <div>
  <p className="font-bold text-red-600 text-sm">Commande annulée</p>
  <p className="text-red-500 text-xs mt-0.5">
- Contactez-nous au {CONTACT_PHONE_DISPLAY} pour plus d&apos;informations.
+ Contactez-nous au {contact.phoneDisplay} pour plus d&apos;informations.
  </p>
  </div>
  </div>
@@ -569,11 +570,11 @@ function SuiviContent() {
  <p className="text-gray-500 text-xs mb-4 leading-relaxed">
  Notre équipe est disponible pour vous aider du lundi au samedi de 8h à 18h.
  </p>
- <a href={`tel:${CONTACT_PHONE}`}
+ <a href={`tel:${contact.phone}`}
  className="flex items-center gap-2 bg-foreground text-white px-4 py-2.5
  rounded-xl text-sm font-bold hover:bg-foreground transition-all">
  <Phone size={14} />
- {CONTACT_PHONE_DISPLAY}
+ {contact.phoneDisplay}
  </a>
  </div>
 

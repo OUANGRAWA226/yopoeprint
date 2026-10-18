@@ -4,7 +4,7 @@ import {
   LayoutTemplate, ArrowRight, Download, FileCheck, Layers, 
   Sparkles, CheckCircle2, ShieldCheck, Phone, HelpCircle, FileText
 } from 'lucide-react'
-import { WHATSAPP_URL } from '@/lib/contact'
+import { getServerContact } from '@/lib/contact'
 
 export const metadata = {
   title: 'Guide Technique Pré-Presse — Préparer ses fichiers pour YopoePrint',
@@ -26,7 +26,8 @@ const FORMATS_TABLE = [
   { name: 'A2 & A1 (Grand format)', dimMm: '420 × 594 mm / 594 × 841 mm', pixels300: '4960 × 7016 px', usage: 'Affiches événementielles, vitrines' },
 ]
 
-export default function GuideImpressionPage() {
+export default async function GuideImpressionPage() {
+  const contact = await getServerContact()
   return (
     <div className="bg-gray-100 min-h-screen text-foreground pb-24">
       
@@ -359,7 +360,7 @@ export default function GuideImpressionPage() {
               Voir le catalogue produits
             </Link>
             <a 
-              href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20j'ai%20besoin%20d'aide%20pour%20la%20préparation%20de%20mon%20fichier.`} 
+              href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint,%20j'ai%20besoin%20d'aide%20pour%20la%20préparation%20de%20mon%20fichier.`} 
               target="_blank" 
               rel="noreferrer"
               className="bg-white/10 hover:bg-white/15 text-white font-medium px-7 py-3.5 rounded-full text-xs sm:text-sm border border-white/15 transition-all"

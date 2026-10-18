@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Search, ChevronDown, MessageSquare, Phone, MapPin, Mail, Paperclip, Send } from 'lucide-react'
-import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 // ─── DONNÉES DE LA FAQ ──────────────────────────────────────────────────────────
 const FAQ_CATEGORIES = ['Populaires', 'Fichiers & PAO', 'Paiement', 'Livraison']
@@ -79,6 +79,7 @@ function Accordion({ question, answer }: { question: string, answer: string }) {
 }
 
 export default function FAQContactPage() {
+  const contact = useContact()
   const [activeCategory, setActiveCategory] = useState('Populaires')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -223,7 +224,7 @@ export default function FAQContactPage() {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Téléphone & WhatsApp</p>
-                    <p className="text-sm text-gray-500 mt-0.5">{CONTACT_PHONE_DISPLAY}</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{contact.phoneDisplay}</p>
                     <p className="text-2xs text-gray-600 mt-1">Lun-Sam, 8h00 - 18h00</p>
                   </div>
                 </div>
@@ -234,7 +235,7 @@ export default function FAQContactPage() {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Email Support</p>
-                    <p className="text-sm text-gray-500 mt-0.5">contact@yopoeprint.bf</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{contact.email}</p>
                   </div>
                 </div>
 
@@ -244,7 +245,7 @@ export default function FAQContactPage() {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Adresse</p>
-                    <p className="text-sm text-gray-500 mt-0.5">Koulouba, Ouagadougou<br/>Burkina Faso</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{contact.address}</p>
                   </div>
                 </div>
               </div>

@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react'
 import { quotesService, Quote } from '@/lib/quotes.service'
-import { WHATSAPP_URL } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; border: string; icon: React.ReactNode }> = {
   new: {
@@ -66,6 +66,7 @@ function formatDate(d?: string) {
 }
 
 export default function DevisClientPage() {
+  const contact = useContact()
   const [devisList, setDevisList] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
@@ -232,7 +233,7 @@ export default function DevisClientPage() {
 
             <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
               <a 
-                href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20je%20souhaite%20échanger%20sur%20mon%20devis%20%3A%20${encodeURIComponent(selectedQuote.title)}`}
+                href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint%2C%20je%20souhaite%20échanger%20sur%20mon%20devis%20%3A%20${encodeURIComponent(selectedQuote.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 px-4 rounded-xl font-bold text-xs transition-colors"

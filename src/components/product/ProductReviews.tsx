@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Star, CheckCircle2, User, MessageSquare } from 'lucide-react'
-import { WHATSAPP_URL } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 export interface ProductReview {
   name: string
@@ -18,9 +18,9 @@ interface ProductReviewsProps {
   reviews?: ProductReview[]
 }
 
-const WHATSAPP_REVIEW_URL = `${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20donner%20mon%20avis`
-
 export function ProductReviews({ productName = 'ce produit', reviews = [] }: ProductReviewsProps) {
+  const contact = useContact()
+  const WHATSAPP_REVIEW_URL = `${contact.whatsappUrl}?text=Bonjour%20YopoePrint,%20je%20souhaite%20donner%20mon%20avis`
   const count = reviews.length
   const average = count ? reviews.reduce((sum, r) => sum + r.rating, 0) / count : 0
 

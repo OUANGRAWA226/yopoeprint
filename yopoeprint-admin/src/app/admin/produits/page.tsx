@@ -472,6 +472,35 @@ function ProductModal({
                 </label>
               </div>
 
+              {/* Mise en avant sur l'accueil de la boutique */}
+              <fieldset className="p-4 bg-gray-50 rounded-xl space-y-3">
+                <legend className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1">Mise en avant sur l&apos;accueil</legend>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" className="mt-0.5 w-4 h-4 accent-blue-mid" checked={!!form.isHomeOffer}
+                    onChange={(e) => { setHasChanges(true); setForm((f: any) => ({ ...f, isHomeOffer: e.target.checked })) }} />
+                  <span className="text-sm text-blue-deep">
+                    <strong>Offre de l&apos;atelier</strong>
+                    <span className="block text-xs text-gray-600">Carte dans « Offres de l&apos;atelier » et vedette du méga-menu de sa catégorie.</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" className="mt-0.5 w-4 h-4 accent-blue-mid" checked={!!form.inCalculator}
+                    onChange={(e) => { setHasChanges(true); setForm((f: any) => ({ ...f, inCalculator: e.target.checked })) }} />
+                  <span className="text-sm text-blue-deep">
+                    <strong>Calculateur de prix</strong>
+                    <span className="block text-xs text-gray-600">Onglet du calculateur de l&apos;accueil (quantités et finitions de ce produit).</span>
+                  </span>
+                </label>
+                <label className="block text-xs font-semibold text-gray-700 space-y-1">
+                  <span>Quantité du prix affiché (« Dès … »)</span>
+                  <select className={`${inputCls} cursor-pointer`} value={form.offerQuantity ?? ''}
+                    onChange={(e) => { setHasChanges(true); setForm((f: any) => ({ ...f, offerQuantity: e.target.value ? Number(e.target.value) : null })) }}>
+                    <option value="">Quantité minimale ({form.minQuantity || '—'} ex.)</option>
+                    {(form.quantities || []).map((q: number) => <option key={q} value={q}>{q} ex.</option>)}
+                  </select>
+                </label>
+              </fieldset>
+
               {/* Formats */}
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">
@@ -937,6 +966,7 @@ export default function AdminProduitsPage() {
         const productList = Array.isArray(data) ? data : data?.data || data?.products || []
         // Transformer les données reçues au format Product
         const transformed = productList.map((p: any) => ({
+          ...p, // produit complet (formats, papiers, quantités…) : le formulaire de modification en a besoin
           id: p.id?.toString() || '',
           slug: p.slug || '',
           name: p.name || '',
@@ -982,6 +1012,7 @@ export default function AdminProduitsPage() {
       const data = await api.get('/products?limit=200&includeInactive=true')
       const productList = Array.isArray(data) ? data : data?.data || data?.products || []
       const transformed = productList.map((p: any) => ({
+        ...p, // produit complet (formats, papiers, quantités…) : le formulaire de modification en a besoin
         id: p.id?.toString() || '',
         slug: p.slug || '',
         name: p.name || '',

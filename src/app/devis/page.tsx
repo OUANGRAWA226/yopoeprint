@@ -21,7 +21,7 @@ import {
   PhoneCall,
   Loader2
 } from 'lucide-react'
-import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 import { Alert } from '@/components/ui/Alert'
 
 // ─── Données ──────────────────────────────────────────────────
@@ -99,6 +99,7 @@ const inputCls = `w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl 
 const selectCls = `${inputCls} cursor-pointer appearance-none`
 
 export default function DevisPage() {
+  const contact = useContact()
   const [form, setForm] = useState(INITIAL)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
@@ -675,15 +676,15 @@ export default function DevisPage() {
 
               <div className="pt-1 flex flex-col gap-2">
                 <a 
-                  href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20j%27ai%20besoin%20d%27un%20devis%20urgent%20pour%20une%20impression.`} 
+                  href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint%2C%20j%27ai%20besoin%20d%27un%20devis%20urgent%20pour%20une%20impression.`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs transition-colors"
                 >
-                  WhatsApp Devis Urgent ({CONTACT_PHONE_DISPLAY})
+                  WhatsApp Devis Urgent ({contact.phoneDisplay})
                 </a>
                 <a 
-                  href={`tel:${CONTACT_PHONE}`} 
+                  href={`tel:${contact.phone}`} 
                   className="w-full inline-flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-semibold transition-colors"
                 >
                   Téléphone direct : +226 25 30 00 00

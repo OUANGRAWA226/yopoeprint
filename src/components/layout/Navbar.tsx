@@ -12,435 +12,81 @@ import {
 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useAuthContext } from '@/context/AuthContext'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { productsService } from '@/lib/products.service'
 import { Logo } from '@/components/shared/Logo'
-import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
-import { usePublicSettings } from '@/lib/settings.service'
+import { usePublicSettings, useContact } from '@/lib/settings.service'
+import { useCatalogue, CatalogueProduct, priceFor, referenceQuantity, productImage } from '@/lib/catalogue'
 
-// ─── Structure de Données E-Commerce Professionnelle (Standard Helloprint & Jumia) ───
+// ─── Méga-menu : rubriques fixes, contenu tiré du catalogue (admin › Produits) ───
 export interface NavCategory {
   id: string
   label: string
   href: string
   icon: any
-  startingPrice: string
   columns: {
     title: string
-    items: {
-      label: string
-      href: string
-      price?: string
-      badge?: string
-      isNew?: boolean
-    }[]
+    items: { label: string; href: string }[]
   }[]
-  featured: {
+  // Produit vedette : coché « Offre de l'atelier », sinon populaire, sinon le premier de la rubrique
+  featured?: {
     badge: string
     title: string
-    subtitle: string
     price: string
-    oldPrice?: string
-    discount?: string
-    delivery: string
     href: string
     imageUrl: string
   }
 }
 
-const NAV_CATEGORIES: NavCategory[] = [
-  {
-    id: 'flyers',
-    label: 'Flyers & Dépliants',
-    href: '/catalogue/flyers',
-    icon: FileText,
-    startingPrice: '8 500 F',
-    columns: [
-      {
-        title: 'Formats Standards',
-        items: [
-          { label: 'Flyer A6 (10 × 15 cm)', href: '/catalogue/flyers', price: 'Dès 8 500 F', badge: 'Éco' },
-          { label: 'Flyer A5 (14,8 × 21 cm)', href: '/catalogue/flyers', price: 'Dès 12 000 F', badge: 'Top Vente' },
-          { label: 'Flyer A4 (21 × 29,7 cm)', href: '/catalogue/flyers', price: 'Dès 18 500 F' },
-          { label: 'Format DL (10 × 21 cm)', href: '/catalogue/flyers', price: 'Dès 10 500 F' },
-          { label: 'Flyer Carré (15 × 15 cm)', href: '/catalogue/flyers', price: 'Dès 14 000 F' },
-        ],
-      },
-      {
-        title: 'Dépliants & Plis',
-        items: [
-          { label: 'Dépliant 2 volets (1 pli central)', href: '/catalogue/flyers', price: 'Dès 22 000 F' },
-          { label: 'Dépliant 3 volets (2 plis roulés)', href: '/catalogue/flyers', price: 'Dès 28 000 F', badge: 'Bestseller' },
-          { label: 'Dépliant 3 volets (plis accordéon)', href: '/catalogue/flyers', price: 'Dès 28 000 F' },
-          { label: 'Dépliant 4 volets (3 plis fenêtre)', href: '/catalogue/flyers', price: 'Dès 38 000 F' },
-        ],
-      },
-      {
-        title: 'Papiers & Finitions',
-        items: [
-          { label: 'Couché Brillant 135g (Événements)', href: '/catalogue/flyers' },
-          { label: 'Couché Mat 170g (Élégant)', href: '/catalogue/flyers' },
-          { label: 'Couché Semi-Rigide 250g', href: '/catalogue/flyers' },
-          { label: 'Couché Carte 350g Mat', href: '/catalogue/flyers' },
-          { label: 'Pelliculage Soft Touch velours', href: '/catalogue/flyers', badge: 'VIP' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Offre Flash de la Semaine',
-      title: 'Pack 1 000 Flyers A5 Quadri Recto-Verso',
-      subtitle: 'Papier couché brillant 135g haute tenue. Calibrage CMJN FOGRA39 garanti.',
-      price: '28 500 FCFA',
-      oldPrice: '35 000 FCFA',
-      discount: '-18%',
-      delivery: 'Expédié sous 48h à Ouaga',
-      href: '/catalogue/flyers',
-      imageUrl: '/images/products/flyers-depliants.jpg',
-    },
-  },
-  {
-    id: 'cartes',
-    label: 'Cartes de Visite',
-    href: '/catalogue/cartes',
-    icon: CreditCard,
-    startingPrice: '12 500 F',
-    columns: [
-      {
-        title: 'Formats & Découpes',
-        items: [
-          { label: 'Carte Standard 85 × 55 mm', href: '/catalogue/cartes', price: 'Dès 12 500 F', badge: 'Top Vente' },
-          { label: 'Format Carré Square 55 × 55 mm', href: '/catalogue/cartes', price: 'Dès 16 000 F' },
-          { label: 'Format Carte Bancaire 85 × 54 mm', href: '/catalogue/cartes', price: 'Dès 14 000 F' },
-          { label: 'Coins Arrondis (Rayon 4mm)', href: '/catalogue/cartes', price: '+2 500 F' },
-          { label: 'Carte Double Pliée 85 × 110 mm', href: '/catalogue/cartes', price: 'Dès 25 000 F' },
-        ],
-      },
-      {
-        title: 'Finitions Prestige',
-        items: [
-          { label: 'Pelliculage Mat Velours (Soft Touch)', href: '/catalogue/cartes', badge: 'Signature' },
-          { label: 'Vernis Sélectif 3D Brillant', href: '/catalogue/cartes', badge: 'Relief' },
-          { label: 'Dorure à Chaud Or Métallisé', href: '/catalogue/cartes' },
-          { label: 'Dorure Argent & Holographique', href: '/catalogue/cartes' },
-          { label: 'Pelliculage Brillant Anti-Rayures', href: '/catalogue/cartes' },
-        ],
-      },
-      {
-        title: 'Matières Spéciales',
-        items: [
-          { label: 'Papier Couché 350g Extra-Blanc', href: '/catalogue/cartes' },
-          { label: 'Papier Couché 450g Ultra-Épais', href: '/catalogue/cartes' },
-          { label: 'Kraft Naturel Recyclé 300g', href: '/catalogue/cartes', badge: 'Éco' },
-          { label: 'PVC Plastique Transparent indéchirable', href: '/catalogue/cartes' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Pack Prestige Entreprise',
-      title: '500 Cartes 350g Soft Touch + Vernis 3D',
-      subtitle: 'Effet tactile soyeux et logos en surbrillance relief 3D. Le choix des dirigeants.',
-      price: '32 000 FCFA',
-      oldPrice: '40 000 FCFA',
-      discount: '-20%',
-      delivery: 'Livrable en 48h au bureau',
-      href: '/catalogue/cartes',
-      imageUrl: '/images/products/cartes-visite.jpg',
-    },
-  },
-  {
-    id: 'affiches',
-    label: 'Affiches & Bâches',
-    href: '/catalogue/affiches',
-    icon: ImageIcon,
-    startingPrice: '4 500 F',
-    columns: [
-      {
-        title: 'Affiches Papier HD',
-        items: [
-          { label: 'Affiche A3 (29,7 × 42 cm)', href: '/catalogue/affiches', price: 'Dès 4 500 F' },
-          { label: 'Affiche A2 (42 × 59,4 cm)', href: '/catalogue/affiches', price: 'Dès 9 000 F' },
-          { label: 'Affiche A1 (59,4 × 84,1 cm)', href: '/catalogue/affiches', price: 'Dès 16 000 F', badge: 'Événement' },
-          { label: 'Affiche A0 (84,1 × 118,9 cm)', href: '/catalogue/affiches', price: 'Dès 25 000 F' },
-          { label: 'Affiche Abribus & Métro (120 × 176 cm)', href: '/catalogue/affiches', price: 'Dès 38 000 F' },
-        ],
-      },
-      {
-        title: 'Bâches & Banderoles',
-        items: [
-          { label: 'Bâche PVC 510g avec Œillets tous les 50cm', href: '/catalogue/signaletique', price: 'Dès 6 500 F/m²', badge: 'Robuste' },
-          { label: 'Bâche Micro-Perforée Mesh (Anti-Vent)', href: '/catalogue/signaletique', price: 'Dès 8 500 F/m²' },
-          { label: 'Bâche Écologique Sans PVC', href: '/catalogue/signaletique', price: 'Dès 10 500 F/m²' },
-          { label: 'Banderole Événementielle Corde & Fourreau', href: '/catalogue/signaletique' },
-        ],
-      },
-      {
-        title: 'Panneaux Rigides',
-        items: [
-          { label: 'Panneau Akilux Alvéolaire (Chantiers & Immo)', href: '/catalogue/signaletique', price: 'Dès 7 500 F' },
-          { label: 'Panneau Forex PVC expansé 3mm / 5mm', href: '/catalogue/signaletique', price: 'Dès 14 000 F' },
-          { label: 'Panneau Alu Dibond Métallique 3mm', href: '/catalogue/signaletique', price: 'Dès 28 000 F', badge: 'Prestige' },
-          { label: 'Adhésif Vinyle Vitrine & Façade', href: '/catalogue/signaletique' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Grand Format Événementiel',
-      title: 'Bâche PVC 510g Haute Résistance 3×1m',
-      subtitle: 'Encres Latex résistantes aux fortes chaleurs sahéliennes et UV sans décoloration.',
-      price: '19 500 FCFA',
-      oldPrice: '24 000 FCFA',
-      discount: '-18%',
-      delivery: 'Atelier Ouaga · Prêt en 24h',
-      href: '/catalogue/signaletique',
-      imageUrl: '/images/products/affiches-baches.jpg',
-    },
-  },
-  {
-    id: 'roll-up',
-    label: 'Roll-ups & Salons',
-    href: '/catalogue/roll-up',
-    icon: Flag,
-    startingPrice: '28 000 F',
-    columns: [
-      {
-        title: 'Kakémonos & Enrouleurs',
-        items: [
-          { label: 'Roll-Up Standard 85 × 200 cm', href: '/catalogue/roll-up', price: '28 000 F', badge: 'Top Vente' },
-          { label: 'Roll-Up Large 100 × 200 cm', href: '/catalogue/roll-up', price: '38 000 F' },
-          { label: 'Roll-Up Géant 120 × 200 cm', href: '/catalogue/roll-up', price: '48 000 F' },
-          { label: 'Roll-Up Deluxe Aluminium Pied Lourd', href: '/catalogue/roll-up', price: '45 000 F', badge: 'VIP' },
-          { label: 'Recharge Visuel Seul (Sans structure)', href: '/catalogue/roll-up', price: '16 000 F' },
-        ],
-      },
-      {
-        title: 'Stands d’Exposition & Salons',
-        items: [
-          { label: 'Photocall Stand Parapluie Tissu 3 × 2,3m', href: '/catalogue/evenementiel', price: '185 000 F', badge: 'Complet' },
-          { label: 'Comptoir d’Accueil Pliable Personnalisé', href: '/catalogue/evenementiel', price: '65 000 F' },
-          { label: 'Porte-Brochures Zig-Zag Aluminium', href: '/catalogue/papeterie', price: '35 000 F' },
-          { label: 'Chevalet de Trottoir Double Face', href: '/catalogue/signaletique', price: '42 000 F' },
-        ],
-      },
-      {
-        title: 'Drapeaux & Signalétique Extérieure',
-        items: [
-          { label: 'Oriflamme Beach Flag Plume 2,80m', href: '/catalogue/evenementiel', price: '55 000 F' },
-          { label: 'Oriflamme Goutte d’Eau 3,40m', href: '/catalogue/evenementiel', price: '68 000 F' },
-          { label: 'Pied Platine Acier 10kg & Bouée de Lestage', href: '/catalogue/evenementiel' },
-          { label: 'Badges Tours de Cou Satinés Personnalisés', href: '/catalogue/goodies', price: 'Dès 450 F/u' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Pack Spécial Salons Pro',
-      title: 'Kit Stand Pro : 2 Roll-Ups 85×200 + 1 000 Dépliants',
-      subtitle: 'Comprend 2 structures complètes avec housses de transport matelassées et 1 000 brochures 3 volets.',
-      price: '84 000 FCFA',
-      oldPrice: '98 000 FCFA',
-      discount: '-15%',
-      delivery: 'Livrable en 48h chrono',
-      href: '/catalogue/roll-up',
-      imageUrl: '/images/products/rollup-salons.jpg',
-    },
-  },
-  {
-    id: 'brochures',
-    label: 'Brochures & Livrets',
-    href: '/catalogue/brochures',
-    icon: BookOpen,
-    startingPrice: '45 000 F',
-    columns: [
-      {
-        title: 'Reliures & Façonnages',
-        items: [
-          { label: 'Brochure Agrafée 2 Points Métal', href: '/catalogue/brochures', price: 'Dès 45 000 F', badge: 'Standard' },
-          { label: 'Dos Carré Collé PUR (Effet Livre)', href: '/catalogue/brochures', price: 'Dès 95 000 F', badge: 'Prestige' },
-          { label: 'Reliure Spirale Wire-O Métallique', href: '/catalogue/brochures', price: 'Dès 55 000 F' },
-          { label: 'Rapports d’Activités & Bilans Annuels', href: '/catalogue/brochures' },
-          { label: 'Magazines Périodiques & Bulletins', href: '/catalogue/brochures' },
-        ],
-      },
-      {
-        title: 'Formats Courants',
-        items: [
-          { label: 'Format A4 Fermé (8 à 64 pages)', href: '/catalogue/brochures' },
-          { label: 'Format A5 Fermé (8 à 48 pages)', href: '/catalogue/brochures', badge: 'Populaire' },
-          { label: 'Format Carré 21 × 21 cm', href: '/catalogue/brochures' },
-          { label: 'Format Paysage à l’Italienne', href: '/catalogue/brochures' },
-        ],
-      },
-      {
-        title: 'Options de Couverture',
-        items: [
-          { label: 'Couverture 300g Couché avec Vernis 3D', href: '/catalogue/brochures' },
-          { label: 'Pelliculage Mat Velours Anti-Rayures', href: '/catalogue/brochures' },
-          { label: 'Pages Intérieures Couché Brillant 135g', href: '/catalogue/brochures' },
-          { label: 'Pages Intérieures Couché Mat 170g', href: '/catalogue/brochures' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Corporate B2B',
-      title: '100 Catalogues A4 de 16 Pages Couverture 300g',
-      subtitle: 'Brochage 2 points métal, quadrichromie intégrale offset haute définition certifiée DGI.',
-      price: '115 000 FCFA',
-      oldPrice: '135 000 FCFA',
-      discount: '-15%',
-      delivery: 'Expédié en 3 à 5 jours',
-      href: '/catalogue/brochures',
-      imageUrl: '/images/products/brochures-catalogues.jpg',
-    },
-  },
-  {
-    id: 'textile',
-    label: 'Textile Pro & Vêtements',
-    href: '/catalogue/textile',
-    icon: Shirt,
-    startingPrice: '3 500 F',
-    columns: [
-      {
-        title: 'Vêtements Corporate',
-        items: [
-          { label: 'T-Shirts Coton Peigné 190g Quadri', href: '/catalogue/textile', price: 'Dès 3 500 F/u', badge: 'Top Vente' },
-          { label: 'Polos Piqué 220g avec Broderie Cœur', href: '/catalogue/textile', price: 'Dès 6 500 F/u', badge: 'Prestige' },
-          { label: 'Sweats à Capuche & Hoodies Épais', href: '/catalogue/textile', price: 'Dès 12 500 F/u' },
-          { label: 'Chemises Homme & Femme Broderie', href: '/catalogue/textile', price: 'Dès 11 000 F/u' },
-        ],
-      },
-      {
-        title: 'Tenues de Travail & Sécurité',
-        items: [
-          { label: 'Gilets Haute Visibilité Marqués', href: '/catalogue/textile', price: 'Dès 2 500 F/u', badge: 'Sécurité' },
-          { label: 'Combinaisons & Blouses d’Atelier', href: '/catalogue/textile', price: 'Dès 15 000 F/u' },
-          { label: 'Casquettes 6 Panneaux Broderie Relief', href: '/catalogue/textile', price: 'Dès 3 000 F/u' },
-          { label: 'Tabliers Serveur & Cuisine Marqués', href: '/catalogue/textile', price: 'Dès 4 500 F/u' },
-        ],
-      },
-      {
-        title: 'Techniques de Marquage',
-        items: [
-          { label: 'Sérigraphie Directe (Grands volumes)', href: '/catalogue/textile' },
-          { label: 'Broderie Industrielle Fil Haute Résistance', href: '/catalogue/textile' },
-          { label: 'Impression Numérique Directe DTG', href: '/catalogue/textile' },
-          { label: 'Transfert DTF Découpe Haute Définition', href: '/catalogue/textile' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Pack Équipe Pro',
-      title: 'Lot de 50 T-Shirts 100% Coton avec Logo',
-      subtitle: 'Marquage quadri grand format face avant ou broderie cœur. Coton peigné doux 190g.',
-      price: '145 000 FCFA',
-      oldPrice: '175 000 FCFA',
-      discount: '-17%',
-      delivery: 'Production express sous 72h',
-      href: '/catalogue/textile',
-      imageUrl: '/images/products/textile-pro.jpg',
-    },
-  },
-  {
-    id: 'goodies',
-    label: 'Goodies & Cadeaux VIP',
-    href: '/catalogue/goodies',
-    icon: Gift,
-    startingPrice: '350 F',
-    columns: [
-      {
-        title: 'Papeterie & Écriture',
-        items: [
-          { label: 'Stylos Métal avec Gravure Laser', href: '/catalogue/goodies', price: 'Dès 650 F/u', badge: 'VIP' },
-          { label: 'Stylos Bille Plastique Quadri', href: '/catalogue/goodies', price: 'Dès 350 F/u', badge: 'Éco' },
-          { label: 'Carnets de Notes Cuir PU avec Élastique', href: '/catalogue/goodies', price: 'Dès 2 800 F/u' },
-          { label: 'Bloc-Notes & Agendas Millésimés', href: '/catalogue/goodies', price: 'Dès 4 500 F/u' },
-        ],
-      },
-      {
-        title: 'Boissons & Lifestyle',
-        items: [
-          { label: 'Mugs Céramique Personnalisés 330ml', href: '/catalogue/goodies', price: 'Dès 2 500 F/u', badge: 'Bestseller' },
-          { label: 'Gourdes Isothermes Inox 500ml Gravées', href: '/catalogue/goodies', price: 'Dès 6 500 F/u' },
-          { label: 'Gobelets Réutilisables Éco-Cup', href: '/catalogue/goodies', price: 'Dès 450 F/u' },
-          { label: 'Tote Bags Coton Épais 280g Sérigraphiés', href: '/catalogue/sacs', price: 'Dès 1 500 F/u' },
-        ],
-      },
-      {
-        title: 'High-Tech & Badges',
-        items: [
-          { label: 'Clés USB Métalliques Gravées 16/32 Go', href: '/catalogue/goodies', price: 'Dès 4 500 F/u' },
-          { label: 'Batteries Externes Powerbank 10 000 mAh', href: '/catalogue/goodies', price: 'Dès 12 000 F/u' },
-          { label: 'Tours de Cou & Lanyards Satinés', href: '/catalogue/goodies', price: 'Dès 450 F/u' },
-          { label: 'Porte-Clés Métal Découpe Laser', href: '/catalogue/goodies', price: 'Dès 1 200 F/u' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Cadeau de Fin d’Année',
-      title: 'Coffret VIP : Gourde Inox + Carnet Cuir + Stylo Laser',
-      subtitle: 'Présentation sous boîte aimantée noire satinée avec mousse thermo-découpée personnalisée.',
-      price: '18 500 FCFA',
-      oldPrice: '22 000 FCFA',
-      discount: '-16%',
-      delivery: 'Dès 25 exemplaires livrés sous 5j',
-      href: '/catalogue/goodies',
-      imageUrl: '/images/products/goodies-vip.jpg',
-    },
-  },
-  {
-    id: 'packaging',
-    label: 'Stickers & Packaging',
-    href: '/catalogue/etiquettes',
-    icon: Box,
-    startingPrice: '5 500 F',
-    columns: [
-      {
-        title: 'Stickers & Autocollants',
-        items: [
-          { label: 'Stickers Découpe à la Forme (Kiss-Cut)', href: '/catalogue/etiquettes', price: 'Dès 8 500 F', badge: 'Tendance' },
-          { label: 'Stickers Planche A4 / A5 Multi-Poses', href: '/catalogue/etiquettes', price: 'Dès 5 500 F' },
-          { label: 'Étiquettes Produits en Rouleaux Bobines', href: '/catalogue/etiquettes', price: 'Dès 18 000 F', badge: 'Industriel' },
-          { label: 'Stickers Vinyle Résistant Eau & Huile', href: '/catalogue/etiquettes' },
-        ],
-      },
-      {
-        title: 'Packaging & Boîtes Carton',
-        items: [
-          { label: 'Boîtes d’Expédition E-Commerce Kraft', href: '/catalogue/etiquettes', price: 'Dès 850 F/u' },
-          { label: 'Pochettes Shopping Papier Kraft Corde', href: '/catalogue/sacs', price: 'Dès 450 F/u', badge: 'Boutique' },
-          { label: 'Étuis Pliants Cosmétiques & Pharmacie', href: '/catalogue/etiquettes' },
-          { label: 'Papier de Soie Imprimé au Logo', href: '/catalogue/etiquettes' },
-        ],
-      },
-      {
-        title: 'Signalétique Adhésive',
-        items: [
-          { label: 'Adhésifs Grand Format Sol Antidérapant', href: '/catalogue/signaletique' },
-          { label: 'Lettrage Découpé Vitrine Micro-Perforé', href: '/catalogue/signaletique' },
-          { label: 'Magnétiques pour Portières de Véhicules', href: '/catalogue/signaletique', price: 'Dès 14 000 F/paire' },
-          { label: 'Ruban Adhésif Scotch Personnalisé', href: '/catalogue/etiquettes' },
-        ],
-      },
-    ],
-    featured: {
-      badge: 'Packaging Artisanal',
-      title: '500 Sacs Kraft Cordelettes + 1 000 Stickers Vinyle',
-      subtitle: 'La panoplie complète pour valoriser vos colis e-commerce et boutiques physiques.',
-      price: '89 000 FCFA',
-      oldPrice: '105 000 FCFA',
-      discount: '-15%',
-      delivery: 'Expédié sous 4 jours ouvrés',
-      href: '/catalogue/etiquettes',
-      imageUrl: '/images/products/packaging-kraft.jpg',
-    },
-  },
+// Rubriques du menu (structure du site) et catégorie API correspondante
+const NAV_SECTIONS: (Omit<NavCategory, 'columns' | 'featured'> & { category: string })[] = [
+  { id: 'flyers',       label: 'Flyers & Dépliants',      href: '/catalogue/flyers',       icon: FileText,   category: 'flyers' },
+  { id: 'cartes',       label: 'Cartes de Visite',        href: '/catalogue/cartes',       icon: CreditCard, category: 'cartes-de-visite' },
+  { id: 'affiches',     label: 'Affiches & Posters',      href: '/catalogue/affiches',     icon: ImageIcon,  category: 'affiches' },
+  { id: 'roll-up',      label: 'Roll-ups & Salons',       href: '/catalogue/roll-up',      icon: Flag,       category: 'roll-up' },
+  { id: 'brochures',    label: 'Brochures & Livrets',     href: '/catalogue/brochures',    icon: BookOpen,   category: 'brochures' },
+  { id: 'textile',      label: 'Textile Pro & Vêtements', href: '/catalogue/textile',      icon: Shirt,      category: 'textile' },
+  { id: 'goodies',      label: 'Goodies & Cadeaux VIP',   href: '/catalogue/goodies',      icon: Gift,       category: 'goodies' },
+  { id: 'signaletique', label: 'Signalétique & Bâches',   href: '/catalogue/signaletique', icon: Box,        category: 'signaletique' },
 ]
 
+const uniqueLabels = (labels: string[], max: number) => Array.from(new Set(labels.filter(Boolean))).slice(0, max)
+
+function buildNavCategories(products: CatalogueProduct[] | null): NavCategory[] {
+  return NAV_SECTIONS.map(({ category, ...section }) => {
+    const inCat = (products ?? []).filter((p) => p.category === category)
+    const columns = [
+      { title: 'Produits', items: inCat.slice(0, 6).map((p) => ({ label: p.name, href: `/produit/${p.slug}` })) },
+      { title: 'Formats', items: uniqueLabels(inCat.flatMap((p) => (p.formats ?? []).map((f) => f.label)), 6).map((label) => ({ label, href: section.href })) },
+      {
+        title: 'Finitions',
+        items: uniqueLabels(inCat.flatMap((p) => (p.finishes ?? []).filter((f) => f.priceModifier > 0).map((f) => f.label)), 6)
+          .map((label) => ({ label, href: section.href })),
+      },
+    ].filter((c) => c.items.length > 0)
+
+    const star = inCat.find((p) => p.isHomeOffer) ?? inCat.find((p) => p.isPopular || p.badge === 'popular') ?? inCat[0]
+    const featured = star && {
+      badge: star.isHomeOffer ? 'Offre de l\'atelier' : star.badge === 'new' ? 'Nouveau' : star.isPopular || star.badge === 'popular' ? 'Populaire' : 'À découvrir',
+      title: star.name,
+      price: `${new Intl.NumberFormat('fr-FR').format(priceFor(star))} FCFA · ${new Intl.NumberFormat('fr-FR').format(referenceQuantity(star))} ex.`,
+      href: `/produit/${star.slug}`,
+      imageUrl: productImage(star),
+    }
+    return { ...section, columns, featured }
+  })
+}
+
 export function Navbar() {
+  const contact = useContact()
   const { itemCount, openCart } = useCart()
   const { user, isLoggedIn, logout } = useAuthContext()
   const pathname = usePathname()
   const router = useRouter()
   const freeThreshold = usePublicSettings().settings?.delivery.freeThreshold ?? 0
+  const { products: catalogue } = useCatalogue()
+  const navCategories = useMemo(() => buildNavCategories(catalogue), [catalogue])
 
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -577,7 +223,7 @@ export function Navbar() {
     megaTimer.current = setTimeout(() => setActiveMega(null), 260)
   }
 
-  const activeCategory = activeMega !== null ? NAV_CATEGORIES[activeMega] : null
+  const activeCategory = activeMega !== null ? navCategories[activeMega] : null
 
   return (
     <>
@@ -895,7 +541,7 @@ export function Navbar() {
               {/* ONGLETS DES CATÉGORIES (Responsive & Sans collision) */}
               <div className="hidden lg:flex items-center min-w-0">
                 {/* 1. Catégories toujours visibles sur lg+ (0 à 4 : Flyers, Cartes, Affiches, Roll-ups, Brochures) */}
-                {NAV_CATEGORIES.slice(0, 5).map((cat, idx) => {
+                {navCategories.slice(0, 5).map((cat, idx) => {
                   const isActive = activeMega === idx
                   const isCurrentRoute = pathname.includes(cat.href.replace('/catalogue/', ''))
                   return (
@@ -928,16 +574,16 @@ export function Navbar() {
                   onMouseLeave={handleCatLeave}
                 >
                   <Link
-                    href={NAV_CATEGORIES[5].href}
+                    href={navCategories[5].href}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                       activeMega === 5
                         ? 'text-primary border-primary bg-emerald-50/60 font-bold'
-                        : pathname.includes(NAV_CATEGORIES[5].href.replace('/catalogue/', ''))
+                        : pathname.includes(navCategories[5].href.replace('/catalogue/', ''))
                           ? 'text-primary border-primary font-bold'
                           : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
-                    <span>{NAV_CATEGORIES[5].label}</span>
+                    <span>{navCategories[5].label}</span>
                   </Link>
                 </div>
 
@@ -948,36 +594,36 @@ export function Navbar() {
                   onMouseLeave={handleCatLeave}
                 >
                   <Link
-                    href={NAV_CATEGORIES[6].href}
+                    href={navCategories[6].href}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                       activeMega === 6
                         ? 'text-primary border-primary bg-emerald-50/60 font-bold'
-                        : pathname.includes(NAV_CATEGORIES[6].href.replace('/catalogue/', ''))
+                        : pathname.includes(navCategories[6].href.replace('/catalogue/', ''))
                           ? 'text-primary border-primary font-bold'
                           : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
-                    <span>{NAV_CATEGORIES[6].label}</span>
+                    <span>{navCategories[6].label}</span>
                   </Link>
                 </div>
 
-                {/* 4. Catégorie 7 (Stickers & Packaging) visible dès 2xl (>= 1536px) */}
+                {/* 4. Catégorie 7 (Signalétique & Bâches) visible dès 2xl (>= 1536px) */}
                 <div
                   className="relative shrink-0 hidden 2xl:block"
                   onMouseEnter={() => handleCatEnter(7)}
                   onMouseLeave={handleCatLeave}
                 >
                   <Link
-                    href={NAV_CATEGORIES[7].href}
+                    href={navCategories[7].href}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                       activeMega === 7
                         ? 'text-primary border-primary bg-emerald-50/60 font-bold'
-                        : pathname.includes(NAV_CATEGORIES[7].href.replace('/catalogue/', ''))
+                        : pathname.includes(navCategories[7].href.replace('/catalogue/', ''))
                           ? 'text-primary border-primary font-bold'
                           : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
-                    <span>{NAV_CATEGORIES[7].label}</span>
+                    <span>{navCategories[7].label}</span>
                   </Link>
                 </div>
 
@@ -1009,40 +655,40 @@ export function Navbar() {
                     >
                       {/* Textile (si sous xl) */}
                       <Link
-                        href={NAV_CATEGORIES[5].href}
+                        href={navCategories[5].href}
                         onClick={() => setMoreMenuOpen(false)}
                         onMouseEnter={() => handleCatEnter(5)}
                         className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-gray-50 hover:text-primary transition-colors"
                       >
                         <div className="flex items-center gap-2">
                           <Shirt size={14} className="text-primary" />
-                          <span className="font-medium">{NAV_CATEGORIES[5].label}</span>
+                          <span className="font-medium">{navCategories[5].label}</span>
                         </div>
                         <ChevronRight size={13} className="text-gray-400" />
                       </Link>
                       {/* Goodies (si sous xl) */}
                       <Link
-                        href={NAV_CATEGORIES[6].href}
+                        href={navCategories[6].href}
                         onClick={() => setMoreMenuOpen(false)}
                         onMouseEnter={() => handleCatEnter(6)}
                         className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-gray-50 hover:text-primary transition-colors"
                       >
                         <div className="flex items-center gap-2">
                           <Gift size={14} className="text-primary" />
-                          <span className="font-medium">{NAV_CATEGORIES[6].label}</span>
+                          <span className="font-medium">{navCategories[6].label}</span>
                         </div>
                         <ChevronRight size={13} className="text-gray-400" />
                       </Link>
-                      {/* Packaging (si sous 2xl) */}
+                      {/* Signalétique (si sous 2xl) */}
                       <Link
-                        href={NAV_CATEGORIES[7].href}
+                        href={navCategories[7].href}
                         onClick={() => setMoreMenuOpen(false)}
                         onMouseEnter={() => handleCatEnter(7)}
                         className="flex items-center justify-between px-3.5 py-2 text-xs hover:bg-gray-50 hover:text-primary transition-colors"
                       >
                         <div className="flex items-center gap-2">
                           <Box size={14} className="text-primary" />
-                          <span className="font-medium">{NAV_CATEGORIES[7].label}</span>
+                          <span className="font-medium">{navCategories[7].label}</span>
                         </div>
                         <ChevronRight size={13} className="text-gray-400" />
                       </Link>
@@ -1053,7 +699,7 @@ export function Navbar() {
                           onClick={() => setMoreMenuOpen(false)}
                           className="flex items-center gap-1.5 px-3.5 py-1.5 text-2xs font-bold text-primary hover:text-emerald-800 transition-colors"
                         >
-                          <span>Voir tout le catalogue ({NAV_CATEGORIES.length} univers)</span>
+                          <span>Voir tout le catalogue ({navCategories.length} univers)</span>
                           <ArrowRight size={11} />
                         </Link>
                       </div>
@@ -1100,7 +746,7 @@ export function Navbar() {
                         href="/catalogue"
                         className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 group"
                       >
-                        <span>Tout le catalogue ({NAV_CATEGORIES.length} univers)</span>
+                        <span>Tout le catalogue ({navCategories.length} univers)</span>
                         <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </div>
@@ -1110,7 +756,7 @@ export function Navbar() {
                       
                       {/* 1. VOLET GAUCHE : LISTE DES RAYONS AVEC ICÔNES ET INDICATEURS */}
                       <div className="w-[300px] shrink-0 bg-gray-50/90 p-2.5 border-r border-gray-200/80 space-y-1">
-                        {NAV_CATEGORIES.map((cat, idx) => {
+                        {navCategories.map((cat, idx) => {
                           const Icon = cat.icon
                           const isSelected = masterCatIndex === idx
                           return (
@@ -1142,7 +788,7 @@ export function Navbar() {
 
                       {/* 2. VOLET DROIT DYNAMIQUE : SOUS-FORMATS + ENCART VEDETTE DE LA CATÉGORIE ACTIVE */}
                       {(() => {
-                        const activeCatData = NAV_CATEGORIES[masterCatIndex] || NAV_CATEGORIES[0]
+                        const activeCatData = navCategories[masterCatIndex] || navCategories[0]
                         return (
                           <div className="flex-1 p-6 bg-white flex flex-col justify-between">
                             
@@ -1171,6 +817,11 @@ export function Navbar() {
                                 
                                 {/* Colonnes de liens Formats et Papiers */}
                                 <div className="col-span-7 grid grid-cols-2 gap-5 divide-x divide-gray-100">
+                                  {activeCatData.columns.length === 0 && (
+                                    <p className="col-span-2 text-xs text-gray-500">
+                                      {catalogue === null ? 'Chargement…' : 'Aucun produit dans cette rubrique pour le moment.'}
+                                    </p>
+                                  )}
                                   {activeCatData.columns.slice(0, 2).map((col, cIdx) => (
                                     <div key={cIdx} className={cIdx > 0 ? 'pl-5' : ''}>
                                       <h4 className="font-extrabold text-2xs uppercase tracking-wider text-gray-400 mb-3">
@@ -1195,6 +846,7 @@ export function Navbar() {
                                 </div>
 
                                 {/* Carte Encart Produit Vedette */}
+                                {activeCatData.featured && (
                                 <div className="col-span-5 bg-gray-50 rounded-2xl border border-gray-200/80 p-3.5 flex flex-col justify-between group">
                                   <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-gray-100 mb-2.5">
                                     <Image
@@ -1230,6 +882,7 @@ export function Navbar() {
                                     <ArrowRight size={12} />
                                   </Link>
                                 </div>
+                                )}
 
                               </div>
                             </div>
@@ -1296,6 +949,11 @@ export function Navbar() {
                     
                     {/* 3 Colonnes de Liens Produits (9/12) */}
                     <div className="col-span-9 grid grid-cols-3 gap-6 divide-x divide-gray-100">
+                      {activeCategory.columns.length === 0 && (
+                        <p className="col-span-3 text-xs text-gray-500">
+                          {catalogue === null ? 'Chargement…' : 'Aucun produit dans cette rubrique pour le moment.'}
+                        </p>
+                      )}
                       {activeCategory.columns.map((col, cIdx) => (
                         <div key={cIdx} className={cIdx > 0 ? 'pl-6' : ''}>
                           <h4 className="font-mono text-2xs font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -1465,7 +1123,7 @@ export function Navbar() {
                 </div>
 
                 <div className="space-y-0.5">
-                  {NAV_CATEGORIES.map((cat) => {
+                  {navCategories.map((cat) => {
                     const Icon = cat.icon
                     return (
                       <Link
@@ -1488,7 +1146,7 @@ export function Navbar() {
               <div className="p-4 border-t border-gray-100 bg-gray-50/80 mt-2 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-gray-800">
                   <Phone size={14} className="text-primary shrink-0" />
-                  <span>Hotline Atelier : {CONTACT_PHONE_DISPLAY}</span>
+                  <span>Hotline Atelier : {contact.phoneDisplay}</span>
                 </div>
                 <p className="text-2xs text-gray-500 leading-relaxed">
                   Ouagadougou & Bobo-Dioulasso · Facturation IFU normalisée

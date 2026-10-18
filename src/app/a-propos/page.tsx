@@ -6,7 +6,7 @@ import {
   Sparkles, FileText, ChevronRight, Check, Eye, Package, 
   Cpu, Factory, Users, Download, HelpCircle
 } from 'lucide-react'
-import { WHATSAPP_URL } from '@/lib/contact'
+import { getServerContact } from '@/lib/contact'
 
 export const metadata = {
   title: 'À Propos de YopoePrint — Imprimerie Numérique & Industrielle au Burkina Faso',
@@ -125,7 +125,8 @@ const CORE_VALUES = [
   },
 ]
 
-export default function AProposPage() {
+export default async function AProposPage() {
+  const contact = await getServerContact()
   return (
     <div className="min-h-screen bg-gray-100 text-foreground">
       
@@ -247,7 +248,7 @@ export default function AProposPage() {
                   <MapPin size={20} className="text-primary shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-white">Site Principal & Showroom :</p>
-                    <p className="text-xs text-gray-300">Zone Industrielle Gounghin & Antenne Ouaga 2000, Ouagadougou</p>
+                    <p className="text-xs text-gray-300">{contact.address}</p>
                   </div>
                 </div>
 
@@ -493,7 +494,7 @@ export default function AProposPage() {
               </Link>
               
               <a 
-                href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20sur%20vos%20services%20d'impression.`} 
+                href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20sur%20vos%20services%20d'impression.`} 
                 target="_blank" 
                 rel="noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-medium px-7 py-4 rounded-full text-sm border border-white/15 backdrop-blur-md transition-all active:scale-95 text-center"

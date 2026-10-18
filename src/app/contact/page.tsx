@@ -21,7 +21,7 @@ import {
   Building2,
   ArrowRight
 } from 'lucide-react'
-import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 // Sujets pré-configurés
 const SUBJECT_OPTIONS = [
@@ -53,6 +53,7 @@ const FAQS = [
 ]
 
 export default function ContactPage() {
+  const contact = useContact()
   const [selectedSubject, setSelectedSubject] = useState('quote')
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -179,16 +180,16 @@ export default function ContactPage() {
                           <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-emerald-100/70 text-emerald-800">Direct</span>
                         </div>
                         <a 
-                          href={`tel:${CONTACT_PHONE}`} 
+                          href={`tel:${contact.phone}`} 
                           className="font-bold text-gray-900 text-base hover:text-primary transition-colors block mt-0.5"
                         >
-                          {CONTACT_PHONE_DISPLAY}
+                          {contact.phoneDisplay}
                         </a>
                         <p className="text-xs text-gray-500 mt-0.5">Fixe atelier : +226 25 30 00 00</p>
                       </div>
                     </div>
                     <button
-                      onClick={() => handleCopy(CONTACT_PHONE, 'phone')}
+                      onClick={() => handleCopy(contact.phone, 'phone')}
                       title="Copier le numéro"
                       className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                       aria-label="Copier le numéro"
@@ -208,16 +209,16 @@ export default function ContactPage() {
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Courriel officiel</p>
                         <a 
-                          href="mailto:contact@yopoeprint.bf" 
+                          href={`mailto:${contact.email}`} 
                           className="font-bold text-gray-900 text-sm sm:text-base hover:text-primary transition-colors block mt-0.5"
                         >
-                          contact@yopoeprint.bf
+                          {contact.email}
                         </a>
                         <p className="text-xs text-gray-500 mt-0.5">Devis : devis@yopoeprint.bf</p>
                       </div>
                     </div>
                     <button
-                      onClick={() => handleCopy('contact@yopoeprint.bf', 'email')}
+                      onClick={() => handleCopy(contact.email, 'email')}
                       title="Copier l'email"
                       className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                       aria-label="Copier l'email"
@@ -236,10 +237,9 @@ export default function ContactPage() {
                     <div>
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Showroom & Retrait</p>
                       <p className="font-bold text-gray-900 text-sm mt-0.5">
-                        Zone Industrielle de Kossodo & Centre-ville
+                        {contact.address}
                       </p>
                       <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                        Ouagadougou, Burkina Faso.<br />
                         <span className="text-emerald-700 font-medium">Point retrait gratuit disponible sans frais.</span>
                       </p>
                     </div>
@@ -306,7 +306,7 @@ export default function ContactPage() {
                 </div>
 
                 <a 
-                  href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20j%27aimerais%20avoir%20des%20renseignements%20sur%20vos%20services%20d%27impression.`} 
+                  href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint%2C%20j%27aimerais%20avoir%20des%20renseignements%20sur%20vos%20services%20d%27impression.`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2.5 bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98]"

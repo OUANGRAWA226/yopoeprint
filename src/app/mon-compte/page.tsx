@@ -21,7 +21,7 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react'
-import { CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 // ─── Statuts normalisés ──────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
@@ -85,6 +85,7 @@ function formatDate(d: string) {
 }
 
 export default function DashboardPage() {
+  const contact = useContact()
   const { user } = useAuthContext()
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -356,12 +357,12 @@ export default function DashboardPage() {
               
               <div className="pt-1 flex flex-col gap-2">
                 <a 
-                  href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20j%27ai%20une%20question%20sur%20mes%20commandes%20d%27impression.`}
+                  href={`${contact.whatsappUrl}?text=Bonjour%20YopoePrint%2C%20j%27ai%20une%20question%20sur%20mes%20commandes%20d%27impression.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold transition-colors"
                 >
-                  Contacter sur WhatsApp ({CONTACT_PHONE_DISPLAY})
+                  Contacter sur WhatsApp ({contact.phoneDisplay})
                 </a>
                 <Link 
                   href="/contact" 

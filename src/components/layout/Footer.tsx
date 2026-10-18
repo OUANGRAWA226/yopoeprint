@@ -1,6 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import { Logo } from '@/components/shared/Logo'
-import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 const FOOTER_LINKS = {
   produits: [
@@ -30,6 +32,7 @@ const FOOTER_LINKS = {
 }
 
 export function Footer() {
+  const contact = useContact()
   return (
     <footer className="bg-gray-900 text-gray-400 md:pb-0 pb-20">
       {/* Main footer content */}
@@ -64,7 +67,7 @@ export function Footer() {
             {/* Contact */}
             <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
               <p className="text-2xs text-gray-400 mb-0.5">Besoin d'aide ?</p>
-              <p className="text-base font-bold text-emerald-400">{CONTACT_PHONE_DISPLAY}</p>
+              <p className="text-base font-bold text-emerald-400">{contact.phoneDisplay}</p>
               <p className="text-2xs text-gray-400 mt-0.5">Lun–Sam · 8h–18h (WhatsApp)</p>
             </div>
           </div>

@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from './api'
+import { ContactInfo, DEFAULT_CONTACT, toContactInfo } from './contact'
 
 // Contrat de l'API : GET /settings/public (yopoeprint-api/src/modules/settings)
 export interface DeliveryZone {
@@ -55,4 +56,10 @@ export function usePublicSettings() {
   }, [])
 
   return { settings, error }
+}
+
+/** Coordonnées de l'atelier (admin › Paramètres), valeurs de secours le temps du chargement. */
+export function useContact(): ContactInfo {
+  const { settings } = usePublicSettings()
+  return useMemo(() => (settings ? toContactInfo(settings.contact) : DEFAULT_CONTACT), [settings])
 }

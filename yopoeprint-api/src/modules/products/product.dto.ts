@@ -93,6 +93,22 @@ export class CreateProductDto {
   @IsOptional()
   @IsInt()
   sortOrder?: number
+
+  @ApiPropertyOptional({ description: 'Mis en avant dans les offres de l\'accueil et le méga-menu' })
+  @IsOptional()
+  @IsBoolean()
+  isHomeOffer?: boolean
+
+  @ApiPropertyOptional({ description: 'Proposé dans le calculateur de prix de l\'accueil' })
+  @IsOptional()
+  @IsBoolean()
+  inCalculator?: boolean
+
+  @ApiPropertyOptional({ description: 'Quantité de référence du prix affiché (vide = quantité minimale)' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  offerQuantity?: number | null
 }
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {}

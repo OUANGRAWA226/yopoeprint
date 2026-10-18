@@ -5,7 +5,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import { ToastProvider } from '@/context/ToastContext'
 import { ConditionalUI } from '@/components/layout/ConditionalUI'
-import { CONTACT_PHONE } from '@/lib/contact'
+import { getServerContact } from '@/lib/contact'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -62,7 +62,6 @@ const localBusinessJsonLd = {
   name: 'YopoePrint',
   image: 'https://yopoeprint.bf/images/og-image.jpg',
   url: 'https://yopoeprint.bf',
-  telephone: CONTACT_PHONE,
   priceRange: '$$',
   address: {
     '@type': 'PostalAddress',
@@ -89,13 +88,15 @@ const localBusinessJsonLd = {
   currenciesAccepted: 'XOF',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Téléphone et email des données structurées : admin › Paramètres › Coordonnées
+  const contact = await getServerContact()
   return (
     <html lang="fr" className={`${poppins.variable} ${inter.variable}`}>
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...localBusinessJsonLd, telephone: contact.phone, email: contact.email }) }}
         />
       </head>
       <body className="antialiased text-foreground bg-background">

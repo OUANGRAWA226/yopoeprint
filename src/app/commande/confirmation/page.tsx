@@ -9,7 +9,7 @@ import { uploadService } from '@/lib/upload.service'
 import { CheckCircle, Clock, Truck, Phone, ArrowRight, FileWarning, UploadCloud, FileCheck, MapPin, Download, FileText, Printer } from 'lucide-react'
 import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
+import { useContact } from '@/lib/settings.service'
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(n) }
 
@@ -52,6 +52,7 @@ function ReceiptSkeleton() {
 }
 
 function ConfirmationDetails() {
+  const contact = useContact()
   const params = useSearchParams()
   const orderId = params.get('orderId')
   const { clearCart } = useCart()
@@ -205,7 +206,7 @@ function ConfirmationDetails() {
                     />
                   </label>
                   <a
-                    href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Bonjour YopoePrint, voici mes fichiers pour ma commande ${order?.orderNumber || ''}`)}`}
+                    href={`${contact.whatsappUrl}?text=${encodeURIComponent(`Bonjour YopoePrint, voici mes fichiers pour ma commande ${order?.orderNumber || ''}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-5 py-2.5 bg-[#25D366] text-white rounded-xl font-bold text-sm hover:bg-[#20ba59] transition-colors inline-flex items-center justify-center gap-2 shadow-xs"
@@ -383,8 +384,8 @@ function ConfirmationDetails() {
           <Link href="/catalogue" className="px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-xl font-bold text-sm hover:border-primary hover:text-primary transition-all text-center flex items-center justify-center gap-2 shadow-xs">
             Continuer mes achats <ArrowRight size={16} />
           </Link>
-          <a href={`tel:${CONTACT_PHONE}`} className="px-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all text-center flex items-center justify-center gap-2 shadow-xs">
-            <Phone size={16} /> Besoin d'aide ? ({CONTACT_PHONE_DISPLAY})
+          <a href={`tel:${contact.phone}`} className="px-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all text-center flex items-center justify-center gap-2 shadow-xs">
+            <Phone size={16} /> Besoin d'aide ? ({contact.phoneDisplay})
           </a>
         </div>
 
