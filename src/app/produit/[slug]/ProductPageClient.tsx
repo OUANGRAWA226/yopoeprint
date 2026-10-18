@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ChevronRight, ShieldCheck, Truck, Clock, Upload,
   ShoppingCart, HelpCircle, FileCheck, FileWarning,
-  AlertTriangle, Check, ChevronDown, Star, Zap, RotateCcw
+  AlertTriangle, Check, ChevronDown, Star, Zap, RotateCcw,
+  ArrowRight
 } from 'lucide-react'
 import { usePriceCalculator } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
@@ -18,6 +20,7 @@ import { ProductReviews } from '@/components/product/ProductReviews'
 import { uploadService } from '@/lib/upload.service'
 import { BatPreviewModal } from '@/components/product/BatPreviewModal'
 import { useToast } from '@/context/ToastContext'
+import { UniversalProductDetails } from '@/components/product/UniversalProductDetails'
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n)
@@ -50,17 +53,18 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
 }
 
 export function ProductPageClient({ product }: ProductPageClientProps) {
+  const router = useRouter()
   const { price, loading: priceLoading, calculate } = usePriceCalculator()
   const { addItem, openCart } = useCart()
   const toast = useToast()
 
-  const [config, setConfig] = useState({
-    formatId: '',
-    paperId: '',
-    quantity: 0,
-    finishId: '',
+  const [config, setConfig] = useState(() => ({
+    formatId: (product as any).formats?.[0]?.id || '',
+    paperId: (product as any).papers?.[0]?.id || '',
+    quantity: (product as any).quantities?.[0] || product.minQuantity || 100,
+    finishId: (product as any).finishes?.[0]?.id || '',
     rectoverso: false,
-  })
+  }))
 
   const [addedToCart, setAddedToCart] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
@@ -79,15 +83,14 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
 
   useEffect(() => {
     if (!product) return
-    const defaultConfig = {
+    const initialConfig = {
       formatId: (product as any).formats?.[0]?.id || '',
       paperId: (product as any).papers?.[0]?.id || '',
       quantity: (product as any).quantities?.[0] || product.minQuantity || 100,
       finishId: (product as any).finishes?.[0]?.id || '',
       rectoverso: false,
     }
-    setConfig(defaultConfig)
-    calculate({ productId: product.id, basePrice: product.basePrice, ...defaultConfig })
+    calculate({ productId: product.id, basePrice: product.basePrice, ...initialConfig })
 
     productsService.getAll({ category: product.category, limit: 5 })
       .then((res) => {
@@ -101,6 +104,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
   useEffect(() => {
     if (!product || !config.formatId) return
     
+    const sFormat = (product as any).formats?.find((f: any) => f.id === config.formatId)
     const sPaper = (product as any).papers?.find((p: any) => p.id === config.paperId)
     const sFinish = (product as any).finishes?.find((f: any) => f.id === config.finishId)
 
@@ -108,8 +112,9 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
       productId: product.id, 
       basePrice: product.basePrice, 
       ...config,
+      formatMultiplier: sFormat?.multiplier || 1,
       paperExtra: sPaper?.priceExtra || 0,
-      finishExtra: sFinish?.priceExtra || 0
+      finishExtra: sFinish?.priceModifier ?? sFinish?.priceExtra ?? 0
     })
   }, [config, product, calculate])
 
@@ -142,6 +147,28 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
     setTimeout(() => setAddedToCart(false), 2500)
   }
 
+  const handleBuyNow = () => {
+    if (!product) return
+    addItem({
+      id: `${product.id}-${config.formatId}-${config.paperId}-${config.finishId}-${config.rectoverso ? 'rv' : 'r'}`,
+      productId: product.id,
+      productName: product.name,
+      emoji: product.emoji,
+      formatId: config.formatId,
+      formatLabel: selectedFormat?.label || config.formatId,
+      paperId: config.paperId,
+      paperLabel: selectedPaper?.label || config.paperId,
+      quantity: config.quantity,
+      rectoverso: config.rectoverso,
+      finition: selectedFinish?.label || 'Sans finition',
+      price: price?.total || product.basePrice,
+      unitPrice: price?.unitPrice || 0,
+      fileUrl: uploadState.fileUrl,
+      fileName: uploadState.fileName || 'Visuel différé / WhatsApp',
+    })
+    router.push('/commande')
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -161,8 +188,18 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
       warningMsg = 'Résolution faible suspectée. Préférez un PDF.'
     }
 
+    // Prévisualisation immédiate en local si fichier image
+    const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(extension)
+    const localPreviewUrl = isImage ? URL.createObjectURL(file) : undefined
+
     // Lancer l'upload réel
-    setUploadState({ status: 'uploading', fileName: file.name, fileSize: formattedSize, message: 'Upload en cours...' })
+    setUploadState({ 
+      status: 'uploading', 
+      fileName: file.name, 
+      fileSize: formattedSize, 
+      message: 'Upload en cours...',
+      fileUrl: localPreviewUrl 
+    })
     try {
       const res = await uploadService.uploadFile(file, 'designs')
       setUploadState({ 
@@ -170,7 +207,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
         fileName: file.name, 
         fileSize: formattedSize, 
         message: warningMsg || 'Fichier prêt pour l\'impression.',
-        fileUrl: res.url
+        fileUrl: res.url || localPreviewUrl
       })
       if (warningMsg) {
         toast.warning('Fichier uploadé avec avertissement', warningMsg)
@@ -219,15 +256,22 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="relative">
                   {badgeLabel && (
-                    <span className="absolute top-3 left-3 z-10 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded">
+                    <span className="absolute top-3 left-3 z-10 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded pointer-events-none select-none">
                       {badgeLabel}
                     </span>
                   )}
                   <ProductImageGallery
                     slug={product.slug}
                     productName={product.name}
+                    category={product.category}
                     imageUrl={product.imageUrl}
                     images={product.images}
+                    selectedFormat={selectedFormat}
+                    selectedPaper={selectedPaper}
+                    selectedFinish={selectedFinish}
+                    rectoverso={config.rectoverso}
+                    customVisualUrl={uploadState.fileUrl}
+                    onFlipRectoVerso={() => setConfig(c => ({ ...c, rectoverso: !c.rectoverso }))}
                   />
                 </div>
 
@@ -609,6 +653,26 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                     ))}
                   </div>
                 )}
+
+                {/* Option fichier différé / WhatsApp */}
+                <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-amber-900 min-w-0">
+                    <span className="text-base shrink-0">💡</span>
+                    <span className="leading-tight text-[11px]">Pas encore de maquette ? Vous pouvez commander maintenant et l'envoyer par WhatsApp.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUploadState({
+                      status: 'valid',
+                      fileName: 'Envoi ultérieur (WhatsApp / Email)',
+                      fileSize: 'À fournir après commande',
+                      message: 'Visuel différé sélectionné'
+                    })}
+                    className="shrink-0 px-3 py-1.5 bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-bold rounded-lg transition-colors text-[11px]"
+                  >
+                    Envoyer plus tard
+                  </button>
+                </div>
               </Section>
 
             </div>
@@ -621,24 +685,33 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
               className="fixed md:hidden left-0 right-0 bottom-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.10)] px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
             >
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] text-gray-400 font-medium">Total TTC · {formatPrice(config.quantity)} ex.</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-gray-400 font-medium truncate">Total · {formatPrice(config.quantity)} ex.</p>
                   {priceLoading ? (
-                    <div className="h-7 w-24 bg-gray-100 rounded animate-pulse mt-0.5" />
+                    <div className="h-6 w-20 bg-gray-100 rounded animate-pulse mt-0.5" />
                   ) : (
-                    <p className="font-display text-2xl font-extrabold text-gray-900 leading-none">
-                      {formatPrice(currentPrice)} <span className="text-sm font-normal text-gray-400">FCFA</span>
+                    <p className="font-display text-xl font-extrabold text-gray-900 leading-none">
+                      {formatPrice(currentPrice)} <span className="text-xs font-normal text-gray-400">FCFA</span>
                     </p>
                   )}
                 </div>
-                <button
-                  onClick={handleAddToCart}
-                  className={`flex items-center gap-2 px-5 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-95
-                    ${addedToCart ? 'bg-primary text-white' : 'bg-[#FF6B00] text-white hover:bg-[#E66000]'}`}
-                >
-                  <ShoppingCart size={16} />
-                  {addedToCart ? 'Ajouté !' : 'Ajouter'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAddToCart}
+                    className={`flex items-center justify-center p-3 rounded-xl border-2 font-bold text-xs transition-all active:scale-95
+                      ${addedToCart ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'}`}
+                    title="Ajouter au panier"
+                  >
+                    <ShoppingCart size={16} />
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl font-bold text-xs bg-[#FF6B00] text-white hover:bg-[#E66000] active:scale-95 transition-all shadow-md"
+                  >
+                    <span>Commander</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -669,29 +742,40 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-2.5 shrink-0">
+                <div className="flex flex-col gap-2.5 shrink-0 min-w-[240px]">
                   <button
-                    onClick={handleAddToCart}
-                    className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all
-                      ${addedToCart
-                        ? 'bg-primary text-white shadow-lg'
-                        : 'bg-[#FF6B00] text-white hover:bg-[#E66000] shadow-md hover:shadow-lg active:scale-[0.98]'}`}
+                    onClick={handleBuyNow}
+                    className="flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl font-bold text-base bg-[#FF6B00] text-white hover:bg-[#E66000] shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
                   >
-                    <ShoppingCart size={20} />
-                    {addedToCart ? '✓ Ajouté au panier !' : 'Ajouter au panier'}
+                    Commander maintenant <ArrowRight size={18} />
                   </button>
-                  <button
-                    onClick={() => setDevisOpen(true)}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all"
-                  >
-                    Demander un devis gratuit
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleAddToCart}
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all
+                        ${addedToCart
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-gray-200 text-gray-800 hover:border-gray-300 hover:bg-gray-50 active:scale-98'}`}
+                    >
+                      <ShoppingCart size={14} />
+                      {addedToCart ? 'Ajouté !' : 'Au panier'}
+                    </button>
+                    <button
+                      onClick={() => setDevisOpen(true)}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border-2 border-gray-200 text-gray-700 font-semibold text-xs hover:border-gray-300 hover:bg-gray-50 transition-all"
+                    >
+                      Devis proforma
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
           </div>
         </div>
+
+        {/* ── Fiche détaillée universelle (Tous produits & futures créations) ── */}
+        <UniversalProductDetails product={product} />
 
         {/* ── Produits liés ────────────────────────────────────────── */}
         {relatedProducts.length > 0 && (
@@ -711,7 +795,12 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
             REVIEWS
         ═══════════════════════════════════════════════════════════ */}
         <div id="avis-clients" className="mt-12 md:mt-16">
-          <ProductReviews />
+          <ProductReviews
+            productName={product.name}
+            category={product.category}
+            rating={4.9}
+            totalReviews={127}
+          />
         </div>
       </div>
 

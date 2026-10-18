@@ -14,6 +14,7 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://yopoeprint.bf'),
   title: 'YopoePrint — Imprimerie en ligne au Burkina Faso',
   description: "Commandez vos flyers, cartes de visite, bâches et bien plus. Qualité premium, livraison rapide, paiement Orange Money & Moov.",
   manifest: '/manifest.json',
@@ -42,15 +43,54 @@ export const metadata: Metadata = {
 }
 
 export const viewport = {
-  themeColor: '#FF6B00',
+  themeColor: '#008537',
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
 }
 
+const localBusinessJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: 'YopoePrint',
+  image: 'https://yopoeprint.bf/images/og-image.jpg',
+  url: 'https://yopoeprint.bf',
+  telephone: '+226 70 00 00 00',
+  priceRange: '$$',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Avenue Kwamé N\'Krumah',
+    addressLocality: 'Ouagadougou',
+    addressRegion: 'Kadiogo',
+    postalCode: '01 BP',
+    addressCountry: 'BF',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 12.3714,
+    longitude: -1.5197,
+  },
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      opens: '08:00',
+      closes: '18:30',
+    },
+  ],
+  paymentAccepted: 'Orange Money, Moov Money, Carte Bancaire, Virement, Espèces',
+  currenciesAccepted: 'XOF',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={poppins.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
+      </head>
       <body className="antialiased text-foreground bg-background">
         <AuthProvider>
           <CartProvider>

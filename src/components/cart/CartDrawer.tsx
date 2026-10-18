@@ -15,36 +15,30 @@ function fmt(n: number) {
 const FREE_DELIVERY_THRESHOLD = 75000
 
 export function CartDrawer() {
-  const { items, removeItem, updateQty, total, itemCount, isCartOpen, closeCart } = useCart()
+  const {
+    items, removeItem, updateQty, total, itemCount,
+    isCartOpen, closeCart,
+    appliedPromo, discount, finalTotal,
+    applyPromo, removePromo,
+  } = useCart()
   const [isDevisOpen, setIsDevisOpen] = useState(false)
   const toast = useToast()
 
-  // ── Promo Code State ──────────────────────────────────────────
+  // ── Promo Code Input State ────────────────────────────────────
   const [promoInput, setPromoInput] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
-  const [appliedPromo, setAppliedPromo] = useState<PromoCodeResult | null>(null)
-
-  const discount = appliedPromo ? computeDiscount(appliedPromo, total) : 0
-  const finalTotal = total - discount
 
   const handleApplyPromo = async () => {
     const code = promoInput.trim().toUpperCase()
     if (!code) return
     setPromoLoading(true)
     try {
-      const result = await promoService.validate(code, total)
-      if (result.isValid) {
-        setAppliedPromo(result)
+      const res = await applyPromo(code)
+      if (res.success) {
         setPromoInput('')
-        const disc = computeDiscount(result, total)
-        toast.success(
-          `Code « ${code} » appliqué !`,
-          result.discountType === 'percentage'
-            ? `${result.discountValue}% de réduction — vous économisez ${fmt(disc)} FCFA`
-            : `${fmt(disc)} FCFA offerts sur votre commande`
-        )
+        toast.success(`Code « ${code} » appliqué !`, res.message)
       } else {
-        toast.error('Code invalide', 'Ce code promo n\'est pas valide ou a expiré.')
+        toast.error('Code invalide', res.message)
       }
     } catch {
       toast.error('Erreur réseau', 'Impossible de vérifier le code. Réessayez.')
@@ -54,7 +48,7 @@ export function CartDrawer() {
   }
 
   const handleRemovePromo = () => {
-    setAppliedPromo(null)
+    removePromo()
     toast.info('Code promo retiré', 'Le tarif normal a été restauré.')
   }
 
@@ -73,8 +67,8 @@ export function CartDrawer() {
       {/* ── Drawer Panel ──────────────────────────────────── */}
       <aside
         className={`fixed top-0 right-0 z-50 h-full w-full max-w-[420px] bg-white shadow-2xl
-          flex flex-col transition-transform duration-300 ease-in-out
-          ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          flex flex-col transition-all duration-300 ease-in-out
+          ${isCartOpen ? 'translate-x-0 visible' : 'translate-x-full invisible pointer-events-none'}`}
       >
         {/* ── Header ──────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">

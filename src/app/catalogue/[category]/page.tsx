@@ -9,6 +9,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 
 const CATEGORIES: Record<string, { label: string; emoji: string; desc: string }> = {
   flyers: { label: 'Flyers & Dépliants', emoji: '📄', desc: 'Flyers A4, A5, A6 recto/verso pour vos événements' },
+  'cartes-de-visite': { label: 'Cartes de visite', emoji: '🪪', desc: 'Cartes standard, premium, pelliculage mat/brillant' },
   cartes: { label: 'Cartes de visite', emoji: '🪪', desc: 'Cartes standard, premium, pelliculage mat/brillant' },
   affiches: { label: 'Affiches & Posters', emoji: '🗓️', desc: 'Affiches A3, A2, A1 en papier couché haute qualité' },
   brochures: { label: 'Brochures', emoji: '📚', desc: 'Brochures 2 et 3 volets, dos collé, agrafées' },
@@ -16,6 +17,10 @@ const CATEGORIES: Record<string, { label: string; emoji: string; desc: string }>
   goodies: { label: 'Goodies personnalisés', emoji: '🎁', desc: 'Mugs, stylos, tote bags personnalisés' },
   textile: { label: 'Textile imprimé', emoji: '👕', desc: 'T-shirts, casquettes avec impression DTG' },
   evenementiel: { label: 'Événementiel', emoji: '🎊', desc: 'Invitations, programmes, badges nominatifs' },
+  signaletique: { label: 'Signalétique & Bâches', emoji: '🪧', desc: 'Bâches PVC 510g grand format, panneaux et enseignes' },
+  baches: { label: 'Signalétique & Bâches', emoji: '🪧', desc: 'Bâches PVC 510g grand format, panneaux et enseignes' },
+  etiquettes: { label: 'Étiquettes & Stickers', emoji: '🏷️', desc: 'Stickers vinyle, étiquettes en rouleau et packaging' },
+  corporate: { label: 'Papeterie Corporate', emoji: '💼', desc: 'En-têtes de lettre, chemises à rabats, blocs-notes' },
 }
 
 const SORT_OPTIONS = [
@@ -38,7 +43,8 @@ const DELAI_OPTIONS = [
 
 export default function CategoryPage() {
   const params = useParams()
-  const category = params.category as string
+  const rawCategory = (params.category as string) || ''
+  const category = rawCategory === 'cartes' ? 'cartes-de-visite' : rawCategory === 'baches' ? 'signaletique' : rawCategory
 
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,11 +55,11 @@ export default function CategoryPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(1)
 
-  const catInfo = CATEGORIES[category] || { label: category, emoji: '📦', desc: '' }
+  const catInfo = CATEGORIES[category] || CATEGORIES[rawCategory] || { label: category, emoji: '📦', desc: '' }
 
   useEffect(() => {
     setLoading(true)
-    productsService.getAll({ category, search: search || undefined, page, limit: 100 }) // fetching more to allow client filtering to work nicely for demo
+    productsService.getAll({ category, search: search || undefined, page, limit: 100 })
       .then((res) => { setProducts(res.data || []); setTotal(res.total || 0) })
       .catch(() => setProducts([]))
       .finally(() => setLoading(false))

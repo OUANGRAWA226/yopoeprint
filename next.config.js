@@ -34,6 +34,16 @@ const nextConfig = {
         destination: `${adminBase}/admin`,
         permanent: false,
       },
+      {
+        source: '/catalogue/cartes',
+        destination: '/catalogue/cartes-de-visite',
+        permanent: true,
+      },
+      {
+        source: '/catalogue/baches',
+        destination: '/catalogue/signaletique',
+        permanent: true,
+      },
     ]
   },
 }

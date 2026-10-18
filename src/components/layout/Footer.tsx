@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from '@/components/shared/Logo'
 
 const FOOTER_LINKS = {
   produits: [
@@ -36,9 +37,7 @@ export function Footer() {
 
           {/* Brand — full width on mobile */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="font-display text-xl md:text-2xl font-extrabold text-white tracking-tight block mb-3">
-              Yopoe<span className="text-primary">Print</span>
-            </Link>
+            <Logo theme="dark" size="md" className="mb-3" />
             <p className="text-sm leading-relaxed mb-4 max-w-xs">
               Votre imprimerie en ligne de référence au Burkina Faso.
             </p>

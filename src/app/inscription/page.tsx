@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthContext } from '@/context/AuthContext'
-import { Eye, EyeOff, CheckCircle, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle, AlertCircle, Loader2, ArrowRight, PackageCheck, Smartphone, FileText, ShieldCheck } from 'lucide-react'
+import { Logo } from '@/components/shared/Logo'
 
 // ─── Validation ───────────────────────────────────────────────
 function validate(form: typeof INITIAL_FORM) {
@@ -128,9 +129,10 @@ const INITIAL_FORM = {
   newsletter: false,
 }
 
-// ─── Page principale ──────────────────────────────────────────
-export default function InscriptionPage() {
+function InscriptionForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/mon-compte'
   const { register } = useAuthContext()
   const [form, setForm] = useState(INITIAL_FORM)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -166,7 +168,7 @@ export default function InscriptionPage() {
         password: form.password,
       })
       setSuccess(true)
-      setTimeout(() => router.push('/mon-compte'), 2000)
+      setTimeout(() => router.push(redirect), 1800)
     } catch (err: any) {
       const msg = err.response?.data?.message
       if (msg?.includes('already exists') || msg?.includes('duplicate')) {
@@ -204,43 +206,65 @@ export default function InscriptionPage() {
   // ── Formulaire ────────────────────────────────────────────
   return (
     <div className="min-h-screen flex bg-white">
-      {/* ─── LEFT PANEL (Image & Branding) ─── */}
-      <div className="hidden lg:flex lg:w-5/12 relative bg-primary overflow-hidden items-center justify-center">
+      {/* ─── LEFT PANEL (Studio Mockup & Branding) ─── */}
+      <div className="hidden lg:flex lg:w-5/12 relative bg-slate-950 overflow-hidden items-center justify-center">
         <div 
-          className="absolute inset-0 bg-cover bg-center mix-blend-multiply opacity-50"
-          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=2000&auto=format&fit=crop")' }}
+          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity scale-105"
+          style={{ backgroundImage: 'url("/images/products/flyers-depliants.jpg")' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/80 to-transparent" />
+        {/* Technical print grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.06] pointer-events-none" 
+          style={{
+            backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
+            backgroundSize: '32px 32px'
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
+        <div className="absolute bottom-10 left-10 w-72 h-72 bg-emerald-500/15 blur-[100px] rounded-full pointer-events-none" />
         
-        <div className="relative z-10 max-w-md px-12">
-          <Link href="/" className="font-display text-4xl font-extrabold text-white mb-16 tracking-tight block">
-            Yopoe<span className="text-white/80">Print</span>
-          </Link>
+        <div className="relative z-10 max-w-md px-10">
+          <div className="mb-10">
+            <Logo theme="dark" size="lg" />
+          </div>
           
-          <h2 className="text-3xl font-display font-bold text-white mb-8 leading-tight">
-            Rejoignez des milliers de professionnels.
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300 mb-6">
+            <ShieldCheck size={14} className="text-emerald-400" />
+            <span>Compte client sécurisé • DGI Compliant</span>
+          </div>
+
+          <h2 className="text-3xl font-display font-bold text-white mb-6 leading-tight">
+            Rejoignez plus de 1 200 entreprises et créateurs.
           </h2>
           
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 text-white">📦</div>
+          <div className="space-y-5">
+            <div className="flex items-start gap-3.5 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800/80">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary">
+                <PackageCheck size={18} />
+              </div>
               <div>
-                <h3 className="text-white font-bold mb-1">Suivi en temps réel</h3>
-                <p className="text-primary-foreground/70 text-sm">Suivez l'avancement de vos impressions étape par étape.</p>
+                <h3 className="text-white font-bold text-sm">Suivi atelier en direct</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">Notification à chaque étape : validation BAT, tirage et mise sous pli.</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 text-white">💰</div>
+
+            <div className="flex items-start gap-3.5 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800/80">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400">
+                <Smartphone size={18} />
+              </div>
               <div>
-                <h3 className="text-white font-bold mb-1">Paiement Mobile Money</h3>
-                <p className="text-primary-foreground/70 text-sm">Payez simplement avec Orange Money ou Moov Africa.</p>
+                <h3 className="text-white font-bold text-sm">Paiement Mobile Money local</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">Réglez directement avec Orange Money ou Moov Africa sans frais cachés.</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 text-white">📝</div>
+
+            <div className="flex items-start gap-3.5 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800/80">
+              <div className="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 text-sky-400">
+                <FileText size={18} />
+              </div>
               <div>
-                <h3 className="text-white font-bold mb-1">Devis Express</h3>
-                <p className="text-primary-foreground/70 text-sm">Gérez et validez vos devis sur-mesure depuis votre espace.</p>
+                <h3 className="text-white font-bold text-sm">Facturation normalisée e-Sintax</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">Téléchargez instantanément vos factures avec sticker fiscal DGI.</p>
               </div>
             </div>
           </div>
@@ -252,10 +276,8 @@ export default function InscriptionPage() {
         <div className="w-full max-w-[480px]">
           
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="font-display text-3xl font-extrabold text-gray-900">
-              Yopoe<span className="text-primary">Print</span>
-            </Link>
+          <div className="lg:hidden flex justify-center mb-8">
+            <Logo theme="light" size="md" />
           </div>
 
           <div className="mb-8">
@@ -362,12 +384,27 @@ export default function InscriptionPage() {
 
           <p className="text-center text-sm text-gray-500 mt-8">
             Déjà un compte ?{' '}
-            <Link href="/connexion" className="text-gray-900 font-bold hover:text-primary transition-colors underline underline-offset-4">
+            <Link
+              href={`/connexion${redirect !== '/mon-compte' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
+              className="text-gray-900 font-bold hover:text-primary transition-colors underline underline-offset-4"
+            >
               Se connecter
             </Link>
           </p>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function InscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center p-12">
+        <Loader2 size={32} className="animate-spin text-primary" />
+      </div>
+    }>
+      <InscriptionForm />
+    </Suspense>
   )
 }

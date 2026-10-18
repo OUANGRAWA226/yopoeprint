@@ -50,6 +50,10 @@ export interface Product {
  finishes: ProductOption[]
  deliveryDays: number
  popular: boolean
+ imageUrl?: string
+ images?: Array<{ id: string; label: string; description: string; url: string; order: number }>
+ rating?: number
+ reviewsCount?: number
 }
 
 // ─── Cart Types ───────────────────────────────────────────────

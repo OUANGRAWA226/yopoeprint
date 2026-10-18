@@ -294,7 +294,7 @@ export default function CataloguePage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
               {filteredProducts.map((p) => (
-                <ProductCard key={p._id || p.id} product={p} />
+                <ProductCard key={(p as any)._id || p.id} product={p} />
               ))}
             </div>
           )}

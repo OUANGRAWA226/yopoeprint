@@ -7,8 +7,10 @@ import { useAuth } from '@/hooks/useAuth'
 import {
   ShoppingBag, Trash2, Plus, Minus,
   ArrowRight, Tag, ChevronRight, ShieldCheck,
-  Truck, Package, Check
+  Truck, Package, Check, FileText, Loader2, X
 } from 'lucide-react'
+import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
+import { useToast } from '@/context/ToastContext'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n)
@@ -18,35 +20,48 @@ const FREE_DELIVERY = 75000
 const DELIVERY_FEE  = 3500
 
 export default function PanierPage() {
-  const { items, removeItem, updateQty, total, clearCart } = useCart()
+  const {
+    items, removeItem, updateQty, total, clearCart,
+    appliedPromo, discount, applyPromo, removePromo
+  } = useCart()
   const { user } = useAuth()
-  const [promo, setPromo]               = useState('')
-  const [promoErr, setPromoErr]         = useState('')
-  const [discount, setDiscount]         = useState(0)
-  const [promoApplied, setPromoApplied] = useState('')
+  const toast = useToast()
+
+  const [promoInput, setPromoInput] = useState('')
+  const [promoErr, setPromoErr] = useState('')
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [isDevisOpen, setIsDevisOpen] = useState(false)
 
   const delivery   = total >= FREE_DELIVERY ? 0 : DELIVERY_FEE
-  const finalTotal = total - discount + delivery
+  const finalTotal = Math.max(0, total - discount + delivery)
   const remaining  = FREE_DELIVERY - total
   const progress   = Math.min((total / FREE_DELIVERY) * 100, 100)
 
-  const applyPromo = () => {
-    const CODES: Record<string, number> = {
-      'YOPPRINT15': 0.15,
-      'YOPOE10': 0.10,
-      'PROMO20': 0.20,
-      'BURKINA': 0.15,
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim().toUpperCase()
+    if (!code) return
+    setPromoLoading(true)
+    setPromoErr('')
+    try {
+      const res = await applyPromo(code)
+      if (res.success) {
+        setPromoInput('')
+        toast.success(`Code « ${code} » appliqué !`, res.message)
+      } else {
+        setPromoErr(res.message)
+        toast.error('Code promo non valide', res.message)
+      }
+    } catch {
+      setPromoErr('Erreur de validation. Veuillez réessayer.')
+    } finally {
+      setPromoLoading(false)
     }
-    const code = promo.trim().toUpperCase()
-    if (CODES[code]) {
-      setDiscount(Math.round(total * CODES[code]))
-      setPromoApplied(code)
-      setPromoErr('')
-    } else {
-      setPromoErr('Code promo invalide ou expiré')
-      setDiscount(0)
-      setPromoApplied('')
-    }
+  }
+
+  const handleRemovePromo = () => {
+    removePromo()
+    setPromoErr('')
+    toast.info('Code promo retiré', 'Le tarif normal a été restauré.')
   }
 
   // ── Panier vide ─────────────────────────────────────────────
@@ -65,7 +80,7 @@ export default function PanierPage() {
           </p>
           <Link
             href="/catalogue"
-            className="inline-flex items-center gap-2 bg-primary text-white font-bold px-6 py-3.5 rounded-xl text-sm hover:bg-primary/90 transition-all"
+            className="inline-flex items-center gap-2 bg-primary text-white font-bold px-6 py-3.5 rounded-xl text-sm hover:bg-primary/90 transition-all shadow-md active:scale-95"
           >
             Découvrir le catalogue <ArrowRight size={16} />
           </Link>
@@ -134,8 +149,8 @@ export default function PanierPage() {
 
         {/* ── Barre livraison gratuite ─────────────────────── */}
         {remaining > 0 ? (
-          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex items-center gap-4">
-            <Truck size={20} className="text-gray-400 shrink-0" />
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex items-center gap-4 shadow-xs">
+            <Truck size={20} className="text-primary shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-700 mb-1.5">
                 Plus que <strong className="text-primary">{fmt(remaining)} FCFA</strong> pour la livraison gratuite
@@ -151,7 +166,7 @@ export default function PanierPage() {
         ) : (
           <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-5 flex items-center gap-3">
             <span className="text-xl">🎁</span>
-            <p className="text-sm font-bold text-green-700">Livraison gratuite débloquée !</p>
+            <p className="text-sm font-bold text-green-700">Livraison offerte sur Ouagadougou débloquée !</p>
           </div>
         )}
 
@@ -162,7 +177,7 @@ export default function PanierPage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border border-gray-200 rounded-xl overflow-hidden"
+                className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors"
               >
                 <div className="flex gap-4 p-4 md:p-5">
 
@@ -180,6 +195,7 @@ export default function PanierPage() {
                       <button
                         onClick={() => removeItem(item.id)}
                         className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shrink-0"
+                        title="Supprimer cet article"
                       >
                         <Trash2 size={15} />
                       </button>
@@ -192,10 +208,11 @@ export default function PanierPage() {
                         item.paperLabel,
                         item.rectoverso ? 'Recto/Verso' : 'Recto seul',
                         item.finition !== 'none' && item.finition !== 'Sans finition' ? item.finition : null,
+                        item.fileName ? `Fichier: ${item.fileName}` : 'Fichier différé / WhatsApp',
                       ].filter(Boolean).map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[11px] font-medium"
+                          className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[11px] font-medium"
                         >
                           {tag}
                         </span>
@@ -207,7 +224,8 @@ export default function PanierPage() {
                       <div className="flex items-center gap-1.5 bg-gray-100 rounded-xl p-1">
                         <button
                           onClick={() => updateQty(item.id, Math.max(1, item.quantity - 100))}
-                          className="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                          className="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-xs hover:bg-gray-50 transition-colors"
+                          title="Diminuer la quantité"
                         >
                           <Minus size={13} />
                         </button>
@@ -216,7 +234,8 @@ export default function PanierPage() {
                         </span>
                         <button
                           onClick={() => updateQty(item.id, item.quantity + 100)}
-                          className="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                          className="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-xs hover:bg-gray-50 transition-colors"
+                          title="Augmenter la quantité"
                         >
                           <Plus size={13} />
                         </button>
@@ -235,12 +254,20 @@ export default function PanierPage() {
               </div>
             ))}
 
-            <Link
-              href="/catalogue"
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 font-semibold hover:text-primary transition-colors mt-1"
-            >
-              ← Continuer mes achats
-            </Link>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+              <Link
+                href="/catalogue"
+                className="inline-flex items-center gap-1.5 text-sm text-gray-500 font-semibold hover:text-primary transition-colors"
+              >
+                ← Continuer mes achats
+              </Link>
+              <button
+                onClick={() => setIsDevisOpen(true)}
+                className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3.5 py-2 rounded-xl transition-all"
+              >
+                <FileText size={14} /> Télécharger un devis officiel (PDF)
+              </button>
+            </div>
           </div>
 
           {/* ── Sidebar : Code promo + Récap ──────────────── */}
@@ -252,16 +279,24 @@ export default function PanierPage() {
                 <Tag size={15} className="text-primary" />
                 <h3 className="font-bold text-gray-900 text-[14px]">Code promo</h3>
               </div>
-              {promoApplied ? (
+              {appliedPromo ? (
                 <div className="flex items-center justify-between px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl">
-                  <span className="text-green-700 font-bold text-sm flex items-center gap-1.5">
-                    <Check size={14} strokeWidth={3} /> {promoApplied} appliqué
-                  </span>
+                  <div>
+                    <span className="text-green-700 font-bold text-sm flex items-center gap-1.5">
+                      <Check size={14} strokeWidth={3} /> {appliedPromo.code}
+                    </span>
+                    <p className="text-[11px] text-green-600 mt-0.5">
+                      {appliedPromo.discountType === 'percentage'
+                        ? `−${appliedPromo.discountValue}% appliqué`
+                        : `−${fmt(appliedPromo.discountValue)} FCFA appliqués`}
+                    </p>
+                  </div>
                   <button
-                    onClick={() => { setDiscount(0); setPromoApplied(''); setPromo('') }}
-                    className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    onClick={handleRemovePromo}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    title="Retirer ce code"
                   >
-                    Retirer
+                    <X size={15} />
                   </button>
                 </div>
               ) : (
@@ -270,16 +305,17 @@ export default function PanierPage() {
                     <input
                       type="text"
                       placeholder="Ex: YOPPRINT15"
-                      value={promo}
-                      onChange={(e) => setPromo(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => e.key === 'Enter' && applyPromo()}
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
                       className="flex-1 px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-mono outline-none focus:border-primary uppercase transition-all"
                     />
                     <button
-                      onClick={applyPromo}
-                      className="px-4 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all"
+                      onClick={handleApplyPromo}
+                      disabled={promoLoading || !promoInput.trim()}
+                      className="px-4 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 disabled:opacity-40 transition-all flex items-center gap-1"
                     >
-                      Appliquer
+                      {promoLoading ? <Loader2 size={13} className="animate-spin" /> : 'Appliquer'}
                     </button>
                   </div>
                   {promoErr && <p className="text-xs text-red-500 mt-1.5">{promoErr}</p>}
@@ -288,7 +324,7 @@ export default function PanierPage() {
             </div>
 
             {/* Récapitulatif */}
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
               <h3 className="font-bold text-gray-900 text-[14px] mb-4">Récapitulatif</h3>
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
@@ -297,12 +333,12 @@ export default function PanierPage() {
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Réduction ({promoApplied})</span>
+                    <span>Réduction ({appliedPromo?.code})</span>
                     <span className="font-bold">−{fmt(discount)} FCFA</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Livraison</span>
+                  <span className="text-gray-500">Livraison estimée</span>
                   <span className={delivery === 0 ? 'text-green-600 font-semibold' : 'font-semibold text-gray-900'}>
                     {delivery === 0 ? '🎁 Offerte' : `${fmt(delivery)} FCFA`}
                   </span>
@@ -327,24 +363,18 @@ export default function PanierPage() {
 
               {/* CTA Commander */}
               <Link
-                href={user ? '/commande' : '/connexion?redirect=/commande'}
+                href="/commande"
                 className="mt-4 w-full flex items-center justify-center gap-2 bg-[#FF6B00] text-white py-4 rounded-xl font-bold text-[15px] hover:bg-[#E66000] active:scale-[0.98] transition-all shadow-md"
               >
-                Commander <ArrowRight size={18} />
+                Passer la commande <ArrowRight size={18} />
               </Link>
-
-              {!user && (
-                <p className="text-center text-xs text-gray-400 mt-2">
-                  Connexion requise pour continuer
-                </p>
-              )}
             </div>
 
             {/* Réassurance */}
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2.5">
               {[
-                { icon: <ShieldCheck size={15} className="text-green-600" />, text: 'Paiement 100% sécurisé' },
-                { icon: <span className="text-base leading-none">🟠</span>, text: 'Orange Money & Moov Money' },
+                { icon: <ShieldCheck size={15} className="text-green-600" />, text: 'Paiement 100% sécurisé (SSL & OTP)' },
+                { icon: <span className="text-base leading-none">🟠</span>, text: 'Orange Money & Moov Money Burkina' },
                 { icon: <Package size={15} className="text-primary" />, text: 'Livraison 24-48h à Ouagadougou' },
               ].map((it, i) => (
                 <div key={i} className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
@@ -356,6 +386,13 @@ export default function PanierPage() {
           </aside>
         </div>
       </div>
+
+      <DevisPdfGenerator
+        isOpen={isDevisOpen}
+        onClose={() => setIsDevisOpen(false)}
+        items={items}
+        total={total}
+      />
     </div>
   )
 }

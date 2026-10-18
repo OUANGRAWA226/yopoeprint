@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, MailCheck } from 'lucide-react'
+import { Logo } from '@/components/shared/Logo'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -38,9 +39,9 @@ export default function ForgotPasswordPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
         
         <div className="relative z-10 max-w-xl px-12 text-center flex flex-col items-center">
-          <Link href="/" className="font-display text-4xl font-extrabold text-white mb-12 tracking-tight">
-            Yopoe<span className="text-primary">Print</span>
-          </Link>
+          <div className="mb-12">
+            <Logo theme="dark" size="lg" />
+          </div>
           
           <h2 className="text-4xl font-display font-extrabold text-white mb-6 leading-tight">
             Pas de panique.
@@ -56,10 +57,8 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-[420px]">
           
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-10">
-            <Link href="/" className="font-display text-3xl font-extrabold text-gray-900">
-              Yopoe<span className="text-primary">Print</span>
-            </Link>
+          <div className="lg:hidden flex justify-center mb-10">
+            <Logo theme="light" size="md" />
           </div>
 
           <Link href="/connexion" className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors mb-8">

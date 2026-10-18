@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib'
 import { uploadService } from '@/lib/upload.service'
-import { CheckCircle, Clock, Truck, Phone, ArrowRight, FileWarning, UploadCloud, FileCheck, MapPin, Download } from 'lucide-react'
+import { CheckCircle, Clock, Truck, Phone, ArrowRight, FileWarning, UploadCloud, FileCheck, MapPin, Download, FileText, Printer } from 'lucide-react'
+import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(n) }
 
@@ -21,6 +22,7 @@ function ConfirmationDetails() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false)
   
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -153,7 +155,7 @@ function ConfirmationDetails() {
                   <p className="text-xs text-orange-600 font-medium text-center">Veuillez ne pas fermer cette page.</p>
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                   <label className="px-5 py-2.5 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-orange-500/20 active:scale-[0.98]">
                     <UploadCloud size={16} /> Sélectionner mes fichiers
                     <input 
@@ -163,8 +165,16 @@ function ConfirmationDetails() {
                       onChange={handleFileUpload} 
                     />
                   </label>
+                  <a
+                    href={`https://wa.me/22670000000?text=${encodeURIComponent(`Bonjour YopoePrint, voici mes fichiers pour ma commande ${order?.orderNumber || ''}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-2.5 bg-[#25D366] text-white rounded-xl font-bold text-sm hover:bg-[#20ba59] transition-colors inline-flex items-center justify-center gap-2 shadow-xs"
+                  >
+                    <span>💬</span> Envoyer par WhatsApp
+                  </a>
                   <Link href="/guide-impression" className="px-5 py-2.5 bg-white border border-orange-200 text-orange-700 rounded-xl font-bold text-sm hover:bg-orange-100 transition-colors inline-flex items-center justify-center">
-                    Voir le guide d'impression
+                    Guide technique
                   </Link>
                 </div>
               )}
@@ -256,9 +266,25 @@ function ConfirmationDetails() {
                 <h2 className="font-display text-xl font-bold text-gray-900 mb-1">Reçu de commande</h2>
                 <p className="text-sm text-gray-500 font-mono">{order.orderNumber}</p>
               </div>
-              <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors" title="Télécharger la facture">
-                <Download size={18} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPdfModalOpen(true)}
+                  className="px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-colors flex items-center gap-1.5 text-xs font-bold shadow-xs"
+                  title="Télécharger la facture ou devis officiel"
+                >
+                  <FileText size={15} />
+                  <span>Facture PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="p-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors"
+                  title="Imprimer cette page"
+                >
+                  <Printer size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="border-t border-b border-dashed border-gray-200 py-4 mb-4 space-y-4">
@@ -315,15 +341,42 @@ function ConfirmationDetails() {
 
         {/* ── ACTIONS & AIDE ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href="/catalogue" className="px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-xl font-bold text-sm hover:border-primary hover:text-primary transition-all text-center flex items-center justify-center gap-2">
+          <Link href="/catalogue" className="px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-xl font-bold text-sm hover:border-primary hover:text-primary transition-all text-center flex items-center justify-center gap-2 shadow-xs">
             Continuer mes achats <ArrowRight size={16} />
           </Link>
-          <a href="tel:+22670000000" className="px-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all text-center flex items-center justify-center gap-2">
+          <a href="tel:+22670000000" className="px-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all text-center flex items-center justify-center gap-2 shadow-xs">
             <Phone size={16} /> Besoin d'aide ? (+226 70 00 00 00)
           </a>
         </div>
 
       </div>
+
+      {order && (
+        <DevisPdfGenerator
+          isOpen={isPdfModalOpen}
+          onClose={() => setIsPdfModalOpen(false)}
+          items={order.items?.map((it: any) => ({
+            id: it.id || String(Math.random()),
+            productId: it.productId || 'prod',
+            productName: it.productName || 'Article imprimé',
+            emoji: it.emoji || '📦',
+            formatId: it.formatId || 'Standard',
+            formatLabel: it.formatLabel || it.formatId || 'Standard',
+            paperId: it.paperId || '',
+            paperLabel: it.paperLabel || it.paperId || '',
+            quantity: it.quantity || 1,
+            rectoverso: !!it.rectoverso,
+            finition: it.finition || 'Standard',
+            price: it.price || 0,
+            unitPrice: Math.round((it.price || 0) / (it.quantity || 1)),
+          })) || []}
+          total={order.total || 0}
+          clientInfo={{
+            name: order.shippingAddress?.fullName || 'Client YopoePrint',
+            phone: order.shippingAddress?.phone || '',
+          }}
+        />
+      )}
     </div>
   )
 }

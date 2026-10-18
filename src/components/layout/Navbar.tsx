@@ -7,13 +7,15 @@ import {
   Menu, ArrowRight, LayoutGrid, Loader2, FileText, CreditCard,
   Image as ImageIcon, BookOpen, Flag, Shirt, Gift, Box,
   Sparkles, CheckCircle2, ShieldCheck, Phone, Clock, Percent,
-  Zap, Truck, ChevronDown
+  Zap, Truck, ChevronDown, FileCheck, Flame, Copy, CheckCheck,
+  Heart, Package, Tag, HelpCircle
 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { productsService } from '@/lib/products.service'
+import { Logo } from '@/components/shared/Logo'
 
 // ─── Structure de Données E-Commerce Professionnelle (Standard Helloprint & Jumia) ───
 export interface NavCategory {
@@ -21,7 +23,6 @@ export interface NavCategory {
   label: string
   href: string
   icon: any
-  tag?: string
   startingPrice: string
   columns: {
     title: string
@@ -52,7 +53,6 @@ const NAV_CATEGORIES: NavCategory[] = [
     label: 'Flyers & Dépliants',
     href: '/catalogue/flyers',
     icon: FileText,
-    tag: 'Populaire',
     startingPrice: '8 500 F',
     columns: [
       {
@@ -94,7 +94,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-18%',
       delivery: 'Expédié sous 48h à Ouaga',
       href: '/catalogue/flyers',
-      imageUrl: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/flyers-depliants.jpg',
     },
   },
   {
@@ -102,7 +102,6 @@ const NAV_CATEGORIES: NavCategory[] = [
     label: 'Cartes de Visite',
     href: '/catalogue/cartes',
     icon: CreditCard,
-    tag: 'Indispensable',
     startingPrice: '12 500 F',
     columns: [
       {
@@ -144,7 +143,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-20%',
       delivery: 'Livrable en 48h au bureau',
       href: '/catalogue/cartes',
-      imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/cartes-visite.jpg',
     },
   },
   {
@@ -192,7 +191,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-18%',
       delivery: 'Atelier Ouaga · Prêt en 24h',
       href: '/catalogue/signaletique',
-      imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/affiches-baches.jpg',
     },
   },
   {
@@ -200,7 +199,6 @@ const NAV_CATEGORIES: NavCategory[] = [
     label: 'Roll-ups & Salons',
     href: '/catalogue/roll-up',
     icon: Flag,
-    tag: 'Spécial SIAO/SNC',
     startingPrice: '28 000 F',
     columns: [
       {
@@ -241,7 +239,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-15%',
       delivery: 'Livrable en 48h chrono',
       href: '/catalogue/roll-up',
-      imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/rollup-salons.jpg',
     },
   },
   {
@@ -289,7 +287,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-15%',
       delivery: 'Expédié en 3 à 5 jours',
       href: '/catalogue/brochures',
-      imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/brochures-catalogues.jpg',
     },
   },
   {
@@ -336,7 +334,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-17%',
       delivery: 'Production express sous 72h',
       href: '/catalogue/textile',
-      imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/textile-pro.jpg',
     },
   },
   {
@@ -383,7 +381,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-16%',
       delivery: 'Dès 25 exemplaires livrés sous 5j',
       href: '/catalogue/goodies',
-      imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/goodies-vip.jpg',
     },
   },
   {
@@ -391,7 +389,6 @@ const NAV_CATEGORIES: NavCategory[] = [
     label: 'Stickers & Packaging',
     href: '/catalogue/etiquettes',
     icon: Box,
-    tag: 'Nouveau',
     startingPrice: '5 500 F',
     columns: [
       {
@@ -431,7 +428,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       discount: '-15%',
       delivery: 'Expédié sous 4 jours ouvrés',
       href: '/catalogue/etiquettes',
-      imageUrl: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?q=80&w=600&auto=format&fit=crop',
+      imageUrl: '/images/products/packaging-kraft.jpg',
     },
   },
 ]
@@ -442,11 +439,27 @@ export function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
 
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeMega, setActiveMega] = useState<number | null>(null)
-  const [allProductsHover, setAllProductsHover] = useState(false)
+  const [allProductsOpen, setAllProductsOpen] = useState(false)
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const [copiedPromo, setCopiedPromo] = useState(false)
+  const [masterCatIndex, setMasterCatIndex] = useState<number>(0)
   const megaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const masterTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const moreTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleCopyPromo = () => {
+    navigator.clipboard.writeText('YOPPRINT15')
+    setCopiedPromo(true)
+    setTimeout(() => setCopiedPromo(false), 2200)
+  }
 
   // ─── Search State ───────────────────────────────────────────────────────────
   const [navSearch, setNavSearch] = useState('')
@@ -500,7 +513,8 @@ export function Navbar() {
     setMobileMenuOpen(false)
     setSearchOpen(false)
     setActiveMega(null)
-    setAllProductsHover(false)
+    setAllProductsOpen(false)
+    setMoreMenuOpen(false)
   }, [pathname])
 
   useEffect(() => {
@@ -512,20 +526,52 @@ export function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [mobileMenuOpen, searchOpen])
 
-  // Mega Menu Hover Delays (Avoid accidental triggers)
+  // ─── Master Menu "Tous les Produits" & Mega Menu Hover Handlers ─────────
+  const handleMasterEnter = () => {
+    if (masterTimer.current) clearTimeout(masterTimer.current)
+    if (megaTimer.current) clearTimeout(megaTimer.current)
+    if (moreTimer.current) clearTimeout(moreTimer.current)
+    setActiveMega(null)
+    setMoreMenuOpen(false)
+    setAllProductsOpen(true)
+  }
+
+  const handleMasterLeave = () => {
+    masterTimer.current = setTimeout(() => setAllProductsOpen(false), 260)
+  }
+
   const handleCatEnter = (idx: number) => {
     if (megaTimer.current) clearTimeout(megaTimer.current)
+    if (masterTimer.current) clearTimeout(masterTimer.current)
+    if (moreTimer.current) clearTimeout(moreTimer.current)
+    setAllProductsOpen(false)
+    setMoreMenuOpen(false)
     setActiveMega(idx)
-    setAllProductsHover(false)
   }
+
   const handleCatLeave = () => {
-    megaTimer.current = setTimeout(() => setActiveMega(null), 180)
+    megaTimer.current = setTimeout(() => setActiveMega(null), 260)
   }
+
+  const handleMoreEnter = () => {
+    if (moreTimer.current) clearTimeout(moreTimer.current)
+    if (megaTimer.current) clearTimeout(megaTimer.current)
+    if (masterTimer.current) clearTimeout(masterTimer.current)
+    setActiveMega(null)
+    setAllProductsOpen(false)
+    setMoreMenuOpen(true)
+  }
+
+  const handleMoreLeave = () => {
+    moreTimer.current = setTimeout(() => setMoreMenuOpen(false), 260)
+  }
+
   const handleMegaEnter = () => {
     if (megaTimer.current) clearTimeout(megaTimer.current)
   }
+
   const handleMegaLeave = () => {
-    megaTimer.current = setTimeout(() => setActiveMega(null), 180)
+    megaTimer.current = setTimeout(() => setActiveMega(null), 260)
   }
 
   const activeCategory = activeMega !== null ? NAV_CATEGORIES[activeMega] : null
@@ -533,380 +579,746 @@ export function Navbar() {
   return (
     <>
       {/* ══════════════════════════════════════════════════════
-          HEADER PRINCIPAL (Standard Apple & Helloprint)
+          MOBILE HEADER (STYLE JUMIA WEB MOBILE)
       ══════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 bg-[#1D1D1F] border-b border-white/10 shadow-md">
-        
-        {/* LIGNE 1 : LOGO + RECHERCHE CENTRALE + ACTIONS UTILISATEUR */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
-          
+      <header className="md:hidden sticky top-0 z-50 bg-white border-b border-slate-200/80 shadow-xs">
+        {/* Ligne 1 : Hamburger + Logo Centré + Compte & Panier */}
+        <div className="px-3 h-13 flex items-center justify-between">
+          {/* Menu Hamburger Gauche */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu size={23} />
+          </button>
+
           {/* Logo YopoePrint */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-gray-950 font-black text-lg shadow-sm group-hover:scale-105 transition-transform">
-              Y
-            </div>
-            <div className="leading-none">
-              <span className="font-display font-black text-xl text-white tracking-tight">
-                Yopoe<span className="text-emerald-400">Print</span>
-              </span>
-              <span className="block text-[9px] uppercase tracking-widest text-gray-400 font-semibold mt-0.5">
-                Imprimerie en ligne · BF
-              </span>
-            </div>
-          </Link>
+          <Logo theme="light" size="sm" showSubtitle={false} />
 
-          {/* Recherche Prédictive E-Commerce (Desktop) */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-4 relative" ref={searchContainerRef}>
-            <form onSubmit={handleSearchSubmit} className="w-full relative">
-              <div className="relative flex items-center">
-                <Search size={17} className="absolute left-4 text-gray-400 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Rechercher cartes, flyers, roll-up, bâches, t-shirts…"
-                  value={navSearch}
-                  onChange={(e) => setNavSearch(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  className="w-full bg-white/10 hover:bg-white/15 focus:bg-white text-white focus:text-[#1D1D1F] placeholder:text-gray-400 focus:placeholder:text-gray-500 rounded-full py-2.5 pl-11 pr-24 text-xs sm:text-sm border border-white/10 focus:border-emerald-500 outline-none transition-all duration-200 shadow-inner"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold px-3.5 py-1.5 rounded-full text-xs transition-colors flex items-center gap-1 shadow-xs"
-                >
-                  {searchLoading ? <Loader2 size={13} className="animate-spin" /> : <span>Trouver</span>}
-                </button>
-              </div>
-            </form>
-
-            {/* Dropdown de Résultats Prédictifs */}
-            {searchFocused && navSearch.trim().length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden z-[60] text-slate-900 animate-in fade-in slide-in-from-top-1">
-                {searchLoading ? (
-                  <div className="p-5 flex items-center justify-center gap-2 text-xs text-gray-500 font-medium">
-                    <Loader2 size={15} className="animate-spin text-emerald-600" />
-                    <span>Recherche des produits en atelier...</span>
-                  </div>
-                ) : navSearchResults.length > 0 ? (
-                  <div className="py-2">
-                    <div className="px-4 py-2 border-b border-gray-100 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      Suggestions immédiates
-                    </div>
-                    {navSearchResults.map((prod) => (
-                      <Link
-                        key={prod.id || prod._id}
-                        href={`/produit/${prod.slug}`}
-                        onClick={() => { setSearchFocused(false); setNavSearch('') }}
-                        className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-lg shrink-0 group-hover:bg-emerald-50">
-                            {prod.emoji || '📦'}
-                          </div>
-                          <div>
-                            <p className="font-bold text-xs text-slate-900 group-hover:text-emerald-600 transition-colors">
-                              {prod.name}
-                            </p>
-                            <p className="text-[11px] text-gray-500">{prod.category}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-gray-400 block font-medium">Dès</span>
-                          <span className="font-bold text-xs text-emerald-600 font-mono">
-                            {new Intl.NumberFormat('fr-FR').format(prod.basePrice)} FCFA
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                    <button
-                      onClick={handleSearchSubmit}
-                      className="w-full text-center text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-slate-50 hover:bg-slate-100 py-3 border-t border-gray-100 transition-colors"
-                    >
-                      Voir tous les résultats pour "{navSearch}" →
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-xs text-gray-500">
-                    <p className="font-bold text-slate-800 mb-1">Aucun résultat trouvé pour "{navSearch}"</p>
-                    <p className="text-[11px] text-gray-400">Essayez avec "cartes", "flyers", "roll-up" ou "bâche".</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Actions Droite : Devis B2B + Mon Compte + Panier */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            
-            {/* Bouton Devis Express B2B (Bureau) */}
+          {/* Actions Droite : Compte & Panier */}
+          <div className="flex items-center gap-1">
             <Link
-              href="/devis"
-              className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-bold border border-white/15 transition-all"
+              href={mounted && isLoggedIn ? "/mon-compte" : "/connexion"}
+              className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform"
+              aria-label="Mon compte"
             >
-              <Zap size={14} className="text-amber-400" />
-              <span>Devis sous 2h</span>
+              <User size={22} />
             </Link>
 
-            {/* Espace Client */}
-            {isLoggedIn ? (
-              <div className="hidden sm:flex items-center gap-2 pl-2">
-                <Link
-                  href="/mon-compte"
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-white/10 text-white text-xs font-medium transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
-                    {user?.firstName ? user.firstName[0].toUpperCase() : 'U'}
-                  </div>
-                  <span className="max-w-[100px] truncate">{user?.firstName || 'Mon Compte'}</span>
-                </Link>
-                <button
-                  onClick={logout}
-                  title="Déconnexion"
-                  className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/connexion"
-                className="hidden sm:flex items-center gap-1.5 py-1.5 px-3.5 rounded-full hover:bg-white/10 text-gray-200 hover:text-white text-xs font-semibold transition-colors"
-              >
-                <User size={16} />
-                <span>Connexion</span>
-              </Link>
-            )}
-
-            {/* Panier Interactif Apple style */}
             <button
               onClick={openCart}
-              className="relative flex items-center gap-2 py-2 px-3.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition-all shadow-md active:scale-95 ml-1"
+              className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg relative active:scale-95 transition-transform"
+              aria-label="Panier"
             >
-              <ShoppingCart size={16} />
-              <span className="hidden sm:inline">Panier</span>
-              {itemCount > 0 && (
-                <span className="bg-gray-950 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+              <ShoppingCart size={22} />
+              {mounted && itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}
             </button>
-
-            {/* Bouton Mobile : Recherche */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="md:hidden p-2 text-gray-300 hover:text-white rounded-lg active:bg-white/10"
-              aria-label="Recherche"
-            >
-              <Search size={20} />
-            </button>
-
-            {/* Bouton Mobile : Menu Hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 text-gray-300 hover:text-white rounded-lg active:bg-white/10"
-              aria-label="Ouvrir le menu"
-            >
-              <Menu size={22} />
-            </button>
           </div>
-
         </div>
 
-        {/* LIGNE 2 : BARRE DE CATÉGORIES (Standard Helloprint avec Déclenchement Mega Menu) */}
-        <nav className="border-t border-white/10 bg-[#141416] relative">
+        {/* Ligne 2 : Barre de Recherche Pleine Largeur (Style Jumia Mobile) */}
+        <div className="px-3 pb-2.5">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="flex items-center bg-slate-100/90 rounded-xl px-3.5 py-2 border border-slate-200/70 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+              <Search size={16} className="text-slate-400 shrink-0 mr-2.5" />
+              <input
+                type="text"
+                placeholder="Cherchez sur YopoePrint"
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                className="w-full bg-transparent text-xs text-slate-900 placeholder:text-slate-400 outline-none font-medium"
+              />
+            </div>
+
+            {/* Dropdown de Résultats Prédictifs Mobile */}
+            {searchFocused && navSearch.trim().length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60] text-slate-900">
+                {searchLoading ? (
+                  <div className="p-4 flex items-center justify-center gap-2 text-xs text-gray-500">
+                    <Loader2 size={14} className="animate-spin text-emerald-600" />
+                    <span>Recherche...</span>
+                  </div>
+                ) : navSearchResults.length > 0 ? (
+                  <div className="py-1 max-h-60 overflow-y-auto">
+                    {navSearchResults.slice(0, 5).map((prod) => (
+                      <Link
+                        key={prod.id || prod._id}
+                        href={`/produit/${prod.slug}`}
+                        onClick={() => { setSearchFocused(false); setNavSearch('') }}
+                        className="flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 border-b border-gray-50 last:border-0"
+                      >
+                        <span className="font-bold text-xs text-slate-900 truncate max-w-[200px]">{prod.name}</span>
+                        <span className="font-bold text-xs text-emerald-600 font-mono">
+                          {new Intl.NumberFormat('fr-FR').format(prod.basePrice)} F
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </form>
+        </div>
+      </header>
+
+      {/* ══════════════════════════════════════════════════════
+          HEADER PRINCIPAL DESKTOP (Standard Apple & Helloprint)
+      ══════════════════════════════════════════════════════ */}
+      <header className="hidden md:block sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-xs transition-colors">
+        
+        {/* LIGNE 0 : TOP BAR ANNONCES & SERVICE ATELIER (High Header en couleur) */}
+        <div className="bg-[#008537] text-white text-xs py-1.5 px-4 shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            
+            {/* Gauche : Réassurance logistique atelier Ouaga & Bobo */}
+            <div className="flex items-center gap-3 text-[11px] text-emerald-50">
+              <span className="inline-flex items-center gap-1.5 text-white font-medium">
+                <Truck size={13} className="text-white shrink-0" />
+                <span>Livraison offerte dès <strong className="font-bold underline decoration-white/40">75 000 FCFA</strong> à Ouaga et Bobo</span>
+              </span>
+              <span className="text-white/30 hidden xl:inline">•</span>
+              <span className="hidden xl:inline-flex items-center gap-1 text-emerald-100">
+                <CheckCircle2 size={12} className="text-white shrink-0" />
+                Vérification PAO & BAT 300 DPI offerts
+              </span>
+            </div>
+
+            {/* Droite : Code Promo 1-Click + Contact Hotline */}
+            <div className="flex items-center gap-4 text-[11px]">
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-200 font-semibold inline-flex items-center gap-1">
+                  <Flame size={12} className="text-amber-200 shrink-0 fill-amber-300" />
+                  -15% 1ère commande :
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyPromo}
+                  title="Cliquer pour copier le code promo"
+                  className="inline-flex items-center gap-1 bg-white/20 hover:bg-white/30 active:scale-95 text-white px-2 py-0.5 rounded font-mono font-bold border border-white/30 transition-all cursor-pointer shadow-2xs"
+                >
+                  {copiedPromo ? (
+                    <>
+                      <CheckCheck size={11} className="text-white" />
+                      <span className="text-white font-sans font-bold">Copié !</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={11} className="text-emerald-100" />
+                      <span>YOPPRINT15</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <span className="text-white/30 hidden lg:inline">•</span>
+
+              <Link
+                href="/contact"
+                className="hidden lg:inline-flex items-center gap-1.5 text-white hover:text-emerald-100 transition-colors"
+              >
+                <Phone size={12} className="text-white shrink-0" />
+                <span>Hotline Atelier : <strong className="font-semibold">+226 70 00 00 00</strong></span>
+              </Link>
+            </div>
+
+          </div>
+        </div>
+
+        {/* LIGNE 1 : LOGO ORIGINAL + RECHERCHE CENTRALE + ACTIONS UTILISATEUR */}
+        <div className="bg-white border-b border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+            
+            {/* Logo YopoePrint ORIGINAL (Vert & Noir sur fond blanc) */}
+            <Logo theme="light" size="md" />
+
+            {/* Recherche Prédictive E-Commerce (Desktop) */}
+            <div className="hidden md:flex flex-1 max-w-xl mx-4 relative" ref={searchContainerRef}>
+              <form onSubmit={handleSearchSubmit} className="w-full relative">
+                <div className="relative flex items-center">
+                  <Search size={16} className="absolute left-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher cartes, flyers, roll-up, bâches, t-shirts…"
+                    value={navSearch}
+                    onChange={(e) => setNavSearch(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:placeholder:text-slate-400 rounded-full py-2.5 pl-11 pr-24 text-xs sm:text-sm border border-slate-200/90 focus:border-[#008537] focus:ring-2 focus:ring-[#008537]/15 outline-none transition-all duration-200 shadow-2xs"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-[#008537] hover:bg-[#00702e] text-white font-bold px-3.5 py-1.5 rounded-full text-xs transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
+                  >
+                    {searchLoading ? <Loader2 size={13} className="animate-spin" /> : <span>Trouver</span>}
+                  </button>
+                </div>
+              </form>
+
+              {/* Dropdown de Résultats Prédictifs */}
+              {searchFocused && navSearch.trim().length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 overflow-hidden z-[60] text-slate-900 animate-in fade-in slide-in-from-top-1">
+                  {searchLoading ? (
+                    <div className="p-5 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+                      <Loader2 size={15} className="animate-spin text-[#008537]" />
+                      <span>Recherche des produits en atelier...</span>
+                    </div>
+                  ) : navSearchResults.length > 0 ? (
+                    <div className="py-2">
+                      <div className="px-4 py-2 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Suggestions immédiates
+                      </div>
+                      {navSearchResults.map((prod) => (
+                        <Link
+                          key={prod.id || prod._id}
+                          href={`/produit/${prod.slug}`}
+                          onClick={() => { setSearchFocused(false); setNavSearch('') }}
+                          className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-lg shrink-0 group-hover:bg-emerald-50">
+                              {prod.emoji || '📦'}
+                            </div>
+                            <div>
+                              <p className="font-bold text-xs text-slate-900 group-hover:text-[#008537] transition-colors">
+                                {prod.name}
+                              </p>
+                              <p className="text-[11px] text-slate-500">{prod.category}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-400 block font-medium">Dès</span>
+                            <span className="font-bold text-xs text-[#008537] font-mono">
+                              {new Intl.NumberFormat('fr-FR').format(prod.basePrice)} FCFA
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                      <button
+                        onClick={handleSearchSubmit}
+                        className="w-full text-center text-xs font-bold text-[#008537] hover:text-[#00702e] bg-slate-50 hover:bg-slate-100 py-3 border-t border-slate-100 transition-colors cursor-pointer"
+                      >
+                        Voir tous les résultats pour "{navSearch}" →
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-xs text-slate-500">
+                      <p className="font-bold text-slate-800 mb-1">Aucun résultat trouvé pour "{navSearch}"</p>
+                      <p className="text-[11px] text-slate-400">Essayez avec "cartes", "flyers", "roll-up" ou "bâche".</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Actions Droite : Devis B2B + Mon Compte + Panier */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              
+              {/* Bouton Devis Express B2B */}
+              <Link
+                href="/devis"
+                className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100/80 text-[#008537] text-xs font-bold border border-emerald-200/80 hover:border-emerald-300 transition-all shadow-2xs"
+              >
+                <Zap size={14} className="text-amber-500 fill-amber-500" />
+                <span>Devis sous 2h</span>
+              </Link>
+
+              {/* Espace Client */}
+              {mounted && isLoggedIn ? (
+                <div className="hidden sm:flex items-center gap-2 pl-2">
+                  <Link
+                    href="/mon-compte"
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-slate-100 text-slate-800 text-xs font-semibold transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 text-[#008537] flex items-center justify-center font-bold text-xs border border-emerald-200">
+                      {user?.firstName ? user.firstName[0].toUpperCase() : 'U'}
+                    </div>
+                    <span className="max-w-[100px] truncate">{user?.firstName || 'Mon Compte'}</span>
+                  </Link>
+                  <button
+                    onClick={logout}
+                    title="Déconnexion"
+                    className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <LogOut size={16} />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/connexion"
+                  className="hidden sm:flex items-center gap-1.5 py-1.5 px-3.5 rounded-full hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-semibold transition-colors border border-slate-200/80"
+                >
+                  <User size={15} className="text-slate-500" />
+                  <span>Connexion</span>
+                </Link>
+              )}
+
+              {/* Panier Interactif */}
+              <button
+                onClick={openCart}
+                className="relative flex items-center gap-2 py-2 px-4 rounded-full bg-[#008537] hover:bg-[#00702e] text-white font-black text-xs transition-all shadow-sm hover:shadow active:scale-95 ml-1 cursor-pointer"
+              >
+                <ShoppingCart size={15} />
+                <span className="hidden sm:inline">Panier</span>
+                {mounted && itemCount > 0 && (
+                  <span className="bg-white text-[#008537] text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                    {itemCount > 9 ? '9+' : itemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* LIGNE 2 : BARRE DE CATÉGORIES (Fond Blanc, Sans Collision, Avec Dropdown Plus) */}
+        <nav className="border-t border-slate-100 bg-white relative">
           <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between">
             
-            <div className="flex items-center overflow-x-auto scrollbar-none py-0 flex-1">
+            <div className="flex items-center py-0 flex-1 min-w-0">
               
-              {/* TRIGGER MEGA CATALOGUE COMPLET : "Toutes les catégories" */}
+              {/* TRIGGER MEGA CATALOGUE COMPLET : "Tous les Produits" */}
               <div
                 className="relative shrink-0"
-                onMouseEnter={() => { setAllProductsHover(true); setActiveMega(null) }}
-                onMouseLeave={() => setAllProductsHover(false)}
+                onMouseEnter={handleMasterEnter}
+                onMouseLeave={handleMasterLeave}
               >
-                <Link
-                  href="/catalogue"
-                  className={`flex items-center gap-2 py-3 px-4 text-xs font-extrabold transition-all border-r border-white/10 shrink-0 ${
-                    allProductsHover
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-white/5 text-emerald-400 hover:bg-white/10 hover:text-emerald-300'
+                <button
+                  type="button"
+                  onClick={() => setAllProductsOpen(!allProductsOpen)}
+                  className={`flex items-center gap-2 py-2.5 px-4 text-xs font-extrabold transition-all border-r border-slate-200 shrink-0 cursor-pointer ${
+                    allProductsOpen
+                      ? 'bg-[#008537] text-white'
+                      : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}
                 >
                   <LayoutGrid size={15} />
                   <span>Tous les Produits</span>
-                  <ChevronDown size={13} className={`transition-transform duration-200 ${allProductsHover ? 'rotate-180' : ''}`} />
-                </Link>
-
-                {/* MEGA CATALOGUE COMPLET DÉROULANT (Style Helloprint & Jumia) */}
-                {allProductsHover && (
-                  <div
-                    className="absolute left-0 top-full z-50 w-[840px] bg-white rounded-b-3xl shadow-[0_30px_70px_rgba(0,0,0,0.22)] border border-gray-200 p-6 text-slate-900 animate-in fade-in slide-in-from-top-1 duration-150"
-                    onMouseEnter={() => setAllProductsHover(true)}
-                    onMouseLeave={() => setAllProductsHover(false)}
-                  >
-                    <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                      <div>
-                        <span className="font-display font-black text-sm text-slate-900">
-                          Catalogue Général YopoePrint
-                        </span>
-                        <span className="text-xs text-gray-500 block">
-                          Plus de 200 supports d'impression industrielle livrables au Burkina Faso
-                        </span>
-                      </div>
-                      <Link
-                        href="/catalogue"
-                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 group"
-                      >
-                        <span>Tout le catalogue</span>
-                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
-
-                    {/* Grille 4 colonnes des 8 grandes catégories avec icônes vectorielles */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-                      {NAV_CATEGORIES.map((cat) => {
-                        const Icon = cat.icon
-                        return (
-                          <Link
-                            key={cat.id}
-                            href={cat.href}
-                            className="p-3.5 rounded-2xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200/60 hover:border-emerald-300 transition-all group flex flex-col justify-between"
-                          >
-                            <div className="flex items-start gap-3 mb-2">
-                              <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-800 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-colors shadow-2xs shrink-0">
-                                <Icon size={18} />
-                              </div>
-                              <div className="min-w-0">
-                                <span className="font-bold text-xs text-slate-900 group-hover:text-emerald-600 transition-colors block truncate">
-                                  {cat.label}
-                                </span>
-                                <span className="text-[10px] text-gray-500 block font-mono">
-                                  Dès {cat.startingPrice}
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-[11px] text-gray-500 font-medium line-clamp-1">
-                              {cat.columns[0]?.items[0]?.label || 'Voir les modèles'}
-                            </span>
-                          </Link>
-                        )
-                      })}
-                    </div>
-
-                    {/* Bandeau inférieur pro */}
-                    <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between text-xs bg-slate-50/80 -mx-6 -mb-6 px-6 py-3.5 rounded-b-3xl">
-                      <div className="flex items-center gap-5 text-gray-600 font-medium">
-                        <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-emerald-600" /> Factures conformes DGI</span>
-                        <span className="flex items-center gap-1.5"><Truck size={14} className="text-emerald-600" /> Livraison Ouaga & Bobo</span>
-                        <span className="flex items-center gap-1.5"><CheckCircle2 size={14} className="text-emerald-600" /> BAT numérique offert</span>
-                      </div>
-                      <Link href="/entreprises" className="font-bold text-amber-700 hover:underline flex items-center gap-1">
-                        Packs Entreprises & Grands Comptes →
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                  <ChevronDown size={13} className={`transition-transform duration-200 ${allProductsOpen ? 'rotate-180' : ''}`} />
+                </button>
               </div>
 
-              {/* ONGLETS DES CATÉGORIES (Desktop : Hover pour afficher le Mega Menu) */}
-              <div className="hidden lg:flex items-center">
-                {NAV_CATEGORIES.map((cat, idx) => {
+              {/* ONGLETS DES CATÉGORIES (Responsive & Sans collision) */}
+              <div className="hidden lg:flex items-center min-w-0">
+                {/* 1. Catégories toujours visibles sur lg+ (0 à 4 : Flyers, Cartes, Affiches, Roll-ups, Brochures) */}
+                {NAV_CATEGORIES.slice(0, 5).map((cat, idx) => {
                   const isActive = activeMega === idx
                   const isCurrentRoute = pathname.includes(cat.href.replace('/catalogue/', ''))
                   return (
                     <div
                       key={cat.id}
-                      className="relative"
+                      className="relative shrink-0"
                       onMouseEnter={() => handleCatEnter(idx)}
                       onMouseLeave={handleCatLeave}
                     >
                       <Link
                         href={cat.href}
-                        className={`flex items-center gap-1.5 py-3 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
+                        className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                           isActive
-                            ? 'text-white border-emerald-400 bg-white/5'
+                            ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
                             : isCurrentRoute
-                              ? 'text-emerald-400 border-emerald-500'
-                              : 'text-gray-300 hover:text-white border-transparent hover:border-gray-500'
+                              ? 'text-[#008537] border-[#008537] font-bold'
+                              : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
                         }`}
                       >
                         <span>{cat.label}</span>
-                        {cat.tag && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            {cat.tag}
-                          </span>
-                        )}
                       </Link>
                     </div>
                   )
                 })}
+
+                {/* 2. Catégorie 5 (Textile Pro) visible dès xl (>= 1280px) */}
+                <div
+                  className="relative shrink-0 hidden xl:block"
+                  onMouseEnter={() => handleCatEnter(5)}
+                  onMouseLeave={handleCatLeave}
+                >
+                  <Link
+                    href={NAV_CATEGORIES[5].href}
+                    className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
+                      activeMega === 5
+                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        : pathname.includes(NAV_CATEGORIES[5].href.replace('/catalogue/', ''))
+                          ? 'text-[#008537] border-[#008537] font-bold'
+                          : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                    }`}
+                  >
+                    <span>{NAV_CATEGORIES[5].label}</span>
+                  </Link>
+                </div>
+
+                {/* 3. Catégorie 6 (Goodies VIP) visible dès xl (>= 1280px) */}
+                <div
+                  className="relative shrink-0 hidden xl:block"
+                  onMouseEnter={() => handleCatEnter(6)}
+                  onMouseLeave={handleCatLeave}
+                >
+                  <Link
+                    href={NAV_CATEGORIES[6].href}
+                    className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
+                      activeMega === 6
+                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        : pathname.includes(NAV_CATEGORIES[6].href.replace('/catalogue/', ''))
+                          ? 'text-[#008537] border-[#008537] font-bold'
+                          : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                    }`}
+                  >
+                    <span>{NAV_CATEGORIES[6].label}</span>
+                  </Link>
+                </div>
+
+                {/* 4. Catégorie 7 (Stickers & Packaging) visible dès 2xl (>= 1536px) */}
+                <div
+                  className="relative shrink-0 hidden 2xl:block"
+                  onMouseEnter={() => handleCatEnter(7)}
+                  onMouseLeave={handleCatLeave}
+                >
+                  <Link
+                    href={NAV_CATEGORIES[7].href}
+                    className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
+                      activeMega === 7
+                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        : pathname.includes(NAV_CATEGORIES[7].href.replace('/catalogue/', ''))
+                          ? 'text-[#008537] border-[#008537] font-bold'
+                          : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                    }`}
+                  >
+                    <span>{NAV_CATEGORIES[7].label}</span>
+                  </Link>
+                </div>
+
+                {/* 5. Dropdown "Autres supports ▾" (Visible sous 2xl pour les catégories non affichées) */}
+                <div
+                  className="relative shrink-0 2xl:hidden"
+                  onMouseEnter={handleMoreEnter}
+                  onMouseLeave={handleMoreLeave}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                    className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 cursor-pointer ${
+                      moreMenuOpen
+                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                    }`}
+                  >
+                    <span>Autres supports</span>
+                    <ChevronDown size={12} className={`transition-transform duration-200 ${moreMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Panneau Déroulant "Autres supports" */}
+                  {moreMenuOpen && (
+                    <div
+                      className="absolute top-full left-0 w-64 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 text-slate-800 animate-in fade-in slide-in-from-top-1 duration-150"
+                      onMouseEnter={handleMoreEnter}
+                      onMouseLeave={handleMoreLeave}
+                    >
+                      {/* Textile (si sous xl) */}
+                      <Link
+                        href={NAV_CATEGORIES[5].href}
+                        onClick={() => setMoreMenuOpen(false)}
+                        onMouseEnter={() => handleCatEnter(5)}
+                        className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-slate-50 hover:text-[#008537] transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Shirt size={14} className="text-[#008537]" />
+                          <span className="font-medium">{NAV_CATEGORIES[5].label}</span>
+                        </div>
+                        <ChevronRight size={13} className="text-slate-400" />
+                      </Link>
+                      {/* Goodies (si sous xl) */}
+                      <Link
+                        href={NAV_CATEGORIES[6].href}
+                        onClick={() => setMoreMenuOpen(false)}
+                        onMouseEnter={() => handleCatEnter(6)}
+                        className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-slate-50 hover:text-[#008537] transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Gift size={14} className="text-[#008537]" />
+                          <span className="font-medium">{NAV_CATEGORIES[6].label}</span>
+                        </div>
+                        <ChevronRight size={13} className="text-slate-400" />
+                      </Link>
+                      {/* Packaging (si sous 2xl) */}
+                      <Link
+                        href={NAV_CATEGORIES[7].href}
+                        onClick={() => setMoreMenuOpen(false)}
+                        onMouseEnter={() => handleCatEnter(7)}
+                        className="flex items-center justify-between px-3.5 py-2 text-xs hover:bg-slate-50 hover:text-[#008537] transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Box size={14} className="text-[#008537]" />
+                          <span className="font-medium">{NAV_CATEGORIES[7].label}</span>
+                        </div>
+                        <ChevronRight size={13} className="text-slate-400" />
+                      </Link>
+
+                      <div className="border-t border-slate-100 my-1 pt-1">
+                        <Link
+                          href="/catalogue"
+                          onClick={() => setMoreMenuOpen(false)}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold text-[#008537] hover:text-[#00702e] transition-colors"
+                        >
+                          <span>Voir tout le catalogue ({NAV_CATEGORIES.length} univers)</span>
+                          <ArrowRight size={11} />
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
 
-            </div>
-
-            {/* Lien B2B Corporate fixe à droite */}
-            <div className="hidden sm:flex items-center gap-4 shrink-0 pl-3">
-              <Link
-                href="/entreprises"
-                className="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 py-3 transition-colors"
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <span>Espace Entreprises (DGI)</span>
-              </Link>
             </div>
 
           </div>
 
           {/* ════════════════════════════════════════════════════════════════════
-              LE VRAI MEGA MENU E-COMMERCE PROFESSIONNEL (Clean White Canvas)
-              Inspiré de Helloprint et Jumia, avec la finition soignée Apple
+              MASTER MEGA CATALOGUE DÉROULANT STYLE JUMIA (DOUBLE VOLET)
+          ════════════════════════════════════════════════════════════════════ */}
+          {allProductsOpen && (
+            <>
+              {/* Scrim Overlay transparent */}
+              <div
+                className="fixed inset-0 top-[138px] bg-black/40 backdrop-blur-[2px] z-40 transition-opacity duration-200 pointer-events-none"
+              />
+
+              <div className="hidden lg:block absolute left-0 right-0 top-full z-50 pointer-events-none">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
+                  <div
+                    className="absolute left-4 md:left-6 top-0 z-50 w-[960px] max-w-[calc(100vw-3rem)] bg-white rounded-b-3xl shadow-[0_30px_80px_rgba(0,0,0,0.25)] border border-slate-200/90 text-slate-900 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 pointer-events-auto"
+                    onMouseEnter={handleMasterEnter}
+                    onMouseLeave={handleMasterLeave}
+                  >
+                    {/* EN-TÊTE ÉPURÉ */}
+                    <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-200/80">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-display font-black text-xs uppercase tracking-wider text-slate-900">
+                          Catalogue Industriel de l'Atelier
+                        </span>
+                        <span className="text-slate-400 text-xs">•</span>
+                        <span className="text-xs text-slate-500 font-medium">
+                          Tarifs direct usine en FCFA
+                        </span>
+                      </div>
+                      <Link
+                        href="/catalogue"
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 group"
+                      >
+                        <span>Tout le catalogue ({NAV_CATEGORIES.length} univers)</span>
+                        <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+
+                    {/* CORPS : DOUBLE VOLET (SIDEBAR GAUCHE + PANNEAU CONTENU DROIT) */}
+                    <div className="flex items-stretch min-h-[440px]">
+                      
+                      {/* 1. VOLET GAUCHE : LISTE DES RAYONS AVEC ICÔNES ET INDICATEURS */}
+                      <div className="w-[300px] shrink-0 bg-slate-50/90 p-2.5 border-r border-slate-200/80 space-y-1">
+                        {NAV_CATEGORIES.map((cat, idx) => {
+                          const Icon = cat.icon
+                          const isSelected = masterCatIndex === idx
+                          return (
+                            <button
+                              key={cat.id}
+                              onMouseEnter={() => setMasterCatIndex(idx)}
+                              onClick={() => setMasterCatIndex(idx)}
+                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-white text-emerald-950 shadow-xs border border-slate-200/90 font-bold'
+                                  : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900 font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                  isSelected
+                                    ? 'bg-emerald-600 text-white shadow-2xs'
+                                    : 'bg-white text-slate-600 border border-slate-200'
+                                }`}>
+                                  <Icon size={14} />
+                                </div>
+                                <span className="text-xs truncate">{cat.label}</span>
+                              </div>
+                              <ChevronRight size={13} className={`shrink-0 ml-1 transition-transform ${isSelected ? 'text-emerald-600 translate-x-0.5' : 'text-slate-400'}`} />
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* 2. VOLET DROIT DYNAMIQUE : SOUS-FORMATS + ENCART VEDETTE DE LA CATÉGORIE ACTIVE */}
+                      {(() => {
+                        const activeCatData = NAV_CATEGORIES[masterCatIndex] || NAV_CATEGORIES[0]
+                        return (
+                          <div className="flex-1 p-6 bg-white flex flex-col justify-between">
+                            
+                            <div>
+                              {/* Titre de rayon et tarif direct */}
+                              <div className="flex items-center justify-between pb-3 mb-5 border-b border-slate-100">
+                                <div>
+                                  <h3 className="font-display font-black text-base text-slate-950">
+                                    {activeCatData.label}
+                                  </h3>
+                                  <p className="text-xs text-slate-500">
+                                    Production en atelier à Ouagadougou · Papier certifié et finitions offset
+                                  </p>
+                                </div>
+                                <Link
+                                  href={activeCatData.href}
+                                  className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 group"
+                                >
+                                  <span>Voir tous les modèles</span>
+                                  <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                              </div>
+
+                              {/* Grille Formats (7/12) + Carte Promo (5/12) */}
+                              <div className="grid grid-cols-12 gap-6 items-start">
+                                
+                                {/* Colonnes de liens Formats et Papiers */}
+                                <div className="col-span-7 grid grid-cols-2 gap-5 divide-x divide-slate-100">
+                                  {activeCatData.columns.slice(0, 2).map((col, cIdx) => (
+                                    <div key={cIdx} className={cIdx > 0 ? 'pl-5' : ''}>
+                                      <h4 className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 mb-3">
+                                        {col.title}
+                                      </h4>
+                                      <ul className="space-y-1.5">
+                                        {col.items.slice(0, 5).map((item, iIdx) => (
+                                          <li key={iIdx}>
+                                            <Link
+                                              href={item.href}
+                                              className="group/item flex items-center text-xs text-slate-700 hover:text-emerald-700 hover:font-bold transition-colors py-0.5"
+                                            >
+                                              <span className="truncate group-hover/item:translate-x-0.5 transition-transform">
+                                                {item.label}
+                                              </span>
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Carte Encart Produit Vedette */}
+                                <div className="col-span-5 bg-slate-50 rounded-2xl border border-slate-200/80 p-3.5 flex flex-col justify-between group">
+                                  <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-slate-100 mb-2.5">
+                                    <Image
+                                      src={activeCatData.featured.imageUrl}
+                                      alt={activeCatData.featured.title}
+                                      fill
+                                      priority
+                                      unoptimized
+                                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                      sizes="240px"
+                                    />
+                                    <div className="absolute top-2 left-2 bg-emerald-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-xs">
+                                      {activeCatData.featured.badge}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <h5 className="font-bold text-xs text-slate-900 leading-snug line-clamp-1">
+                                      {activeCatData.featured.title}
+                                    </h5>
+                                    <div className="flex items-baseline gap-2 pt-0.5">
+                                      <span className="font-mono font-black text-sm text-slate-950">
+                                        {activeCatData.featured.price}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <Link
+                                    href={activeCatData.featured.href}
+                                    className="mt-3 w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-950 hover:bg-emerald-600 text-white text-[11px] font-bold transition-all shadow-xs active:scale-95"
+                                  >
+                                    <span>Découvrir</span>
+                                    <ArrowRight size={12} />
+                                  </Link>
+                                </div>
+
+                              </div>
+                            </div>
+
+                            {/* Puces bas de panneau droit */}
+                            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                              <span className="flex items-center gap-1 font-medium">
+                                <CheckCircle2 size={13} className="text-emerald-600" /> BAT 300 DPI offert
+                              </span>
+                              <span className="flex items-center gap-1 font-medium">
+                                <Clock size={13} className="text-emerald-600" /> Prêt en 24h à 48h
+                              </span>
+                              <Link href="/devis" className="font-bold text-emerald-700 hover:underline">
+                                Devis sur mesure →
+                              </Link>
+                            </div>
+
+                          </div>
+                        )
+                      })()}
+
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════════════
+              MEGA MENU ÉPURÉ, COMPACT & RAPIDE (Style Moderne Apple / Stripe)
           ════════════════════════════════════════════════════════════════════ */}
           {activeCategory && (
             <>
-              {/* Scrim Overlay transparent pour focaliser le regard */}
+              {/* Voile d'ombrage ultra-léger */}
               <div
-                className="fixed inset-0 top-[112px] bg-black/40 backdrop-blur-[2px] z-40 transition-opacity duration-200 pointer-events-none"
+                className="fixed inset-0 top-[138px] bg-black/15 z-40 transition-opacity duration-150 pointer-events-none"
               />
 
-              {/* Panneau Déroulant Blanc Lumineux & Pro */}
+              {/* Panneau Déroulant Compact & Épuré */}
               <div
-                className="hidden lg:block absolute left-0 right-0 top-full z-50 bg-white border-b border-gray-200 shadow-[0_30px_70px_rgba(0,0,0,0.18)] text-slate-900 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
+                className="hidden lg:block absolute left-0 right-0 top-full z-50 bg-white border-b border-gray-200 shadow-xl text-slate-900 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
                 onMouseEnter={handleMegaEnter}
                 onMouseLeave={handleMegaLeave}
               >
-                <div className="max-w-7xl mx-auto px-6 py-8">
+                <div className="max-w-6xl mx-auto px-6 py-4">
                   
-                  {/* Grille principale : 3 Colonnes de Liens Thématiques + 1 Colonne Promo Encarts */}
+                  {/* Ligne En-tête Compacte */}
+                  <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-slate-100">
+                    <span className="font-display font-black text-sm text-slate-900 tracking-tight">
+                      {activeCategory.label}
+                    </span>
+                    <Link
+                      href={activeCategory.href}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 group transition-colors"
+                    >
+                      <span>Voir toute la gamme</span>
+                      <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  </div>
+
+                  {/* Grille Épurée : Colonnes de Liens Lisibles (Aucun prix parasite, aucun badge bruyant) */}
                   <div className="grid grid-cols-12 gap-8 items-start">
                     
-                    {/* COLONNES 1, 2, 3 (9 colonnes sur 12) : 3 sous-listes organisées */}
-                    <div className="col-span-8 grid grid-cols-3 gap-6 divide-x divide-gray-100">
+                    {/* 3 Colonnes de Liens Produits (9/12) */}
+                    <div className="col-span-9 grid grid-cols-3 gap-6 divide-x divide-slate-100">
                       {activeCategory.columns.map((col, cIdx) => (
                         <div key={cIdx} className={cIdx > 0 ? 'pl-6' : ''}>
-                          <h4 className="font-display font-extrabold text-xs text-slate-900 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100 flex items-center justify-between">
-                            <span>{col.title}</span>
+                          <h4 className="font-mono text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            {col.title}
                           </h4>
-
-                          <ul className="space-y-1.5">
+                          <ul className="space-y-1">
                             {col.items.map((item, iIdx) => (
                               <li key={iIdx}>
                                 <Link
                                   href={item.href}
-                                  className="group/link flex items-center justify-between py-1.5 px-2 rounded-xl text-xs font-medium text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-all"
+                                  className="text-xs text-slate-700 hover:text-emerald-600 hover:font-bold transition-colors block py-0.5 whitespace-normal leading-snug"
                                 >
-                                  <div className="flex items-center gap-1.5 min-w-0">
-                                    <span className="truncate group-hover/link:translate-x-0.5 transition-transform">
-                                      {item.label}
-                                    </span>
-                                    {item.badge && (
-                                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                                        {item.badge}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {item.price && (
-                                    <span className="shrink-0 text-[11px] font-semibold text-gray-400 group-hover/link:text-emerald-600 font-mono ml-2">
-                                      {item.price}
-                                    </span>
-                                  )}
+                                  {item.label}
                                 </Link>
                               </li>
                             ))}
@@ -915,99 +1327,31 @@ export function Navbar() {
                       ))}
                     </div>
 
-                    {/* COLONNE 4 (4 colonnes sur 12) : Carte Promo Photographique Helloprint style */}
-                    <div className="col-span-4 bg-slate-50 border border-slate-200/80 rounded-3xl p-5 flex flex-col justify-between overflow-hidden relative group">
-                      
-                      {/* Badge Promo / Nouveauté */}
-                      <div className="flex items-center justify-between mb-3 z-10">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-600 text-white shadow-xs">
-                          <Percent size={11} /> {activeCategory.featured.badge}
-                        </span>
-                        {activeCategory.featured.discount && (
-                          <span className="text-xs font-black text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
-                            {activeCategory.featured.discount}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Image Miniature Pro */}
-                      <div className="aspect-[16/9] w-full relative rounded-2xl overflow-hidden mb-3.5 shadow-xs border border-gray-100">
-                        <Image
-                          src={activeCategory.featured.imageUrl}
-                          alt={activeCategory.featured.title}
-                          fill
-                          sizes="360px"
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-
-                      {/* Description & Prix */}
-                      <div className="space-y-1.5 mb-4 z-10">
-                        <h4 className="font-display font-extrabold text-sm text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors">
-                          {activeCategory.featured.title}
-                        </h4>
-                        <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
-                          {activeCategory.featured.subtitle}
-                        </p>
-                        
-                        <div className="pt-2 flex items-baseline gap-2">
-                          <span className="font-display font-black text-base text-slate-900 font-mono">
-                            {activeCategory.featured.price}
-                          </span>
-                          {activeCategory.featured.oldPrice && (
-                            <span className="text-xs text-gray-400 line-through font-mono">
-                              {activeCategory.featured.oldPrice}
-                            </span>
-                          )}
+                    {/* Visuel Miniature Discret & Élégant (3/12) */}
+                    <div className="col-span-3 border-l border-slate-100 pl-6 flex flex-col justify-center">
+                      <Link
+                        href={activeCategory.featured?.href || activeCategory.href}
+                        className="group block relative rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-2.5 hover:border-emerald-500/50 hover:shadow-xs transition-all"
+                      >
+                        <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-100 mb-2">
+                          <Image
+                            src={activeCategory.featured?.imageUrl || '/images/products/flyers-depliants.jpg'}
+                            alt={activeCategory.label}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="200px"
+                          />
                         </div>
-                        <p className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">
-                          <Truck size={12} /> {activeCategory.featured.delivery}
+                        <p className="font-bold text-xs text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                          {activeCategory.featured?.title || activeCategory.label}
                         </p>
-                      </div>
-
-                      {/* Bouton CTA Direct */}
-                      <div className="space-y-2 z-10 pt-2 border-t border-slate-200/60">
-                        <Link
-                          href={activeCategory.featured.href}
-                          className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs transition-all shadow-sm active:scale-95"
-                        >
-                          <span>Configurer & Commander</span>
-                          <ArrowRight size={13} />
-                        </Link>
-                        <Link
-                          href={activeCategory.href}
-                          className="w-full block text-center text-[11px] font-semibold text-gray-500 hover:text-slate-900 transition-colors"
-                        >
-                          Voir toute la gamme {activeCategory.label} →
-                        </Link>
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  {/* Bandeau d'Assurance d'Atelier sous le Mega Menu */}
-                  <div className="mt-8 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-6">
-                      <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                        <CheckCircle2 size={14} className="text-emerald-600" /> Contrôle PAO & Résolution 300 DPI offert
-                      </span>
-                      <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                        <ShieldCheck size={14} className="text-emerald-600" /> Garantie Satisfait ou Réimprimé
-                      </span>
-                      <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                        <Clock size={14} className="text-emerald-600" /> Délais garantis atelier Ouaga
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <Link href="/guide-impression" className="font-bold text-emerald-700 hover:underline">
-                        Consulter le guide technique →
-                      </Link>
-                      <Link href="/devis" className="font-bold text-slate-900 hover:text-emerald-600">
-                        Demander un devis sur mesure
+                        <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-1">
+                          <span>Découvrir</span>
+                          <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                        </span>
                       </Link>
                     </div>
+
                   </div>
 
                 </div>
@@ -1019,139 +1363,148 @@ export function Navbar() {
       </header>
 
       {/* ══════════════════════════════════════════════════════
-          MOBILE: TIROIR LATÉRAL RESPONSIVE COMPLET
+          MOBILE: TIROIR LATÉRAL RESPONSIVE (STYLE JUMIA PUR)
       ══════════════════════════════════════════════════════ */}
       {mobileMenuOpen && (
         <>
+          {/* Overlay flouté sombre */}
           <div
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs md:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <div className="fixed top-0 right-0 bottom-0 z-[70] w-[88vw] max-w-sm bg-white md:hidden flex flex-col shadow-2xl text-slate-900">
+          {/* Drawer glissant depuis la GAUCHE (Style Jumia Mobile) */}
+          <div className="fixed top-0 left-0 bottom-0 z-[70] w-[84vw] max-w-xs sm:max-w-sm bg-white md:hidden flex flex-col shadow-2xl text-slate-900 animate-in slide-in-from-left duration-250">
             
-            {/* Header du Drawer */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-slate-50">
-              <span className="font-display font-black text-base text-slate-900">
-                Menu YopoePrint
-              </span>
+            {/* Header du Drawer (Croix Gauche + Logo YopoePrint) */}
+            <div className="px-3 h-14 border-b border-slate-100 flex items-center gap-2.5 bg-white shrink-0">
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-9 h-9 rounded-full bg-slate-200/80 text-slate-700 flex items-center justify-center"
+                className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform cursor-pointer"
+                aria-label="Fermer le menu"
               >
-                <X size={18} />
+                <X size={22} className="stroke-[2.2]" />
               </button>
+              <Logo theme="light" size="sm" showSubtitle={false} />
             </div>
 
-            {/* Profil Mobile */}
-            <div className="p-4 border-b border-gray-100 bg-white">
-              {isLoggedIn ? (
-                <div className="flex items-center justify-between">
-                  <Link
-                    href="/mon-compte"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center">
-                      {user?.firstName ? user.firstName[0].toUpperCase() : 'U'}
-                    </div>
-                    <div>
-                      <p className="font-bold text-xs text-slate-900">{user?.firstName || 'Mon Compte'}</p>
-                      <p className="text-[11px] text-gray-500">Compte vérifié</p>
-                    </div>
-                  </Link>
-                  <button onClick={() => { logout(); setMobileMenuOpen(false) }} className="text-xs text-red-600 font-bold">
-                    Quitter
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/connexion"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs"
-                >
-                  <User size={15} />
-                  <span>Se connecter à mon compte</span>
-                </Link>
-              )}
-            </div>
-
-            {/* Liste Déroulante des Catégories */}
-            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-                Nos Catégories Produits
-              </div>
-
-              {NAV_CATEGORIES.map((cat) => {
-                const Icon = cat.icon
-                return (
-                  <Link
-                    key={cat.id}
-                    href={cat.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-gray-100 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 group-hover:bg-emerald-100 group-hover:text-emerald-700 transition-colors">
-                        <Icon size={16} />
-                      </div>
-                      <div>
-                        <span className="font-bold text-xs text-slate-900 block">{cat.label}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">Dès {cat.startingPrice}</span>
-                      </div>
-                    </div>
-                    <ChevronRight size={15} className="text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                )
-              })}
-
-              <div className="pt-4 border-t border-gray-100 space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-                  Espace Entreprises & Support
-                </div>
-
-                <Link
-                  href="/entreprises"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs font-bold"
-                >
-                  <span>🏢 Espace Entreprises (DGI)</span>
-                  <ChevronRight size={15} />
-                </Link>
-
-                <Link
-                  href="/guide-impression"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-slate-700 text-xs font-medium"
-                >
-                  <span>Guide technique & Gabarits</span>
-                  <ChevronRight size={15} />
-                </Link>
-
+            {/* Corps Déroulant du Drawer */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              
+              {/* SECTION 1 : BESOIN D'AIDE ? & VOTRE COMPTE (Style Jumia) */}
+              <div className="border-b border-slate-100 divide-y divide-slate-100">
                 <Link
                   href="/contact"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-slate-700 text-xs font-medium"
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 text-xs font-black tracking-wider text-slate-800 uppercase transition-colors"
                 >
-                  <span>Nous contacter & Atelier</span>
-                  <ChevronRight size={15} />
+                  <span>BESOIN D'AIDE?</span>
+                  <ChevronRight size={16} className="text-slate-400" />
+                </Link>
+
+                <Link
+                  href={isLoggedIn ? "/mon-compte" : "/connexion"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 text-xs font-black tracking-wider text-slate-800 uppercase transition-colors"
+                >
+                  <span>
+                    {isLoggedIn && user?.firstName ? `VOTRE COMPTE (${user.firstName})` : 'VOTRE COMPTE YOPOEPRINT'}
+                  </span>
+                  <ChevronRight size={16} className="text-slate-400" />
                 </Link>
               </div>
-            </nav>
 
-            {/* Footer Mobile Drawer */}
-            <div className="p-4 border-t border-gray-100 bg-slate-50 space-y-2">
-              <Link
-                href="/devis"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-xs"
-              >
-                <span>Demander un devis express</span>
-                <ArrowRight size={14} />
-              </Link>
-              <p className="text-[10px] text-center text-gray-400">
-                Atelier Ouagadougou · Tél : +226 70 00 00 00
-              </p>
+              {/* SECTION 1.5 : RACCOURCIS AVEC ICÔNES LIGNES ÉPURÉES (Style Jumia) */}
+              <div className="py-1.5 border-b border-slate-100">
+                <Link
+                  href={isLoggedIn ? "/mon-compte" : "/connexion"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3.5 px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors"
+                >
+                  <Package size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
+                  <span className="text-xs font-medium text-slate-800">Vos commandes</span>
+                </Link>
+
+                <Link
+                  href="/devis"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3.5 px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors"
+                >
+                  <FileCheck size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
+                  <span className="text-xs font-medium text-slate-800">Vos devis d'imprimerie</span>
+                </Link>
+
+                <div
+                  onClick={() => {
+                    handleCopyPromo()
+                  }}
+                  className="flex items-center justify-between px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <Tag size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
+                    <span className="text-xs font-medium text-slate-800">Bons d'achat & Promo</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    {copiedPromo ? 'Copié !' : '-15% YOPPRINT15'}
+                  </span>
+                </div>
+
+                <Link
+                  href="/catalogue"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3.5 px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors"
+                >
+                  <Heart size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
+                  <span className="text-xs font-medium text-slate-800">Favoris</span>
+                </Link>
+              </div>
+
+              {/* SECTION 2 : NOS CATÉGORIES (Style Jumia avec Icônes fines) */}
+              <div className="py-2.5">
+                <div className="flex items-center justify-between px-4 py-1.5 mb-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    NOS CATÉGORIES
+                  </span>
+                  <Link
+                    href="/catalogue"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                  >
+                    Voir plus
+                  </Link>
+                </div>
+
+                <div className="space-y-0.5">
+                  {NAV_CATEGORIES.map((cat) => {
+                    const Icon = cat.icon
+                    return (
+                      <Link
+                        key={cat.id}
+                        href={cat.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3.5 px-4 py-2.5 hover:bg-slate-50 text-slate-800 hover:text-emerald-700 transition-colors group"
+                      >
+                        <Icon size={18} className="text-slate-500 group-hover:text-emerald-600 stroke-[1.8] shrink-0" />
+                        <span className="text-xs font-medium text-slate-800 group-hover:text-emerald-700">
+                          {cat.label}
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* SECTION 3 : ASSISTANCE ATELIER RAPIDE */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50/80 mt-2 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                  <Phone size={14} className="text-[#008537] shrink-0" />
+                  <span>Hotline Atelier : +226 70 00 00 00</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Ouagadougou & Bobo-Dioulasso · Facturation IFU normalisée
+                </p>
+              </div>
+
             </div>
 
           </div>

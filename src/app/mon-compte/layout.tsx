@@ -78,29 +78,52 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-slate-50/60">
 
-      {/* ── Header mobile ─────────────────────────────────── */}
-      <div className="bg-gray-900 py-6 px-4 md:px-6 relative overflow-hidden">
-        {/* Abstract shapes for premium feel */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
+      {/* ── Header Espace Client Slate-950 ────────────────── */}
+      <div className="bg-slate-950 py-7 px-4 md:px-6 relative overflow-hidden border-b border-slate-800">
+        {/* Subtle grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+          style={{
+            backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
+            backgroundSize: '28px 28px'
+          }}
+        />
+        <div className="absolute top-0 right-1/4 w-72 h-72 bg-primary/10 blur-[100px] rounded-full pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto flex items-center gap-4 relative z-10">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary to-orange-400 rounded-2xl flex items-center justify-center font-display text-xl font-bold text-white shadow-lg shrink-0 border border-white/10">
-            {initials}
-          </div>
-          <div>
-            <p className="text-gray-400 text-xs font-medium mb-0.5">Espace Client</p>
-            <h1 className="font-display text-xl font-bold text-white">
-              {user?.firstName} {user?.lastName}
-            </h1>
-            <div className="flex items-center gap-1.5 mt-1">
-              <Star size={12} className="text-[#FFD700] fill-[#FFD700]" />
-              <span className="text-[#FFD700] text-xs font-semibold">
-                {user?.loyaltyPoints || 0} points fidélité
-              </span>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-primary to-orange-500 rounded-2xl flex items-center justify-center font-display text-xl font-extrabold text-white shadow-lg shrink-0 border border-white/10 tracking-tight">
+              {initials || 'YP'}
             </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Espace Client</p>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Compte vérifié
+                </span>
+              </div>
+              <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
+                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Compte Professionnel'}
+              </h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {user?.email || 'client@yopoeprint.bf'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+              <Star size={14} className="text-amber-400 fill-amber-400" />
+              <span className="font-bold text-white">{user?.loyaltyPoints || 0}</span> points fidélité
+            </div>
+            <Link 
+              href="/catalogue"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-sm"
+            >
+              Imprimer <ChevronRight size={14} />
+            </Link>
           </div>
         </div>
       </div>
@@ -111,7 +134,7 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
 
           {/* ── Sidebar ───────────────────────────────────── */}
           <aside className="hidden lg:block">
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm sticky top-24">
+            <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm sticky top-24">
               
               {/* Navigation */}
               <nav className="p-3 space-y-1">
@@ -119,44 +142,46 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
                   const isActive = pathname === href
                   return (
                     <Link key={href} href={href}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
+                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all
                         ${isActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                     >
-                      <Icon size={18} className={isActive ? 'text-primary' : 'text-gray-400'} />
-                      <span className="flex-1">{label}</span>
-                      {isActive && <ChevronRight size={14} className="text-primary" />}
+                      <Icon size={17} className={isActive ? 'text-primary' : 'text-slate-400'} />
+                      <span className="flex-1 text-xs sm:text-sm">{label}</span>
+                      {isActive && <ChevronRight size={14} className="text-slate-400" />}
                     </Link>
                   )
                 })}
               </nav>
 
               {/* Séparateur */}
-              <div className="border-t border-gray-100 p-3">
+              <div className="border-t border-slate-100 p-3">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-all group"
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all group"
                 >
-                  <LogOut size={18} className="text-red-400 group-hover:text-red-500 transition-colors" />
+                  <LogOut size={16} className="text-rose-400 group-hover:text-rose-600 transition-colors" />
                   Se déconnecter
                 </button>
               </div>
 
               {/* Points fidélité */}
-              <div className="m-4 p-4 bg-gray-900 rounded-xl relative overflow-hidden group">
-                <div className="absolute -right-4 -top-4 w-20 h-20 bg-primary/20 blur-2xl rounded-full transition-all group-hover:bg-primary/40" />
+              <div className="m-3 p-4 bg-slate-950 rounded-xl relative overflow-hidden border border-slate-800">
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Star size={14} className="text-[#FFD700] fill-[#FFD700]" />
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Club Fidélité</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Programme Privilège</span>
+                    <Star size={12} className="text-amber-400 fill-amber-400" />
                   </div>
-                  <p className="font-display text-2xl font-bold text-white">
-                    {user?.loyaltyPoints || 0} <span className="text-sm font-medium text-gray-400">pts</span>
+                  <p className="font-display text-xl font-bold text-white font-mono">
+                    {user?.loyaltyPoints || 0} <span className="text-xs font-normal text-slate-400">pts</span>
                   </p>
-                  <p className="text-[11px] text-gray-400 mt-2 bg-white/10 rounded-lg px-2 py-1.5 inline-block">
-                    Soit {Math.floor((user?.loyaltyPoints || 0) / 10) * 100} FCFA de remise
-                  </p>
+                  <div className="mt-2.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400">Remise disponible :</span>
+                    <span className="font-bold text-emerald-400 font-mono">
+                      {Math.floor((user?.loyaltyPoints || 0) / 10) * 100} FCFA
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

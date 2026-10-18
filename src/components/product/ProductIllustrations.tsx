@@ -385,17 +385,52 @@ export const PRODUCT_ILLUSTRATIONS: Record<string, React.FC<IllustrationProps>> 
  'etiquettes-rouleau': EtiquetteIllustration,
 }
 
-// ─── Composant générique ──────────────────────────────────────
+// ─── Composant générique intelligent ─────────────────────────
 export function ProductIllustration({
- slug, className, width, height
+  slug, className, width = 280, height = 200
 }: { slug: string } & IllustrationProps) {
- const Illustration = PRODUCT_ILLUSTRATIONS[slug]
- if (!Illustration) {
- return (
- <div className={`flex items-center justify-center text-6xl ${className}`}>
- 📦
- </div>
- )
- }
- return <Illustration className={className} width={width} height={height} />
+  // 1. Match direct
+  if (PRODUCT_ILLUSTRATIONS[slug]) {
+    const DirectComp = PRODUCT_ILLUSTRATIONS[slug]
+    return <DirectComp className={className} width={width} height={height} />
+  }
+
+  // 2. Détection par mot-clé
+  const s = (slug || '').toLowerCase()
+  if (s.includes('roll-up') || s.includes('kakemono') || s.includes('enrouleur')) {
+    return <RollupIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('carte') || s.includes('visite')) {
+    return <BusinessCardIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('flyer') || s.includes('prospectus') || s.includes('tract')) {
+    return <FlyerIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('affiche') || s.includes('poster')) {
+    return <AfficheIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('brochure') || s.includes('depliant') || s.includes('catalogue')) {
+    return <BrochureIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('t-shirt') || s.includes('tshirt') || s.includes('polo')) {
+    return <TshirtIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('tote-bag') || s.includes('totebag') || s.includes('sac')) {
+    return <ToteBagIllustration className={className} width={width} height={height} />
+  }
+  if (s.includes('etiquette') || s.includes('sticker') || s.includes('adhesif')) {
+    return <EtiquetteIllustration className={className} width={width} height={height} />
+  }
+
+  // 3. Fallback graphique vectoriel moderne
+  return (
+    <svg width={width} height={height} viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <rect x="50" y="30" width="180" height="140" rx="12" fill="#0B192C" />
+      <rect x="60" y="40" width="160" height="120" rx="8" fill="#1E3E62" />
+      <circle cx="140" cy="85" r="24" fill="#38BDF8" opacity="0.8" />
+      <text x="140" y="93" textAnchor="middle" fontSize="20" fill="white">🖨️</text>
+      <text x="140" y="130" textAnchor="middle" fontSize="10" fontWeight="bold" fill="white">YopoePrint Pro</text>
+      <text x="140" y="144" textAnchor="middle" fontSize="8" fill="#94A3B8">Impression Quadri HD</text>
+    </svg>
+  )
 }

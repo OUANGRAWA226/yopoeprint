@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/cart/CartDrawer'
-import { WhatsAppButton } from '@/components/shared/WhatsAppButton'
 
 export function ConditionalUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -24,7 +23,6 @@ export function ConditionalUI({ children }: { children: React.ReactNode }) {
       <main className="flex-1">{children}</main>
       
       {!isHidden && <Footer />}
-      {!isHidden && <WhatsAppButton />}
     </>
   )
 }
