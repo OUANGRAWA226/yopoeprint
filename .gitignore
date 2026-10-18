@@ -10,6 +10,11 @@ build/
 dist/
 coverage/
 
+# ── Rapports de tests & typecheck ─────────────────────────
+playwright-report/
+test-results/
+tsc-report.txt
+
 # ── Variables d'environnement & Secrets (CRITIQUE) ────────
 .env
 .env.*

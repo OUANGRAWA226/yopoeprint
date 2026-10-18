@@ -24,7 +24,8 @@
 
    | Variable              | Valeur                                         |
    |-----------------------|------------------------------------------------|
-   | `NODE_ENV`            | `production`                                   |
+   | `NODE_ENV`            | `production` **(obligatoire)**                 |
+   | `BACKEND_URL`         | `https://yopoeprint-api.onrender.com` **(obligatoire — sert à construire la notify_url CinetPay ; sans elle : `localhost`)** |
    | `PORT`                | `3001`                                         |
    | `API_PREFIX`          | `api/v1`                                       |
    | `DB_HOST`             | *(depuis Supabase → Settings → Database)*       |
@@ -38,6 +39,7 @@
    | `FRONTEND_URL`        | `https://yopoeprint.vercel.app`                |
    | `CINETPAY_API_KEY`    | *(depuis votre tableau de bord CinetPay)*       |
    | `CINETPAY_SITE_ID`    | *(depuis votre tableau de bord CinetPay)*       |
+   | `CINETPAY_SECRET_KEY` | *(clé secrète CinetPay)* **(obligatoire — vérification HMAC de l'en-tête `x-token` du webhook)** |
    | `CLOUDINARY_CLOUD_NAME`| `dtie3vgyz`                                   |
    | `CLOUDINARY_API_KEY`  | *(depuis Cloudinary)*                          |
    | `CLOUDINARY_API_SECRET`| *(depuis Cloudinary)*                         |
@@ -47,8 +49,20 @@
    node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
    ```
 
-5. Cliquer **Create Web Service** → attendre la fin du build (~3-5 min).
-6. Récupérer l'URL de votre API, ex: `https://yopoeprint-api.onrender.com`
+5. **Lancer les migrations TypeORM** sur la base Supabase **avant la mise en service**
+   (`synchronize` est désactivé en production : sans migrations, le schéma n'est pas à jour).
+   L'image Docker ne contient ni `src/` ni les devDependencies : exécuter la commande
+   depuis votre poste (ou la CI), avec les mêmes variables `DB_*` que Render dans
+   `yopoeprint-api/.env` :
+   ```
+   cd yopoeprint-api
+   npm ci
+   npm run migration:run
+   ```
+   À refaire à chaque déploiement qui ajoute une migration (`src/database/migrations/`).
+6. Cliquer **Create Web Service** → attendre la fin du build (~3-5 min).
+7. Récupérer l'URL de votre API, ex: `https://yopoeprint-api.onrender.com`
+   (elle doit correspondre à `BACKEND_URL`).
 
 ---
 
@@ -86,7 +100,9 @@ Tester manuellement ces URL dans le navigateur :
 ## ÉTAPE 4 : Configurer le Webhook CinetPay
 
 Une fois les deux services en ligne, aller dans votre tableau de bord CinetPay :
-- **Notify URL** : `https://yopoeprint-api.onrender.com/api/v1/payments/notify`
+- **Notify URL** : `https://yopoeprint-api.onrender.com/api/v1/payments/webhook`
+  (CinetPay la vérifie d'abord en `GET`, puis notifie en `POST` avec l'en-tête `x-token`
+  signé par `CINETPAY_SECRET_KEY`)
 - **Return URL** : `https://yopoeprint.vercel.app/commande/confirmation`
 
 ---
