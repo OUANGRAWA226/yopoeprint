@@ -3,6 +3,7 @@ import {
   IsOptional, IsArray, Min, MaxLength,
 } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import { ProductCategory, ProductBadge } from './product.entity'
 
 export class CreateProductDto {
@@ -47,6 +48,7 @@ export class CreateProductDto {
   @ApiPropertyOptional({ description: 'Galerie d\'images pour la page produit' })
   @IsOptional()
   @IsArray()
+  @Type(() => Object) // garde des objets simples (sinon conversion implicite en [[]])
   images?: any[]
   @ApiProperty({ example: 8500, description: 'Prix de base en FCFA' })
   @IsInt()
@@ -60,10 +62,12 @@ export class CreateProductDto {
 
   @ApiProperty()
   @IsArray()
+  @Type(() => Object) // garde des objets simples (sinon conversion implicite en [[]])
   formats: any[]
 
   @ApiProperty()
   @IsArray()
+  @Type(() => Object) // garde des objets simples (sinon conversion implicite en [[]])
   papers: any[]
 
   @ApiProperty({ example: [250, 500, 1000, 2000] })
@@ -72,6 +76,7 @@ export class CreateProductDto {
 
   @ApiProperty()
   @IsArray()
+  @Type(() => Object) // garde des objets simples (sinon conversion implicite en [[]])
   finishes: any[]
 
   @ApiProperty({ example: 2 })
