@@ -52,12 +52,12 @@ export function ProductCard(props: ProductCardProps) {
     <Link
       href={`/produit/${slug}`}
       style={props.style}
-      className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-emerald-600 hover:shadow-lg transition-all duration-200 block"
+      className="group flex flex-col bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-emerald-600 hover:shadow-lg transition-all duration-200 block"
     >
       {/* ────────────────────────────────────────
           IMAGE ZONE — Standard E-Commerce Pro
       ──────────────────────────────────────── */}
-      <div className="relative bg-slate-50 flex items-center justify-center overflow-hidden border-b border-slate-100 aspect-[4/3]">
+      <div className="relative bg-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100 aspect-[4/3]">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -73,7 +73,7 @@ export function ProductCard(props: ProductCardProps) {
 
         {/* Badge commercial net */}
         {badgeCfg && (
-          <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide shadow-xs ${badgeCfg.bg}`}>
+          <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg text-2xs font-bold tracking-wide shadow-xs ${badgeCfg.bg}`}>
             {badgeCfg.label}
           </span>
         )}
@@ -90,20 +90,20 @@ export function ProductCard(props: ProductCardProps) {
           <div className="flex text-amber-500 text-xs leading-none">
             {'★'.repeat(5)}
           </div>
-          <span className="text-[11px] font-semibold text-slate-500">
+          <span className="text-2xs font-semibold text-gray-500">
             {rating} ({reviewsCount})
           </span>
         </div>
         ) : null}
 
         {/* Nom du produit */}
-        <h3 className="font-bold text-slate-900 text-sm leading-snug mb-1 group-hover:text-emerald-700 transition-colors line-clamp-2">
+        <h3 className="font-bold text-gray-900 text-sm leading-snug mb-1 group-hover:text-emerald-700 transition-colors line-clamp-2">
           {name}
         </h3>
 
         {/* Description / Spécifications d'atelier */}
         {description && (
-          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
+          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3">
             {description}
           </p>
         )}
@@ -112,26 +112,26 @@ export function ProductCard(props: ProductCardProps) {
         <div className="flex-1" />
 
         {/* ── Prix + CTA — bottom row ── */}
-        <div className="flex items-end justify-between gap-2 pt-3 border-t border-slate-100">
+        <div className="flex items-end justify-between gap-2 pt-3 border-t border-gray-100">
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">
+            <p className="text-2xs text-gray-500 uppercase tracking-wider font-bold mb-0.5">
               À partir de
             </p>
-            <p className="font-bold text-slate-900 text-base font-mono">
+            <p className="font-bold text-gray-900 text-base tabular-nums">
               {basePrice > 0
                 ? new Intl.NumberFormat('fr-FR').format(basePrice)
                 : '—'}
-              <span className="text-xs text-slate-600 font-normal ml-1">FCFA</span>
+              <span className="text-xs text-gray-600 font-normal ml-1">FCFA</span>
             </p>
             {minQuantity > 0 && (
-              <p className="text-[10px] text-slate-500 font-medium">
+              <p className="text-2xs text-gray-500 font-medium">
                 Pour {new Intl.NumberFormat('fr-FR').format(minQuantity)} exemplaires
               </p>
             )}
           </div>
 
           {/* Bouton CTA Net Helloprint */}
-          <div className="shrink-0 bg-slate-900 group-hover:bg-emerald-600 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs active:scale-95">
+          <div className="shrink-0 bg-gray-900 group-hover:bg-emerald-600 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs active:scale-95">
             <span>Configurer</span>
             <ArrowRight size={13} />
           </div>

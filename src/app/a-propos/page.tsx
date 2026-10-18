@@ -6,6 +6,7 @@ import {
   Sparkles, FileText, ChevronRight, Check, Eye, Package, 
   Cpu, Factory, Users, Download, HelpCircle
 } from 'lucide-react'
+import { WHATSAPP_URL } from '@/lib/contact'
 
 export const metadata = {
   title: 'À Propos de YopoePrint — Imprimerie Numérique & Industrielle au Burkina Faso',
@@ -126,10 +127,10 @@ const CORE_VALUES = [
 
 export default function AProposPage() {
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
+    <div className="min-h-screen bg-gray-100 text-foreground">
       
       {/* ─── 1. HERO SECTION STYLE APPLE ────────────────────────────────────────────── */}
-      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-gradient-to-b from-[#1D1D1F] via-[#151516] to-[#1D1D1F] text-white">
+      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-gradient-to-b from-foreground via-[#151516] to-foreground text-white">
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
         
@@ -142,7 +143,7 @@ export default function AProposPage() {
             <span>L’Imprimerie Nouvelle Génération au Burkina Faso</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-black tracking-tight leading-[1.1] max-w-4xl mx-auto mb-6">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto mb-6">
             L’art de l’impression, <br className="hidden sm:inline" />
             propulsé par la <span className="bg-gradient-to-r from-primary via-emerald-400 to-teal-300 bg-clip-text text-transparent">technologie</span>.
           </h1>
@@ -155,7 +156,7 @@ export default function AProposPage() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link 
               href="/catalogue" 
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/95 text-gray-950 font-bold px-8 py-4 rounded-full text-sm sm:text-base transition-all duration-200 shadow-lg shadow-primary/20 active:scale-95"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold px-8 py-4 rounded-full text-sm sm:text-base transition-all duration-200 shadow-lg shadow-primary/20 active:scale-95"
             >
               Commander en ligne <ArrowRight size={18} />
             </Link>
@@ -172,15 +173,15 @@ export default function AProposPage() {
 
       {/* ─── 2. BANDEAU DE CHIFFRES BENTO ────────────────────────────────────────────── */}
       <section className="-mt-8 relative z-20 max-w-7xl mx-auto px-4 md:px-6">
-        <div className="bg-white/80 backdrop-blur-2xl border border-black/5 rounded-[28px] p-6 md:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
+        <div className="bg-white/80 backdrop-blur-2xl border border-black/5 rounded-3xl p-6 md:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
             {STATS.map((stat, i) => (
               <div key={i} className={`text-center ${i > 0 ? 'pt-4 lg:pt-0' : ''}`}>
-                <p className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#1D1D1F] tracking-tight">
+                <p className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
                   {stat.value}
                 </p>
-                <p className="font-bold text-sm text-[#1D1D1F] mt-1.5">{stat.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{stat.sub}</p>
+                <p className="font-bold text-sm text-foreground mt-1.5">{stat.label}</p>
+                <p className="text-xs text-gray-600 mt-0.5">{stat.sub}</p>
               </div>
             ))}
           </div>
@@ -190,20 +191,20 @@ export default function AProposPage() {
       {/* ─── 3. NOTRE HISTOIRE & MISSION (BENTO CARDS) ─────────────────────────────────── */}
       <section className="py-20 md:py-28 max-w-7xl mx-auto px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Notre Vision</p>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#1D1D1F] tracking-tight">
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Notre Vision</p>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
             Pourquoi avons-nous créé YopoePrint ?
           </h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* Card Gauche : Constat & Révolution */}
-          <div className="lg:col-span-7 bg-white rounded-[32px] p-8 md:p-12 border border-black/5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+          <div className="lg:col-span-7 bg-white rounded-3xl p-8 md:p-12 border border-black/5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between">
             <div className="space-y-6">
               <span className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
                 <Clock size={24} />
               </span>
-              <h3 className="font-display text-2xl md:text-3xl font-extrabold text-[#1D1D1F] leading-snug">
+              <h3 className="font-display text-2xl md:text-3xl font-extrabold text-foreground leading-snug">
                 En finir avec les délais flous et les allers-retours physiques inutiles.
               </h3>
               <div className="space-y-4 text-gray-600 text-base md:text-lg leading-relaxed">
@@ -225,7 +226,7 @@ export default function AProposPage() {
           </div>
 
           {/* Card Droite : Notre Atelier de Gounghin */}
-          <div className="lg:col-span-5 bg-[#1D1D1F] text-white rounded-[32px] p-8 md:p-10 border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between relative overflow-hidden">
+          <div className="lg:col-span-5 bg-foreground text-white rounded-3xl p-8 md:p-10 border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
             
             <div className="relative z-10 space-y-6">
@@ -263,7 +264,7 @@ export default function AProposPage() {
             <div className="relative z-10 mt-8 pt-6 border-t border-white/10">
               <Link 
                 href="/contact" 
-                className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-white transition-colors"
               >
                 Plan d’accès & prise de rendez-vous atelier <ChevronRight size={14} />
               </Link>
@@ -277,8 +278,8 @@ export default function AProposPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Technologie & Équipements</p>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#1D1D1F] tracking-tight">
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Technologie & Équipements</p>
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
                 Le parc machine le plus moderne du pays
               </h2>
             </div>
@@ -293,31 +294,31 @@ export default function AProposPage() {
               return (
                 <div 
                   key={i}
-                  className="bg-[#F5F5F7] rounded-[32px] p-8 border border-black/5 flex flex-col justify-between hover:bg-white hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:border-black/10 transition-all duration-300 group"
+                  className="bg-gray-100 rounded-3xl p-8 border border-black/5 flex flex-col justify-between hover:bg-white hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:border-black/10 transition-all duration-300 group"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-6">
-                      <div className="w-12 h-12 rounded-2xl bg-white text-[#1D1D1F] shadow-xs flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <div className="w-12 h-12 rounded-2xl bg-white text-foreground shadow-xs flex items-center justify-center group-hover:scale-105 transition-transform">
                         <Icon size={24} />
                       </div>
-                      <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-white text-[#1D1D1F] border border-black/5 shadow-2xs">
+                      <span className="text-2xs font-bold px-3 py-1 rounded-full bg-white text-foreground border border-black/5 shadow-2xs">
                         {line.badge}
                       </span>
                     </div>
 
                     <p className="text-xs font-bold uppercase tracking-wider text-primary mb-1">{line.category}</p>
-                    <h3 className="font-display text-xl font-black text-[#1D1D1F] mb-4">
+                    <h3 className="font-display text-xl font-extrabold text-foreground mb-4">
                       {line.title}
                     </h3>
 
                     <div className="space-y-3 mb-6 p-4 rounded-2xl bg-white/70 border border-black/5 text-xs">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Cadence :</span>
-                        <span className="font-bold text-[#1D1D1F]">{line.speed}</span>
+                        <span className="font-bold text-foreground">{line.speed}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Résolution :</span>
-                        <span className="font-bold text-[#1D1D1F]">{line.resolution}</span>
+                        <span className="font-bold text-foreground">{line.resolution}</span>
                       </div>
                     </div>
 
@@ -326,7 +327,7 @@ export default function AProposPage() {
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-200/60 text-xs text-gray-500">
+                  <div className="pt-4 border-t border-gray-200/60 text-xs text-gray-600">
                     <span className="font-semibold text-gray-700">Contrôle qualité :</span> {line.colorimetry}
                   </div>
                 </div>
@@ -339,8 +340,8 @@ export default function AProposPage() {
       {/* ─── 5. ATELIER DE FAÇONNAGE & FINITIONS D’EXCEPTION ────────────────────────────── */}
       <section className="py-20 md:py-28 max-w-7xl mx-auto px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Sublimer vos imprimés</p>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#1D1D1F] tracking-tight">
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Sublimer vos imprimés</p>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
             Les finitions nobles qui font la différence
           </h2>
           <p className="text-sm sm:text-base text-gray-600 mt-3">
@@ -352,17 +353,17 @@ export default function AProposPage() {
           {FINISHING_WORKSHOP.map((fin, i) => (
             <div 
               key={i}
-              className="bg-white rounded-[28px] p-6 border border-black/5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-transform duration-200"
+              className="bg-white rounded-3xl p-6 border border-black/5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-transform duration-200"
             >
               <div>
-                <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider text-primary px-2.5 py-1 rounded-full bg-primary/10 mb-4">
+                <span className="inline-block text-2xs font-extrabold uppercase tracking-wider text-primary px-2.5 py-1 rounded-full bg-primary/10 mb-4">
                   {fin.tag}
                 </span>
-                <h3 className="font-display font-bold text-base text-[#1D1D1F] mb-2">{fin.name}</h3>
+                <h3 className="font-display font-bold text-base text-foreground mb-2">{fin.name}</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">{fin.desc}</p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] font-bold text-gray-900">
+              <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between text-2xs font-bold text-gray-900">
                 <span>Disponible au catalogue</span>
                 <Check size={14} className="text-emerald-500" />
               </div>
@@ -371,10 +372,10 @@ export default function AProposPage() {
         </div>
 
         {/* Free Sample Kit Callout */}
-        <div className="mt-12 bg-gradient-to-r from-amber-500/10 via-primary/15 to-emerald-500/10 border border-primary/20 rounded-[28px] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mt-12 bg-gradient-to-r from-amber-500/10 via-primary/15 to-emerald-500/10 border border-primary/20 rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <span className="text-xs font-bold uppercase tracking-widest text-primary">Gratuit pour les professionnels</span>
-            <h3 className="font-display text-2xl font-black text-[#1D1D1F]">
+            <h3 className="font-display text-2xl font-extrabold text-foreground">
               Vous souhaitez toucher nos papiers avant de commander ?
             </h3>
             <p className="text-sm text-gray-600 max-w-xl">
@@ -384,7 +385,7 @@ export default function AProposPage() {
 
           <Link
             href="/contact?sujet=kit-echantillons"
-            className="shrink-0 bg-[#1D1D1F] hover:bg-black text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold shadow-md transition-all active:scale-95"
+            className="shrink-0 bg-foreground hover:bg-black text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold shadow-md transition-all active:scale-95"
           >
             Recevoir le coffret échantillon gratuit →
           </Link>
@@ -392,11 +393,11 @@ export default function AProposPage() {
       </section>
 
       {/* ─── 6. LE PROTOCOLE QUALITÉ EN 4 ÉTAPES ────────────────────────────────────────── */}
-      <section className="py-20 md:py-28 bg-[#1D1D1F] text-white overflow-hidden relative">
+      <section className="py-20 md:py-28 bg-foreground text-white overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-4 md:px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Excellence Opérationnelle</p>
-            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+            <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Excellence Opérationnelle</p>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
               Comment garantissons-nous zéro défaut ?
             </h2>
             <p className="text-sm sm:text-base text-gray-400 mt-3">
@@ -408,10 +409,10 @@ export default function AProposPage() {
             {WORKFLOW_STEPS.map((step, i) => (
               <div 
                 key={i} 
-                className="bg-white/5 backdrop-blur-md rounded-[28px] p-7 border border-white/10 flex flex-col justify-between hover:bg-white/10 transition-colors"
+                className="bg-white/5 backdrop-blur-md rounded-3xl p-7 border border-white/10 flex flex-col justify-between hover:bg-white/10 transition-colors"
               >
                 <div>
-                  <span className="font-display font-black text-3xl text-primary/80 mb-4 block">
+                  <span className="font-display font-extrabold text-3xl text-emerald-400 mb-4 block">
                     {step.num}
                   </span>
                   <h3 className="font-display font-bold text-lg text-white mb-2.5">
@@ -422,7 +423,7 @@ export default function AProposPage() {
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/10 text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
+                <div className="mt-6 pt-4 border-t border-white/10 text-2xs font-semibold text-emerald-400 flex items-center gap-1.5">
                   <CheckCircle2 size={14} /> Étape vérifiée & tracée
                 </div>
               </div>
@@ -434,8 +435,8 @@ export default function AProposPage() {
       {/* ─── 7. NOS 4 ENGAGEMENTS FONDAMENTAUX ──────────────────────────────────────────── */}
       <section className="py-20 md:py-28 max-w-7xl mx-auto px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Garanties & Confiance</p>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#1D1D1F] tracking-tight">
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Garanties & Confiance</p>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
             Les engagements YopoePrint
           </h2>
         </div>
@@ -446,13 +447,13 @@ export default function AProposPage() {
             return (
               <div 
                 key={i} 
-                className="bg-white rounded-[28px] p-7 border border-black/5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between"
+                className="bg-white rounded-3xl p-7 border border-black/5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#F5F5F7] text-[#1D1D1F] flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-100 text-foreground flex items-center justify-center mb-6">
                     <Icon size={24} />
                   </div>
-                  <h3 className="font-display font-bold text-lg text-[#1D1D1F] mb-2.5">
+                  <h3 className="font-display font-bold text-lg text-foreground mb-2.5">
                     {val.title}
                   </h3>
                   <p className="text-xs text-gray-600 leading-relaxed">
@@ -467,7 +468,7 @@ export default function AProposPage() {
 
       {/* ─── 8. CALL TO ACTION COMMERCIAL RICHE ───────────────────────────────────────── */}
       <section className="pb-24 max-w-7xl mx-auto px-4 md:px-6">
-        <div className="bg-gradient-to-br from-[#1D1D1F] via-[#2A2A2E] to-[#1D1D1F] text-white rounded-[36px] p-8 md:p-16 border border-white/10 shadow-2xl relative overflow-hidden text-center md:text-left">
+        <div className="bg-gradient-to-br from-foreground via-[#2A2A2E] to-foreground text-white rounded-3xl p-8 md:p-16 border border-white/10 shadow-2xl relative overflow-hidden text-center md:text-left">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -475,7 +476,7 @@ export default function AProposPage() {
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">
                 <CheckCircle2 size={14} /> Service Commercial & Assistance Directe
               </span>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight">
                 Prêt à sublimer l’image de marque de votre entreprise ?
               </h2>
               <p className="text-gray-300 text-sm sm:text-base max-w-2xl leading-relaxed">
@@ -486,13 +487,13 @@ export default function AProposPage() {
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3.5 justify-center">
               <Link 
                 href="/catalogue" 
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/95 text-gray-950 font-bold px-7 py-4 rounded-full text-sm transition-all shadow-lg shadow-primary/20 active:scale-95 text-center"
+                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold px-7 py-4 rounded-full text-sm transition-all shadow-lg shadow-primary/20 active:scale-95 text-center"
               >
                 Explorer le catalogue en ligne <ArrowRight size={16} />
               </Link>
               
               <a 
-                href="https://wa.me/22670000000?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20sur%20vos%20services%20d'impression." 
+                href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20sur%20vos%20services%20d'impression.`} 
                 target="_blank" 
                 rel="noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-medium px-7 py-4 rounded-full text-sm border border-white/15 backdrop-blur-md transition-all active:scale-95 text-center"

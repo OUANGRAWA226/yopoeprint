@@ -73,7 +73,7 @@ function Stepper({ current, onStepClick }: { current: number; onStepClick: (step
                   'bg-gray-100 text-gray-400'}`}>
                 {current > s.n ? <Check size={15} strokeWidth={3} /> : s.n}
               </div>
-              <span className={`text-[11px] font-bold whitespace-nowrap transition-colors
+              <span className={`text-2xs font-bold whitespace-nowrap transition-colors
                 ${current >= s.n ? 'text-gray-900' : 'text-gray-400'}
                 ${isClickable ? 'group-hover:text-primary' : ''}`}>
                 {s.label}
@@ -94,11 +94,11 @@ function Stepper({ current, onStepClick }: { current: number; onStepClick: (step
 function Field({ label, required, children, helper }: { label: string; required?: boolean; children: React.ReactNode; helper?: string }) {
   return (
     <div>
-      <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
-      {helper && <p className="text-[11px] text-gray-400 mt-1">{helper}</p>}
+      {helper && <p className="text-2xs text-gray-600 mt-1">{helper}</p>}
     </div>
   )
 }
@@ -288,7 +288,7 @@ export default function CommandePage() {
   if (items.length === 0) return null
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-gray-50">
 
       {/* ── Header ───────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
@@ -329,7 +329,7 @@ export default function CommandePage() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-900 text-xs">Un compte est nécessaire pour payer</p>
-                      <p className="text-[11px] text-gray-500">
+                      <p className="text-2xs text-gray-500">
                         Il vous permet de suivre la commande et de valider votre BAT.{' '}
                         <Link href="/inscription?redirect=/commande" className="font-bold text-primary hover:underline">Créer un compte</Link>
                       </p>
@@ -391,7 +391,7 @@ export default function CommandePage() {
                   <UserCheck size={16} className="text-emerald-600 shrink-0" />
                   <span>Connecté en tant que <strong>{user.firstName} {user.lastName}</strong> ({user.email})</span>
                 </div>
-                <span className="text-[10px] bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded-full">Compte vérifié</span>
+                <span className="text-2xs bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded-full">Compte vérifié</span>
               </div>
             )}
 
@@ -415,7 +415,7 @@ export default function CommandePage() {
 
                 {/* Zone */}
                 <div>
-                  <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wide mb-2.5">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2.5">
                     Sélectionnez votre zone de réception *
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -431,11 +431,11 @@ export default function CommandePage() {
                       >
                         <span className="text-xl shrink-0">{z.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className={`font-bold text-[13px] ${zone.id === z.id ? 'text-gray-900' : 'text-gray-700'}`}>
+                          <p className={`font-bold text-sm ${zone.id === z.id ? 'text-gray-900' : 'text-gray-700'}`}>
                             {z.label}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                            <span className="flex items-center gap-1 text-2xs text-gray-400">
                               <Clock size={10} /> Délai: {z.delay}
                             </span>
                           </div>
@@ -519,7 +519,7 @@ export default function CommandePage() {
                     <div>
                       <p className="font-bold text-gray-900 text-sm mb-0.5">Retrait direct à l'atelier YopoePrint</p>
                       <p className="text-sm text-gray-600">Ouagadougou, Burkina Faso</p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-600 mt-1">
                         Vous recevrez une notification par SMS et WhatsApp dès que vos impressions seront prêtes.
                       </p>
                     </div>
@@ -529,7 +529,7 @@ export default function CommandePage() {
                 <button
                   type="button"
                   onClick={() => { if (validateDelivery()) setStep(2) }}
-                  className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-xl font-bold text-[15px] hover:bg-gray-800 active:scale-[0.99] transition-all shadow-md"
+                  className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-xl font-bold text-base hover:bg-gray-800 active:scale-[0.99] transition-all shadow-md"
                 >
                   Continuer vers le récapitulatif <ArrowRight size={16} />
                 </button>
@@ -555,32 +555,32 @@ export default function CommandePage() {
                         {item.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 text-[13px]">{item.productName}</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">
+                        <p className="font-bold text-gray-900 text-sm">{item.productName}</p>
+                        <p className="text-2xs text-gray-500 mt-0.5">
                           {item.formatLabel} · {item.paperLabel} · {fmt(item.quantity)} pièces
                           {item.rectoverso ? ' · Recto/Verso' : ' · Recto'}
                           {item.finition && item.finition !== 'none' && item.finition !== 'Sans finition' ? ` · ${item.finition}` : ''}
                         </p>
                         {item.fileUrl ? (
                           <div className="mt-1 flex items-center gap-2">
-                            <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <span className="text-2xs bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                               ✓ Fichier joint
                             </span>
                             <button
                               type="button"
                               onClick={() => setPreviewBatUrl(item.fileUrl || null)}
-                              className="text-[11px] text-indigo-600 hover:underline font-bold"
+                              className="text-2xs text-indigo-600 hover:underline font-bold"
                             >
                               Voir le BAT
                             </button>
                           </div>
                         ) : (
-                          <p className="text-[10px] text-amber-700 mt-1 flex items-center gap-1">
+                          <p className="text-2xs text-amber-700 mt-1 flex items-center gap-1">
                             <span>💬</span> Visuel à transmettre ultérieurement (WhatsApp / Email)
                           </p>
                         )}
                       </div>
-                      <p className="font-display font-bold text-gray-900 text-[14px] shrink-0">{fmt(item.price)} FCFA</p>
+                      <p className="font-display font-bold text-gray-900 text-sm shrink-0">{fmt(item.price)} FCFA</p>
                     </div>
                   ))}
                 </div>
@@ -628,7 +628,7 @@ export default function CommandePage() {
                   </div>
                   <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                     <span className="font-extrabold text-gray-900 text-base">Net à payer</span>
-                    <span className="font-display font-black text-gray-900 text-2xl">
+                    <span className="font-display font-extrabold text-gray-900 text-2xl">
                       {fmt(finalTotal)} <span className="text-sm text-gray-400 font-normal">FCFA</span>
                     </span>
                   </div>
@@ -684,14 +684,14 @@ export default function CommandePage() {
                         <span className="text-2xl shrink-0">{m.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-[14px] text-gray-900">{m.label}</span>
+                            <span className="font-bold text-sm text-gray-900">{m.label}</span>
                             {m.badge && (
-                              <span className="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full">
+                              <span className="text-2xs font-bold bg-primary text-white px-2 py-0.5 rounded-full">
                                 {m.badge}
                               </span>
                             )}
                           </div>
-                          <p className="text-[12px] text-gray-500 mt-0.5">{m.desc}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{m.desc}</p>
                         </div>
                       </button>
                     )
@@ -716,10 +716,10 @@ export default function CommandePage() {
                 {/* Récap paiement */}
                 <div className="bg-gray-900 rounded-2xl p-5 text-center shadow-lg">
                   <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider font-semibold">Montant total net à régler</p>
-                  <p className="font-display font-black text-white text-3xl md:text-4xl">
+                  <p className="font-display font-extrabold text-white text-3xl md:text-4xl">
                     {fmt(amountDue)} <span className="text-base font-normal text-gray-400">FCFA</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">TVA & frais de livraison inclus</p>
+                  <p className="text-xs text-gray-600 mt-1">TVA & frais de livraison inclus</p>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
@@ -739,7 +739,7 @@ export default function CommandePage() {
                     type="button"
                     onClick={handlePayment}
                     disabled={loading}
-                    className="flex items-center justify-center gap-2 py-3.5 bg-[#FF6B00] text-white rounded-xl font-bold text-[15px] hover:bg-[#E66000] active:scale-[0.98] transition-all shadow-md disabled:opacity-60"
+                    className="flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-xl font-bold text-base hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md disabled:opacity-60"
                   >
                     {loading ? (
                       <>
@@ -773,7 +773,7 @@ export default function CommandePage() {
                     <span className="text-green-800 font-bold text-xs flex items-center gap-1">
                       <Check size={12} strokeWidth={3} /> {appliedPromo.code}
                     </span>
-                    <span className="text-[11px] text-green-600 block">
+                    <span className="text-2xs text-green-600 block">
                       −{fmt(discount)} FCFA
                     </span>
                   </div>
@@ -806,7 +806,7 @@ export default function CommandePage() {
                       {promoLoading ? <Loader2 size={12} className="animate-spin" /> : 'OK'}
                     </button>
                   </div>
-                  {promoErr && <p className="text-[11px] text-red-500 font-medium">{promoErr}</p>}
+                  {promoErr && <p className="text-2xs text-red-500 font-medium">{promoErr}</p>}
                 </div>
               )}
             </div>
@@ -814,7 +814,7 @@ export default function CommandePage() {
             {/* Récapitulatif commande */}
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs sticky top-24">
               <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                <h3 className="font-bold text-gray-900 text-[13px]">
+                <h3 className="font-bold text-gray-900 text-sm">
                   Votre commande
                 </h3>
                 <span className="text-xs text-gray-400">
@@ -827,15 +827,15 @@ export default function CommandePage() {
                     <div key={item.id} className="py-2.5 flex items-start gap-3">
                       <span className="text-xl shrink-0">{item.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-bold text-gray-900 truncate">{item.productName}</p>
-                        <p className="text-[10px] text-gray-400">{fmt(item.quantity)} pièces · {item.formatLabel}</p>
+                        <p className="text-xs font-bold text-gray-900 truncate">{item.productName}</p>
+                        <p className="text-2xs text-gray-400">{fmt(item.quantity)} pièces · {item.formatLabel}</p>
                       </div>
-                      <p className="text-[12px] font-bold text-gray-900 shrink-0">{fmt(item.price)} F</p>
+                      <p className="text-xs font-bold text-gray-900 shrink-0">{fmt(item.price)} F</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="border-t border-gray-100 pt-3 space-y-2 text-[12px]">
+                <div className="border-t border-gray-100 pt-3 space-y-2 text-xs">
                   <div className="flex justify-between text-gray-500">
                     <span>Sous-total</span>
                     <span>{fmt(total)} FCFA</span>
@@ -850,20 +850,20 @@ export default function CommandePage() {
                     <span>Livraison ({zone.label})</span>
                     <span>{deliveryCost === 0 ? '🎁 Gratuite' : `${fmt(deliveryCost)} FCFA`}</span>
                   </div>
-                  <div className="border-t border-gray-100 pt-2 flex justify-between font-extrabold text-gray-900 text-[15px]">
+                  <div className="border-t border-gray-100 pt-2 flex justify-between font-extrabold text-gray-900 text-base">
                     <span>Total net</span>
                     <span className="text-primary">{fmt(amountDue)} FCFA</span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-gray-100 space-y-2">
-                  <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                  <div className="flex items-center gap-2 text-2xs text-gray-500">
                     <span>🟠</span> <span>Orange Money (#144#)</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                  <div className="flex items-center gap-2 text-2xs text-gray-500">
                     <span>🔵</span> <span>Moov Money (*555#)</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                  <div className="flex items-center gap-2 text-2xs text-gray-500">
                     <span>💳</span> <span>Carte bancaire CinetPay</span>
                   </div>
                 </div>

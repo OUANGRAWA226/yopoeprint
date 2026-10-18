@@ -124,7 +124,7 @@ export function ReviewForm({ isOpen, onClose, orderId, orderNumber, productName 
                         size={36}
                         className={`transition-colors ${
                           star <= (hoveredRating || rating)
-                            ? 'text-[#FFB800] fill-[#FFB800]'
+                            ? 'text-amber-400 fill-amber-400'
                             : 'text-gray-200'
                         }`}
                       />
@@ -161,11 +161,11 @@ export function ReviewForm({ isOpen, onClose, orderId, orderNumber, productName 
                   placeholder="Qualité d'impression, délai de livraison, service client... Partagez votre expérience !"
                   className="w-full text-sm border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors resize-none"
                 />
-                <p className="text-[10px] text-gray-400 mt-1">{comment.length}/500 caractères</p>
+                <p className="text-2xs text-gray-600 mt-1">{comment.length}/500 caractères</p>
               </div>
 
               {/* Notice */}
-              <p className="text-[11px] text-gray-400 bg-gray-50 rounded-xl px-3 py-2">
+              <p className="text-2xs text-gray-400 bg-gray-50 rounded-xl px-3 py-2">
                 🔒 Votre avis sera publié sous votre prénom uniquement, après vérification que vous avez bien passé cette commande.
               </p>
 

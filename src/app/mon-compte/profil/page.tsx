@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useAuthContext } from '@/context/AuthContext'
 import { api } from '@/lib'
-import { CheckCircle, AlertCircle, Eye, EyeOff, User, Lock, Mail, Phone, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, Mail, Phone, ShieldCheck } from 'lucide-react'
+import { Alert } from '@/components/ui/Alert'
 
 const inputCls = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all placeholder:text-gray-400"
 
 export default function ProfilPage() {
-  const { user, refreshUser } = useAuthContext() as any
+  const { user, refreshUser } = useAuthContext()
   const [tab, setTab] = useState<'info' | 'password'>('info')
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
@@ -32,10 +33,10 @@ export default function ProfilPage() {
     setLoading(true); setSuccess(''); setError('')
     try {
       await api.patch('/users/me', info)
-      await refreshUser?.()
+      await refreshUser()
       setSuccess('Vos informations ont été mises à jour avec succès.')
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Une erreur est survenue.')
+      setError(e?.message || 'Une erreur est survenue.')
     } finally {
       setLoading(false)
       setTimeout(() => setSuccess(''), 4000)
@@ -66,7 +67,7 @@ export default function ProfilPage() {
       setSuccess('Votre mot de passe a été modifié de façon sécurisée.')
       setPasswords({ current: '', newPass: '', confirm: '' })
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Mot de passe actuel incorrect.')
+      setError(e?.message || 'Mot de passe actuel incorrect.')
     } finally {
       setLoading(false)
       setTimeout(() => setSuccess(''), 4000)
@@ -117,18 +118,8 @@ export default function ProfilPage() {
       </div>
 
       {/* ── Feedback ──────────────────────────────────────── */}
-      {success && (
-        <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-sm font-semibold text-green-800 animate-in fade-in slide-in-from-top-2">
-          <CheckCircle size={18} className="shrink-0 text-green-600 mt-0.5" />
-          <p>{success}</p>
-        </div>
-      )}
-      {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm font-semibold text-red-800 animate-in fade-in slide-in-from-top-2">
-          <AlertCircle size={18} className="shrink-0 text-red-600 mt-0.5" />
-          <p>{error}</p>
-        </div>
-      )}
+      {success && <Alert tone="success">{success}</Alert>}
+      {error && <Alert>{error}</Alert>}
 
       {/* ── Formulaire infos ──────────────────────────────── */}
       {tab === 'info' && (
@@ -140,13 +131,13 @@ export default function ProfilPage() {
           <div className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Prénom</label>
+                <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Prénom</label>
                 <input type="text" placeholder="Ex: Salimata"
                   value={info.firstName} onChange={(e) => setInfo({ ...info, firstName: e.target.value })}
                   className={inputCls} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Nom</label>
+                <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nom</label>
                 <input type="text" placeholder="Ex: Kaboré"
                   value={info.lastName} onChange={(e) => setInfo({ ...info, lastName: e.target.value })}
                   className={inputCls} />
@@ -155,12 +146,12 @@ export default function ProfilPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Adresse Email</label>
+                <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Adresse Email</label>
                 <input type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })}
                   className={inputCls} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Téléphone</label>
+                <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Téléphone</label>
                 <input type="tel" placeholder="+226 70 00 00 00"
                   value={info.phone} onChange={(e) => setInfo({ ...info, phone: e.target.value })}
                   className={inputCls} />
@@ -188,7 +179,7 @@ export default function ProfilPage() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Sécurité du compte</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Mettez à jour votre mot de passe pour protéger vos données.</p>
+              <p className="text-xs text-gray-600 mt-0.5">Mettez à jour votre mot de passe pour protéger vos données.</p>
             </div>
           </div>
           
@@ -199,7 +190,7 @@ export default function ProfilPage() {
               { key: 'confirm', label: 'Confirmez le nouveau mot de passe', show: showPass.confirm, toggle: () => setShowPass((p) => ({ ...p, confirm: !p.confirm })) },
             ].map(({ key, label, show, toggle }) => (
               <div key={key}>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</label>
+                <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</label>
                 <div className="relative">
                   <input
                     type={show ? 'text' : 'password'}

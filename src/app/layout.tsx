@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import { ToastProvider } from '@/context/ToastContext'
 import { ConditionalUI } from '@/components/layout/ConditionalUI'
+import { CONTACT_PHONE } from '@/lib/contact'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -61,7 +62,7 @@ const localBusinessJsonLd = {
   name: 'YopoePrint',
   image: 'https://yopoeprint.bf/images/og-image.jpg',
   url: 'https://yopoeprint.bf',
-  telephone: '+226 70 00 00 00',
+  telephone: CONTACT_PHONE,
   priceRange: '$$',
   address: {
     '@type': 'PostalAddress',

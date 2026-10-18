@@ -11,6 +11,7 @@ interface AuthContextType {
  login: (email: string, password: string) => Promise<void>
  register: (data: any) => Promise<void>
  logout: () => Promise<void>
+ refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -46,6 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  setUser(res.user)
  }
 
+ // Recharge le profil depuis l'API (après modification du compte)
+ const refreshUser = async () => {
+ const fresh = await authService.getMe()
+ setUser(fresh)
+ }
+
  const logout = async () => {
  await authService.logout()
  setUser(null)
@@ -59,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  login,
  register,
  logout,
+ refreshUser,
  }}>
  {children}
  </AuthContext.Provider>

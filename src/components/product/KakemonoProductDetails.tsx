@@ -125,7 +125,7 @@ export function KakemonoProductDetails() {
                 <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                   Carter léger et solide en aluminium argenté satiné avec ressort d'enroulement haute endurance et <strong>2 pieds pivotants à 360°</strong> pour une stabilité parfaite.
                 </p>
-                <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
+                <div className="mt-3 flex items-center gap-1.5 text-2xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
                   <Check size={12} /> Double pied stabilisateur
                 </div>
               </div>
@@ -139,7 +139,7 @@ export function KakemonoProductDetails() {
                 <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                   Impression numérique quadrichromie haute définition (1200 DPI réels) sur bâche anti-feu M1 ou toile Ferrari anti-curling. Visuel déjà inséré dans le tambour.
                 </p>
-                <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">
+                <div className="mt-3 flex items-center gap-1.5 text-2xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg">
                   <Check size={12} /> Prêt à dérouler
                 </div>
               </div>
@@ -153,14 +153,14 @@ export function KakemonoProductDetails() {
                 <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                   Tige de maintien en aluminium robuste reliée par un élastique interne ultra résistant (type armature de tente). Aucun risque d'égarer un élément.
                 </p>
-                <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
+                <div className="mt-3 flex items-center gap-1.5 text-2xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
                   <Check size={12} /> Emboîtement instantané
                 </div>
               </div>
 
               {/* Carte 4 - Sac offert */}
               <div className="bg-amber-50/70 rounded-xl p-5 border-2 border-amber-300 relative overflow-hidden">
-                <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">
+                <span className="absolute top-2 right-2 bg-amber-700 text-white text-2xs font-extrabold uppercase px-2 py-0.5 rounded">
                   Offert
                 </span>
                 <div className="w-12 h-12 rounded-xl bg-white border border-amber-200 shadow-sm flex items-center justify-center text-xl mb-4">
@@ -170,7 +170,7 @@ export function KakemonoProductDetails() {
                 <p className="text-xs text-amber-800 mt-2 leading-relaxed">
                   Housse en tissu Oxford noir renforcé avec mousse de protection intérieure, double fermeture éclair et bandoulière de portage à l'épaule.
                 </p>
-                <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-md">
+                <div className="mt-3 flex items-center gap-1.5 text-2xs font-semibold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-lg">
                   <Check size={12} /> Zéro coût supplémentaire
                 </div>
               </div>
@@ -274,7 +274,7 @@ export function KakemonoProductDetails() {
               <h4 className="font-bold text-gray-900 text-sm mb-3">Quelle matière choisir pour votre visuel ?</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="p-4 rounded-xl border border-gray-200 bg-white">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-700">
+                  <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-700">
                     Standard Économique
                   </span>
                   <h5 className="font-bold text-gray-900 text-sm mt-2">Bâche PVC 510g/m² M1</h5>
@@ -283,7 +283,7 @@ export function KakemonoProductDetails() {
                   </p>
                 </div>
                 <div className="p-4 rounded-xl border-2 border-primary/40 bg-green-50/30">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary">
+                  <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary">
                     Recommandé Prestige
                   </span>
                   <h5 className="font-bold text-gray-900 text-sm mt-2">Toile Ferrari Décolit Anti-curling</h5>
@@ -292,7 +292,7 @@ export function KakemonoProductDetails() {
                   </p>
                 </div>
                 <div className="p-4 rounded-xl border border-gray-200 bg-white">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                  <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
                     Spécial Caméras & Médias
                   </span>
                   <h5 className="font-bold text-gray-900 text-sm mt-2">Tissu Polyester Textile 220g</h5>
@@ -388,24 +388,24 @@ export function KakemonoProductDetails() {
               <div className="lg:col-span-7 space-y-4">
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Dimensions réelles (Standard)</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Dimensions réelles (Standard)</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">850 × 2000 mm</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Format fini visible</p>
+                    <p className="text-2xs text-gray-500 mt-1">Format fini visible</p>
                   </div>
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Mode colorimétrique</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Mode colorimétrique</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">CMJN / Fogra 39</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Pas de profil RVB</p>
+                    <p className="text-2xs text-gray-500 mt-1">Pas de profil RVB</p>
                   </div>
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Résolution d'image</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Résolution d'image</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">150 à 300 DPI</p>
-                    <p className="text-[11px] text-gray-500 mt-1">À l'échelle 1:1</p>
+                    <p className="text-2xs text-gray-500 mt-1">À l'échelle 1:1</p>
                   </div>
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Formats acceptés</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Formats acceptés</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">PDF HD, AI, PSD, TIFF</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Polices vectorisées</p>
+                    <p className="text-2xs text-gray-500 mt-1">Polices vectorisées</p>
                   </div>
                 </div>
 
@@ -442,23 +442,23 @@ export function KakemonoProductDetails() {
               <div className="lg:col-span-5 bg-gray-50 rounded-xl p-4 border border-gray-200 flex flex-col items-center justify-center">
                 <div className="w-full max-w-[200px] aspect-[85/205] bg-white rounded-lg border-2 border-dashed border-gray-300 relative flex flex-col justify-between p-2 shadow-inner">
                   {/* Zone clip haute */}
-                  <div className="h-4 bg-gray-200 rounded text-[9px] text-gray-500 flex items-center justify-center font-bold">
+                  <div className="h-4 bg-gray-200 rounded text-[10px] text-gray-500 flex items-center justify-center font-bold">
                     Profilé haut (1 cm)
                   </div>
                   
                   {/* Zone de contenu utile */}
                   <div className="flex-1 my-2 border border-emerald-300 bg-emerald-50/40 rounded flex flex-col items-center justify-center p-2 text-center">
-                    <span className="text-[10px] font-bold text-emerald-800">Zone Utile Visible</span>
-                    <span className="text-[8px] text-emerald-600 mt-1">Textes, logos, visuels et charte graphique</span>
+                    <span className="text-2xs font-bold text-emerald-800">Zone Utile Visible</span>
+                    <span className="text-[10px] text-emerald-600 mt-1">Textes, logos, visuels et charte graphique</span>
                   </div>
 
                   {/* Zone basse amorce */}
-                  <div className="h-8 bg-red-100 border border-red-300 rounded text-[8px] text-red-700 flex flex-col items-center justify-center font-bold">
+                  <div className="h-8 bg-red-100 border border-red-300 rounded text-[10px] text-red-700 flex flex-col items-center justify-center font-bold">
                     <span>Zone Amorçage (5 cm)</span>
-                    <span className="text-[7px] font-normal opacity-80">Non visible dans le caisson</span>
+                    <span className="text-[10px] font-normal opacity-80">Non visible dans le caisson</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-3 text-center">
+                <p className="text-2xs text-gray-400 mt-3 text-center">
                   Gabarit officiel pour format standard 85×200 cm
                 </p>
               </div>

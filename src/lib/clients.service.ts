@@ -65,7 +65,7 @@ export async function getAllClients(filters: ClientFilters = {}): Promise<Client
  params.set('page', String(filters.page || 1))
  params.set('limit', String(filters.limit || 50))
 
- const res = await api.get(`/users?${params.toString()}`)
+ const res = await api.get(`/admin/users?${params.toString()}`)
 
  // Adapter selon la réponse du backend
  // Si le backend retourne { data, total, page, limit } :
@@ -81,13 +81,13 @@ export async function getAllClients(filters: ClientFilters = {}): Promise<Client
 
 /** Récupère le détail d'un client avec ses commandes */
 export async function getClientById(id: string): Promise<ClientDetail> {
- const res = await api.get(`/users/${id}`)
+ const res = await api.get(`/admin/users/${id}`)
  return res.data ? res.data : res
 }
 
 /** Met à jour un client (segment, statut actif…) */
 export async function updateClient(id: string, data: Partial<Client>): Promise<Client> {
- const res = await api.patch(`/users/${id}`, data)
+ const res = await api.patch(`/admin/users/${id}`, data)
  return res.data ? res.data : res
 }
 

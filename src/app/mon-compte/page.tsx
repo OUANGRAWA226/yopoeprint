@@ -21,6 +21,7 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react'
+import { CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
 
 // ─── Statuts normalisés ──────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
@@ -111,7 +112,7 @@ export default function DashboardPage() {
     <div className="space-y-6 md:space-y-8">
 
       {/* ── BANNIÈRE COMPTE CLIENT ARCHITECTURALE ── */}
-      <div className="relative bg-slate-900 rounded-2xl p-6 sm:p-8 text-white border border-slate-800 shadow-lg overflow-hidden">
+      <div className="relative bg-gray-900 rounded-2xl p-6 sm:p-8 text-white border border-gray-800 shadow-lg overflow-hidden">
         {/* Subtle grid pattern */}
         <div 
           className="absolute inset-0 opacity-[0.05] pointer-events-none" 
@@ -124,7 +125,7 @@ export default function DashboardPage() {
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-800 text-[11px] font-semibold text-slate-300 border border-slate-700/60">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-gray-800 text-2xs font-semibold text-gray-300 border border-gray-700/60">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span>Espace Client Pro • Burkina Faso</span>
             </div>
@@ -133,7 +134,7 @@ export default function DashboardPage() {
               Bonjour {displayName} 👋
             </h2>
             
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+            <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
               Bienvenue sur votre tableau de bord. Retrouvez vos bons à tirer (BAT), 
               suivez vos impressions en cours et téléchargez vos factures certifiées DGI.
             </p>
@@ -150,7 +151,7 @@ export default function DashboardPage() {
             </Link>
             <Link 
               href="/devis"
-              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all"
+              className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-4 py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all"
             >
               <FileText size={16} />
               <span>Demander un devis</span>
@@ -167,9 +168,9 @@ export default function DashboardPage() {
             value: stats.total, 
             suffix: '', 
             icon: <ShoppingBag size={18} />, 
-            color: 'text-slate-900', 
-            bg: 'bg-slate-100',
-            border: 'border-slate-200'
+            color: 'text-gray-900', 
+            bg: 'bg-gray-100',
+            border: 'border-gray-200'
           },
           { 
             label: 'En production', 
@@ -194,25 +195,25 @@ export default function DashboardPage() {
             value: formatPrice(stats.depense), 
             suffix: ' FCFA', 
             icon: <Package size={18} />, 
-            color: 'text-slate-900', 
+            color: 'text-gray-900', 
             bg: 'bg-amber-50',
             border: 'border-amber-200'
           },
         ].map(({ label, value, suffix, icon, color, bg, border }) => (
           <div 
             key={label} 
-            className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
+            className="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+              <span className="text-2xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
               <div className={`w-8 h-8 ${bg} ${border} border rounded-lg flex items-center justify-center ${color}`}>
                 {icon}
               </div>
             </div>
             
-            <p className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+            <p className="font-display text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight tabular-nums">
               {value}
-              {suffix && <span className="text-xs font-semibold text-slate-500 ml-1">{suffix}</span>}
+              {suffix && <span className="text-xs font-semibold text-gray-500 ml-1">{suffix}</span>}
             </p>
           </div>
         ))}
@@ -222,16 +223,16 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 items-start">
         
         {/* Colonne Gauche : Dernières commandes */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white border border-gray-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
           
-          <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-slate-200/70 flex items-center justify-center text-slate-700">
+              <div className="w-8 h-8 rounded-lg bg-gray-200/70 flex items-center justify-center text-gray-700">
                 <ShoppingBag size={16} />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base">Commandes récentes</h3>
-                <p className="text-[11px] text-slate-500">Historique et statut en direct</p>
+                <h3 className="font-bold text-gray-900 text-sm sm:text-base">Commandes récentes</h3>
+                <p className="text-2xs text-gray-500">Historique et statut en direct</p>
               </div>
             </div>
             
@@ -246,16 +247,16 @@ export default function DashboardPage() {
           {loading ? (
             <div className="p-5 space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
+                <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-12 px-6 flex-1 flex flex-col items-center justify-center">
-              <div className="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mb-3">
+              <div className="w-14 h-14 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center mb-3">
                 <ShoppingBag size={24} />
               </div>
-              <p className="font-bold text-slate-900 text-base mb-1">Aucune commande pour le moment</p>
-              <p className="text-xs text-slate-500 mb-5 max-w-xs leading-relaxed">
+              <p className="font-bold text-gray-900 text-base mb-1">Aucune commande pour le moment</p>
+              <p className="text-xs text-gray-500 mb-5 max-w-xs leading-relaxed">
                 Vos cartes de visite, flyers, affiches ou bâches commandées s'afficheront ici.
               </p>
               <Link 
@@ -266,13 +267,13 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 flex-1">
+            <div className="divide-y divide-gray-100 flex-1">
               {orders.map((order) => {
                 const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
                 return (
                   <div 
                     key={order.id} 
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-5 hover:bg-slate-50/70 transition-colors gap-4"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-5 hover:bg-gray-50/70 transition-colors gap-4"
                   >
                     <div className="flex items-center gap-3.5">
                       <div className={`w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 ${status.bg} ${status.border} ${status.color}`}>
@@ -280,30 +281,30 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-slate-900 text-sm font-mono tracking-tight">
+                          <p className="font-bold text-gray-900 text-sm font-mono tracking-tight">
                             {order.orderNumber}
                           </p>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${status.bg} ${status.border} ${status.color}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold border ${status.bg} ${status.border} ${status.color}`}>
                             {status.label}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-gray-500 mt-0.5">
                           {formatDate(order.createdAt)} • {order.items?.length || 1} article(s)
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                       <div className="text-left sm:text-right">
-                        <p className="font-bold text-slate-900 text-sm font-mono">
+                        <p className="font-bold text-gray-900 text-sm tabular-nums">
                           {formatPrice(order.total)} FCFA
                         </p>
-                        <p className="text-[10px] text-slate-400">TTC • Facture DGI</p>
+                        <p className="text-2xs text-gray-500">TTC • Facture DGI</p>
                       </div>
                       
                       <Link 
                         href={`/mon-compte/commandes/${order.id}`} 
-                        className="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors shrink-0"
+                        className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors shrink-0"
                         title="Détails de la commande"
                       >
                         <ChevronRight size={16} />
@@ -322,7 +323,7 @@ export default function DashboardPage() {
           {/* Suivi des Devis */}
           <Link 
             href="/mon-compte/devis" 
-            className="block bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:border-primary/40 hover:shadow-md transition-all group"
+            className="block bg-white border border-gray-200/80 rounded-2xl p-5 shadow-sm hover:border-primary/40 hover:shadow-md transition-all group"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-colors">
@@ -332,14 +333,14 @@ export default function DashboardPage() {
                 Accéder <ArrowRight size={13} />
               </span>
             </div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">Mes devis personnalisés</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="font-bold text-gray-900 text-base mb-1">Mes devis personnalisés</h3>
+            <p className="text-xs text-gray-500 leading-relaxed">
               Consultez les propositions tarifaires reçues et confirmez vos commandes en 1 clic.
             </p>
           </Link>
 
           {/* Assistance Technique Atelier */}
-          <div className="bg-slate-900 rounded-2xl p-5 text-white border border-slate-800 shadow-sm relative overflow-hidden">
+          <div className="bg-gray-900 rounded-2xl p-5 text-white border border-gray-800 shadow-sm relative overflow-hidden">
             <div className="relative z-10 space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
@@ -349,22 +350,22 @@ export default function DashboardPage() {
               </div>
               
               <h4 className="font-bold text-white text-sm">Une question sur vos fichiers ?</h4>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-gray-300 leading-relaxed">
                 Nos graphistes pré-presse vérifient gratuitement vos fichiers PAO avant impression.
               </p>
               
               <div className="pt-1 flex flex-col gap-2">
                 <a 
-                  href="https://wa.me/22670000000?text=Bonjour%20YopoePrint%2C%20j%27ai%20une%20question%20sur%20mes%20commandes%20d%27impression."
+                  href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20j%27ai%20une%20question%20sur%20mes%20commandes%20d%27impression.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-xl text-xs font-bold transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold transition-colors"
                 >
-                  Contacter sur WhatsApp (+226 70 00 00 00)
+                  Contacter sur WhatsApp ({CONTACT_PHONE_DISPLAY})
                 </a>
                 <Link 
                   href="/contact" 
-                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-semibold transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-semibold transition-colors"
                 >
                   Envoyer un message classique
                 </Link>

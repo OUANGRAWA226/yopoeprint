@@ -282,7 +282,7 @@ export default async function Page({ params }: Props) {
         <div className="text-center">
           <p className="text-6xl mb-4">📭</p>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">Produit introuvable</h2>
-          <p className="text-gray-400 mb-6">Ce produit n&apos;existe pas ou a été retiré du catalogue.</p>
+          <p className="text-gray-500 mb-6">Ce produit n&apos;existe pas ou a été retiré du catalogue.</p>
           <Link href="/catalogue" className="btn-primary">Voir le catalogue →</Link>
         </div>
       </div>

@@ -48,21 +48,21 @@ export function Logo({
       ) : (
         /* Fallback stylisé automatique si logo.png n'est pas encore présent */
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-gray-950 font-black text-lg shadow-sm group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-gray-950 font-extrabold text-lg shadow-sm group-hover:scale-105 transition-transform">
             Y
           </div>
           <div className="leading-none">
             <span
-              className={`font-display font-black text-xl tracking-tight ${
-                theme === 'light' ? 'text-slate-900' : 'text-white'
+              className={`font-display font-extrabold text-xl tracking-tight ${
+                theme === 'light' ? 'text-gray-900' : 'text-white'
               }`}
             >
               Yopoe<span className="text-emerald-400">Print</span>
             </span>
             {showSubtitle && (
               <span
-                className={`block text-[9px] uppercase tracking-widest font-semibold mt-0.5 ${
-                  theme === 'light' ? 'text-slate-400' : 'text-gray-400'
+                className={`block text-[10px] uppercase tracking-widest font-semibold mt-0.5 ${
+                  theme === 'light' ? 'text-gray-400' : 'text-gray-400'
                 }`}
               >
                 Imprimerie en ligne · BF

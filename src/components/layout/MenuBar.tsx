@@ -69,7 +69,7 @@ export function MenuBar() {
         <div className="group static">
           <Link
             href="/catalogue"
-            className="flex items-center gap-2 py-3 px-4 bg-gray-900 text-white font-bold text-[13px] uppercase tracking-wide whitespace-nowrap hover:bg-primary transition-colors shrink-0"
+            className="flex items-center gap-2 py-3 px-4 bg-gray-900 text-white font-bold text-sm uppercase tracking-wide whitespace-nowrap hover:bg-primary transition-colors shrink-0"
           >
             <LayoutGrid size={15} />
             Tous les produits
@@ -87,7 +87,7 @@ export function MenuBar() {
                       <Link
                         href={cat.href}
                         onMouseEnter={() => setActiveIdx(idx)}
-                        className={`flex items-center justify-between px-5 py-2.5 text-[14px] font-medium transition-all
+                        className={`flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-all
                           ${activeIdx === idx
                             ? 'bg-white text-primary border-l-2 border-primary'
                             : 'text-gray-700 hover:text-primary hover:bg-white'}`}
@@ -108,14 +108,14 @@ export function MenuBar() {
                 <div className="grid grid-cols-2 gap-x-10 gap-y-3">
                   {MEGA_MENU_DATA[activeIdx].subItems.map((sub, sIdx) => (
                     <Link key={sIdx} href={sub.href} className="group/link block py-1">
-                      <span className="text-[14px] text-gray-700 font-medium group-hover/link:text-primary group-hover/link:underline underline-offset-4 transition-all">
+                      <span className="text-sm text-gray-700 font-medium group-hover/link:text-primary group-hover/link:underline underline-offset-4 transition-all">
                         {sub.label}
                       </span>
                     </Link>
                   ))}
                 </div>
                 <div className="mt-8 pt-5 border-t border-gray-100">
-                  <Link href={MEGA_MENU_DATA[activeIdx].href} className="inline-flex items-center gap-2 text-[14px] font-bold text-primary hover:underline underline-offset-4">
+                  <Link href={MEGA_MENU_DATA[activeIdx].href} className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4">
                     Voir tout — {MEGA_MENU_DATA[activeIdx].label} <ArrowRight size={14} />
                   </Link>
                 </div>
@@ -143,13 +143,13 @@ export function MenuBar() {
           <Link
             key={idx}
             href={cat.href}
-            className="py-3.5 text-[13px] font-semibold whitespace-nowrap text-gray-700 hover:text-primary transition-colors shrink-0"
+            className="py-3.5 text-sm font-semibold whitespace-nowrap text-gray-700 hover:text-primary transition-colors shrink-0"
           >
             {cat.label}
           </Link>
         ))}
 
-        <Link href="/devis" className="py-3.5 text-[13px] font-bold whitespace-nowrap text-primary hover:text-gray-900 transition-colors ml-auto shrink-0 flex items-center gap-1">
+        <Link href="/devis" className="py-3.5 text-sm font-bold whitespace-nowrap text-primary hover:text-gray-900 transition-colors ml-auto shrink-0 flex items-center gap-1">
           Devis sur-mesure
         </Link>
       </div>

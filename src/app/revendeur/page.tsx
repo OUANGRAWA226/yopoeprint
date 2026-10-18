@@ -180,7 +180,7 @@ export default function RevendeurDashboardPage() {
                     {c.amount ? fmt(c.amount) : 'N/A'} F
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
                       c.status === 'Expédié' || c.status === 'expédié' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                     }`}>
                       {c.status || 'En production'}

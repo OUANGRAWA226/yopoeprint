@@ -75,7 +75,7 @@ export default function PanierPage() {
           <h2 className="font-display text-2xl font-bold text-gray-900 mb-2">
             Votre panier est vide
           </h2>
-          <p className="text-gray-400 text-sm mb-8">
+          <p className="text-gray-600 text-sm mb-8">
             Ajoutez des produits depuis notre catalogue pour commencer votre commande.
           </p>
           <Link
@@ -90,7 +90,7 @@ export default function PanierPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-gray-50">
 
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
@@ -132,7 +132,7 @@ export default function PanierPage() {
                     ${s.active ? 'bg-gray-900 text-white ring-4 ring-gray-900/10' : 'bg-gray-100 text-gray-400'}`}>
                     {s.done && s.active ? <Check size={14} strokeWidth={3} /> : s.n}
                   </div>
-                  <span className={`text-[10px] font-bold whitespace-nowrap ${s.active ? 'text-gray-900' : 'text-gray-400'}`}>
+                  <span className={`text-2xs font-bold whitespace-nowrap ${s.active ? 'text-gray-900' : 'text-gray-400'}`}>
                     {s.label}
                   </span>
                 </div>
@@ -189,7 +189,7 @@ export default function PanierPage() {
                   {/* Infos */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-bold text-gray-900 text-[14px] md:text-[15px] leading-tight">
+                      <h3 className="font-bold text-gray-900 text-sm md:text-base leading-tight">
                         {item.productName}
                       </h3>
                       <button
@@ -212,7 +212,7 @@ export default function PanierPage() {
                       ].filter(Boolean).map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[11px] font-medium"
+                          className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-2xs font-medium"
                         >
                           {tag}
                         </span>
@@ -229,7 +229,7 @@ export default function PanierPage() {
                         >
                           <Minus size={13} />
                         </button>
-                        <span className="font-mono font-bold text-gray-900 text-sm w-16 text-center">
+                        <span className="tabular-nums font-bold text-gray-900 text-sm w-16 text-center">
                           {fmt(item.quantity)}
                         </span>
                         <button
@@ -239,11 +239,11 @@ export default function PanierPage() {
                         >
                           <Plus size={13} />
                         </button>
-                        <span className="text-[11px] text-gray-400 pr-1">ex.</span>
+                        <span className="text-2xs text-gray-400 pr-1">ex.</span>
                       </div>
 
                       <div className="text-right">
-                        <p className="text-[11px] text-gray-400">{fmt(item.unitPrice)} FCFA/u</p>
+                        <p className="text-2xs text-gray-400">{fmt(item.unitPrice)} FCFA/u</p>
                         <p className="font-display font-extrabold text-gray-900 text-base leading-tight">
                           {fmt(item.price)} <span className="text-xs font-normal text-gray-400">FCFA</span>
                         </p>
@@ -277,7 +277,7 @@ export default function PanierPage() {
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Tag size={15} className="text-primary" />
-                <h3 className="font-bold text-gray-900 text-[14px]">Code promo</h3>
+                <h3 className="font-bold text-gray-900 text-sm">Code promo</h3>
               </div>
               {appliedPromo ? (
                 <div className="flex items-center justify-between px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl">
@@ -285,7 +285,7 @@ export default function PanierPage() {
                     <span className="text-green-700 font-bold text-sm flex items-center gap-1.5">
                       <Check size={14} strokeWidth={3} /> {appliedPromo.code}
                     </span>
-                    <p className="text-[11px] text-green-600 mt-0.5">
+                    <p className="text-2xs text-green-600 mt-0.5">
                       {appliedPromo.discountType === 'percentage'
                         ? `−${appliedPromo.discountValue}% appliqué`
                         : `−${fmt(appliedPromo.discountValue)} FCFA appliqués`}
@@ -325,7 +325,7 @@ export default function PanierPage() {
 
             {/* Récapitulatif */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
-              <h3 className="font-bold text-gray-900 text-[14px] mb-4">Récapitulatif</h3>
+              <h3 className="font-bold text-gray-900 text-sm mb-4">Récapitulatif</h3>
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Sous-total</span>
@@ -344,7 +344,7 @@ export default function PanierPage() {
                   </span>
                 </div>
                 {total < FREE_DELIVERY && (
-                  <p className="text-[11px] text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+                  <p className="text-2xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
                     Livraison offerte dès {fmt(FREE_DELIVERY)} FCFA d&apos;achat
                   </p>
                 )}
@@ -364,7 +364,7 @@ export default function PanierPage() {
               {/* CTA Commander */}
               <Link
                 href="/commande"
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-[#FF6B00] text-white py-4 rounded-xl font-bold text-[15px] hover:bg-[#E66000] active:scale-[0.98] transition-all shadow-md"
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-primary text-white py-4 rounded-xl font-bold text-base hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md"
               >
                 Passer la commande <ArrowRight size={18} />
               </Link>

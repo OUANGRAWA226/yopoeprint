@@ -48,6 +48,8 @@ export default function CategoryPage() {
 
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('popular')
@@ -59,11 +61,12 @@ export default function CategoryPage() {
 
   useEffect(() => {
     setLoading(true)
+    setLoadError(false)
     productsService.getAll({ category, search: search || undefined, page, limit: 100 })
       .then((res) => { setProducts(res.data || []); setTotal(res.total || 0) })
-      .catch(() => setProducts([]))
+      .catch(() => { setProducts([]); setLoadError(true) })
       .finally(() => setLoading(false))
-  }, [category, search, page])
+  }, [category, search, page, reloadKey])
 
   // Filtrage côté client pour le Budget et le Délai (mock)
   const filteredProducts = useMemo(() => {
@@ -111,7 +114,7 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-gray-50">
 
       {/* ── Header catégorie ── */}
       <div className="bg-white pt-4 pb-4 md:pt-7 md:pb-7 border-b border-gray-200">
@@ -125,12 +128,12 @@ export default function CategoryPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-[#F8F8F8] rounded-xl flex items-center justify-center text-2xl md:text-3xl border border-gray-200 shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center text-2xl md:text-3xl border border-gray-200 shrink-0">
               {catInfo.emoji}
             </div>
             <div className="min-w-0">
               <h1 className="font-display text-xl md:text-3xl font-extrabold text-gray-900 leading-tight tracking-tight">{catInfo.label}</h1>
-              <p className="text-gray-400 text-xs md:text-sm mt-0.5 truncate md:whitespace-normal">{catInfo.desc}</p>
+              <p className="text-gray-600 text-xs md:text-sm mt-0.5 truncate md:whitespace-normal">{catInfo.desc}</p>
             </div>
           </div>
         </div>
@@ -173,7 +176,7 @@ export default function CategoryPage() {
             <SlidersHorizontal size={14} />
             <span className="hidden sm:inline">Filtres</span>
             {Object.keys(filters).length > 0 && (
-              <span className="bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="bg-primary text-white text-2xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
                 {Object.keys(filters).length}
               </span>
             )}
@@ -247,7 +250,7 @@ export default function CategoryPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                <div className="bg-[#F0F0F0] animate-pulse" style={{ aspectRatio: '4/3' }} />
+                <div className="bg-gray-100 animate-pulse" style={{ aspectRatio: '4/3' }} />
                 <div className="p-3 md:p-4 space-y-2">
                   <div className="h-3.5 bg-gray-100 animate-pulse rounded w-3/4" />
                   <div className="h-3 bg-gray-100 animate-pulse rounded w-1/2 hidden md:block" />
@@ -257,11 +260,25 @@ export default function CategoryPage() {
             ))}
           </div>
 
+        ) : loadError ? (
+          <div role="alert" className="text-center py-16 md:py-24 bg-white rounded-2xl border border-gray-100 shadow-sm px-6">
+            <h3 className="font-display text-lg md:text-xl font-bold text-gray-900 mb-2">Le catalogue ne répond pas pour le moment</h3>
+            <p className="text-gray-600 text-sm mb-6 max-w-sm mx-auto">
+              Vérifiez votre connexion puis réessayez. Vous pouvez aussi nous décrire votre projet.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button onClick={() => setReloadKey((k) => k + 1)} className="btn-primary">Réessayer</button>
+              <Link href="/devis" className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-800 hover:border-gray-400">
+                Demander un devis
+              </Link>
+            </div>
+          </div>
+
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-16 md:py-24 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="text-4xl md:text-5xl mb-4">📭</div>
             <h3 className="font-display text-lg md:text-xl font-bold text-gray-900 mb-2">Aucun produit ne correspond</h3>
-            <p className="text-gray-400 text-sm mb-6 max-w-sm mx-auto">
+            <p className="text-gray-600 text-sm mb-6 max-w-sm mx-auto">
               Nous n'avons trouvé aucun produit correspondant à vos filtres actuels ou à votre recherche.
             </p>
             <button onClick={() => { setSearch(''); setFilters({}) }} className="btn-primary mx-auto">

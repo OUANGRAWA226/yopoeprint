@@ -47,7 +47,7 @@ function OrderProgress({ status }: { status: string }) {
           const current = i === currentStep
           return (
             <div key={step} className="flex items-center flex-1 last:flex-none">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-all z-10
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 transition-all z-10
                 ${done
                   ? current
                     ? 'bg-primary text-white ring-4 ring-primary/20 shadow-sm'
@@ -65,7 +65,7 @@ function OrderProgress({ status }: { status: string }) {
       </div>
       <div className="flex justify-between mt-2">
         {labels.map((l, i) => (
-          <span key={l} className={`text-[10px] font-bold ${i <= currentStep ? 'text-gray-900' : 'text-gray-300'}`}>
+          <span key={l} className={`text-2xs font-bold ${i <= currentStep ? 'text-gray-900' : 'text-gray-300'}`}>
             {l}
           </span>
         ))}
@@ -188,7 +188,7 @@ export default function CommandesPage() {
                       <p className="font-extrabold text-gray-900 text-base">{order.orderNumber}</p>
                       <p className="text-xs text-gray-400 mt-0.5">Passée le {formatDate(order.createdAt)}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold ${status.bg} ${status.color}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-2xs font-bold ${status.bg} ${status.color}`}>
                       {status.label}
                     </span>
                   </div>
@@ -201,7 +201,7 @@ export default function CommandesPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-gray-900 truncate">{item.productName}</p>
-                          <p className="text-[11px] text-gray-500">{item.formatLabel} • {item.finition}</p>
+                          <p className="text-2xs text-gray-500">{item.formatLabel} • {item.finition}</p>
                         </div>
                         <p className="text-xs font-semibold text-gray-500 shrink-0">
                           x{new Intl.NumberFormat('fr-FR').format(item.quantity)}
@@ -209,7 +209,7 @@ export default function CommandesPage() {
                       </div>
                     ))}
                     {items.length > 3 && (
-                      <p className="text-[11px] text-primary font-bold mt-2 ml-14">
+                      <p className="text-2xs text-primary font-bold mt-2 ml-14">
                         + {items.length - 3} autre(s) produit(s)
                       </p>
                     )}

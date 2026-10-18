@@ -17,10 +17,18 @@ export function ConditionalUI({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {/* Lien d'évitement : premier élément atteint au clavier, visible seulement au focus */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-white focus:text-gray-900 focus:font-bold focus:text-sm focus:px-4 focus:py-2.5 focus:rounded-xl focus:shadow-lg"
+      >
+        Aller au contenu
+      </a>
+
       {!isHidden && <Navbar />}
       {!isHidden && <CartDrawer />}
-      
-      <main className="flex-1">{children}</main>
+
+      <main id="contenu" tabIndex={-1} className="flex-1 outline-none">{children}</main>
       
       {!isHidden && <Footer />}
     </>

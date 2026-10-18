@@ -21,6 +21,8 @@ import {
   PhoneCall,
   Loader2
 } from 'lucide-react'
+import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
+import { Alert } from '@/components/ui/Alert'
 
 // ─── Données ──────────────────────────────────────────────────
 const POPULAR_PRODUCTS = [
@@ -80,7 +82,7 @@ const INITIAL = {
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
         {label} {required && <span className="text-primary">*</span>}
       </label>
       {children}
@@ -93,7 +95,7 @@ function Field({ label, required, error, children }: { label: string; required?:
   )
 }
 
-const inputCls = `w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`
+const inputCls = `w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`
 const selectCls = `${inputCls} cursor-pointer appearance-none`
 
 export default function DevisPage() {
@@ -176,8 +178,7 @@ export default function DevisPage() {
       })
       setSuccess(true)
     } catch (err: any) {
-      if (err.response?.status === 404) setSuccess(true)
-      else setApiError(err.response?.data?.message || "Erreur lors de l'envoi. Veuillez réessayer ou nous contacter sur WhatsApp.")
+      setApiError(err?.message || "Erreur lors de l'envoi. Veuillez réessayer ou nous contacter sur WhatsApp.")
     } finally {
       setLoading(false)
     }
@@ -185,8 +186,8 @@ export default function DevisPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-20">
-        <div className="max-w-lg w-full bg-white rounded-2xl p-8 border border-slate-200 shadow-xl text-center space-y-6 animate-in zoom-in-95 duration-300">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-20">
+        <div className="max-w-lg w-full bg-white rounded-2xl p-8 border border-gray-200 shadow-xl text-center space-y-6 animate-in zoom-in-95 duration-300">
           <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
             <CheckCircle2 size={36} />
           </div>
@@ -194,32 +195,32 @@ export default function DevisPage() {
             <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
               Demande enregistrée avec succès
             </span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 mt-3">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 mt-3">
               Merci {form.fullName} !
             </h2>
-            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+            <p className="text-gray-600 text-sm mt-2 leading-relaxed">
               Votre dossier de chiffrage a été transmis au bureau d'estimation YopoePrint à Ouagadougou. 
               Vous recevrez une proposition personnalisée sous <strong>24h ouvrées</strong>.
             </p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left text-xs space-y-2.5">
-            <p className="font-bold text-slate-900 uppercase tracking-wider mb-2">Récapitulatif de votre demande</p>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-              <span className="text-slate-500">Produit :</span>
-              <span className="font-bold text-slate-900">{form.product}</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 text-left text-xs space-y-2.5">
+            <p className="font-bold text-gray-900 uppercase tracking-wider mb-2">Récapitulatif de votre demande</p>
+            <div className="flex justify-between border-b border-gray-200/60 pb-1.5">
+              <span className="text-gray-500">Produit :</span>
+              <span className="font-bold text-gray-900">{form.product}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-              <span className="text-slate-500">Quantité :</span>
-              <span className="font-bold text-slate-900">{form.quantity}</span>
+            <div className="flex justify-between border-b border-gray-200/60 pb-1.5">
+              <span className="text-gray-500">Quantité :</span>
+              <span className="font-bold text-gray-900">{form.quantity}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-              <span className="text-slate-500">Budget estimé :</span>
-              <span className="font-bold text-slate-900">{form.budget}</span>
+            <div className="flex justify-between border-b border-gray-200/60 pb-1.5">
+              <span className="text-gray-500">Budget estimé :</span>
+              <span className="font-bold text-gray-900">{form.budget}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Délai visé :</span>
-              <span className="font-bold text-slate-900">{form.deadline}</span>
+              <span className="text-gray-500">Délai visé :</span>
+              <span className="font-bold text-gray-900">{form.deadline}</span>
             </div>
           </div>
 
@@ -232,7 +233,7 @@ export default function DevisPage() {
             </Link>
             <Link 
               href="/" 
-              className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition-colors"
+              className="px-5 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs sm:text-sm transition-colors"
             >
               Retour à l'accueil
             </Link>
@@ -243,10 +244,10 @@ export default function DevisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60">
+    <div className="min-h-screen bg-gray-50/60">
       
       {/* ── HEADER SLATE-950 ARCHITECTURAL ── */}
-      <section className="relative bg-slate-950 text-white pt-16 pb-24 px-4 overflow-hidden">
+      <section className="relative bg-gray-950 text-white pt-16 pb-24 px-4 overflow-hidden">
         {/* Subtle technical print grid */}
         <div 
           className="absolute inset-0 opacity-[0.06] pointer-events-none" 
@@ -259,13 +260,13 @@ export default function DevisPage() {
 
         <div className="max-w-5xl mx-auto text-center space-y-4 relative z-10">
           
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
             <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
             <span>/</span>
-            <span className="text-primary">Devis Spécifique</span>
+            <span className="text-emerald-400">Devis Spécifique</span>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-xs text-gray-300">
             <Sparkles size={14} className="text-primary" />
             <span>Grand tirage, finitions luxe ou format hors-normes</span>
           </div>
@@ -274,19 +275,19 @@ export default function DevisPage() {
             Demande de devis d'impression sur mesure
           </h1>
           
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Obtenez un chiffrage précis sous 24h ouvrées. Nos techniciens calculent les meilleurs coûts de production pour vos séries professionnelles.
           </p>
 
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
             <span className="flex items-center gap-1.5">
               <Clock size={14} className="text-primary" /> Réponse garantie sous <strong>24h ouvrées</strong>
             </span>
-            <span className="hidden sm:inline text-slate-700">•</span>
+            <span className="hidden sm:inline text-gray-700">•</span>
             <span className="flex items-center gap-1.5">
               <FileCheck size={14} className="text-emerald-400" /> Factures conformes <strong>DGI e-Sintax</strong>
             </span>
-            <span className="hidden sm:inline text-slate-700">•</span>
+            <span className="hidden sm:inline text-gray-700">•</span>
             <span className="flex items-center gap-1.5">
               <ShieldCheck size={14} className="text-primary" /> Échantillons papier <strong>sur demande</strong>
             </span>
@@ -298,10 +299,10 @@ export default function DevisPage() {
       <div className="max-w-5xl mx-auto px-4 -mt-10 relative z-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {ADVANTAGES.map(({ icon, title, desc }) => (
-            <div key={title} className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-md shadow-slate-200/40">
+            <div key={title} className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-md shadow-gray-200/40">
               <span className="text-xl">{icon}</span>
-              <p className="font-bold text-slate-900 text-xs sm:text-sm mt-2">{title}</p>
-              <p className="text-slate-500 text-[11px] mt-1 leading-relaxed">{desc}</p>
+              <p className="font-bold text-gray-900 text-xs sm:text-sm mt-2">{title}</p>
+              <p className="text-gray-500 text-2xs mt-1 leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -315,7 +316,7 @@ export default function DevisPage() {
           <div className="space-y-6">
             
             {/* Stepper tactile */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-2 shadow-sm grid grid-cols-3 gap-2">
+            <div className="bg-white border border-gray-200/80 rounded-2xl p-2 shadow-sm grid grid-cols-3 gap-2">
               {[
                 { n: 1, label: 'Vos Coordonnées', desc: 'Identité & Entreprise' },
                 { n: 2, label: 'Votre Projet', desc: 'Produit & Quantité' },
@@ -332,10 +333,10 @@ export default function DevisPage() {
                     }}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all text-center
                       ${isCurrent 
-                        ? 'bg-slate-900 text-white shadow-sm' 
+                        ? 'bg-gray-900 text-white shadow-sm' 
                         : isDone 
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100/60' 
-                          : 'text-slate-400 bg-slate-50/50'}`}
+                          : 'text-gray-400 bg-gray-50/50'}`}
                   >
                     <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
                       {isDone ? (
@@ -345,27 +346,23 @@ export default function DevisPage() {
                       )}
                     </div>
                     <span className="text-xs font-bold mt-0.5">{label}</span>
-                    <span className="hidden sm:inline text-[10px] opacity-75">{desc}</span>
+                    <span className="hidden sm:inline text-2xs opacity-75">{desc}</span>
                   </button>
                 )
               })}
             </div>
 
-            {apiError && (
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-xs sm:text-sm text-rose-700 font-medium">
-                <AlertCircle size={18} className="shrink-0" /> {apiError}
-              </div>
-            )}
+            {apiError && <Alert>{apiError}</Alert>}
 
             {/* Cadre du formulaire */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div className="bg-white border border-gray-200/80 rounded-2xl p-6 sm:p-8 shadow-sm">
               
               {/* Étape 1 : Coordonnées */}
               {step === 1 && (
                 <div className="space-y-5 animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-display text-xl font-bold text-slate-900">Vos coordonnées de contact</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Ces informations serviront à vous envoyer la proposition chiffrée.</p>
+                  <div className="border-b border-gray-100 pb-4">
+                    <h3 className="font-display text-xl font-bold text-gray-900">Vos coordonnées de contact</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Ces informations serviront à vous envoyer la proposition chiffrée.</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -418,7 +415,7 @@ export default function DevisPage() {
                         <option value="">Sélectionnez votre type d'organisation...</option>
                         {PROFILS.map((p) => <option key={p} value={p}>{p}</option>)}
                       </select>
-                      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     </div>
                   </Field>
                 </div>
@@ -427,9 +424,9 @@ export default function DevisPage() {
               {/* Étape 2 : Spécifications Projet */}
               {step === 2 && (
                 <div className="space-y-5 animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-display text-xl font-bold text-slate-900">Spécifications de votre tirage</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Choisissez le support ou détaillez votre fabrication sur mesure.</p>
+                  <div className="border-b border-gray-100 pb-4">
+                    <h3 className="font-display text-xl font-bold text-gray-900">Spécifications de votre tirage</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Choisissez le support ou détaillez votre fabrication sur mesure.</p>
                   </div>
 
                   {/* Pills de produits populaires */}
@@ -445,7 +442,7 @@ export default function DevisPage() {
                             className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all flex items-center justify-between
                               ${isSelected 
                                 ? 'bg-primary/10 border-primary text-primary shadow-sm' 
-                                : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:border-slate-300'}`}
+                                : 'bg-gray-50/70 border-gray-200 text-gray-700 hover:border-gray-300'}`}
                           >
                             <span>{prod}</span>
                             {isSelected && <Check size={14} className="text-primary shrink-0" />}
@@ -504,9 +501,9 @@ export default function DevisPage() {
               {/* Étape 3 : Budget & Délais */}
               {step === 3 && (
                 <div className="space-y-5 animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-display text-xl font-bold text-slate-900">Enveloppe budgétaire & Délais</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Ces indications permettent à nos estimateurs d'optimiser l'amalgame d'impression.</p>
+                  <div className="border-b border-gray-100 pb-4">
+                    <h3 className="font-display text-xl font-bold text-gray-900">Enveloppe budgétaire & Délais</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Ces indications permettent à nos estimateurs d'optimiser l'amalgame d'impression.</p>
                   </div>
 
                   <Field label="Fourchette de budget" required error={errors.budget}>
@@ -518,8 +515,8 @@ export default function DevisPage() {
                           onClick={() => setForm((f) => ({ ...f, budget: b }))}
                           className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all flex items-center justify-between
                             ${form.budget === b 
-                              ? 'bg-slate-900 border-slate-900 text-white shadow-sm' 
-                              : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:border-slate-300'}`}
+                              ? 'bg-gray-900 border-gray-900 text-white shadow-sm' 
+                              : 'bg-gray-50/70 border-gray-200 text-gray-700 hover:border-gray-300'}`}
                         >
                           <span>{b}</span>
                           {form.budget === b && <Check size={14} className="text-emerald-400" />}
@@ -537,8 +534,8 @@ export default function DevisPage() {
                           onClick={() => setForm((f) => ({ ...f, deadline: d }))}
                           className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all flex items-center justify-between
                             ${form.deadline === d 
-                              ? 'bg-slate-900 border-slate-900 text-white shadow-sm' 
-                              : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:border-slate-300'}`}
+                              ? 'bg-gray-900 border-gray-900 text-white shadow-sm' 
+                              : 'bg-gray-50/70 border-gray-200 text-gray-700 hover:border-gray-300'}`}
                         >
                           <span>{d}</span>
                           {form.deadline === d && <Check size={14} className="text-emerald-400" />}
@@ -547,7 +544,7 @@ export default function DevisPage() {
                     </div>
                   </Field>
 
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-4">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 mt-4">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input 
                         type="checkbox" 
@@ -556,8 +553,8 @@ export default function DevisPage() {
                         className="w-4 h-4 mt-0.5 rounded accent-primary cursor-pointer" 
                       />
                       <div>
-                        <span className="text-xs font-bold text-slate-900">J'ai déjà une maquette graphique prête (PDF, AI, PSD)</span>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <span className="text-xs font-bold text-gray-900">J'ai déjà une maquette graphique prête (PDF, AI, PSD)</span>
+                        <p className="text-2xs text-gray-500 mt-0.5">
                           Vous pourrez la joindre par retour de mail ou via WhatsApp dès réception de l'accusé de réception.
                         </p>
                       </div>
@@ -567,12 +564,12 @@ export default function DevisPage() {
               )}
 
               {/* Barre de navigation Stepper */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
                 {step > 1 ? (
                   <button 
                     type="button" 
                     onClick={prevStep} 
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+                    className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors"
                   >
                     ← Étape précédente
                   </button>
@@ -616,44 +613,44 @@ export default function DevisPage() {
           <aside className="space-y-5">
             
             {/* Carte Récapitulatif Temps Réel */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Votre récapitulatif</h3>
-                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">En direct</span>
+            <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-sm space-y-3">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <h3 className="font-bold text-gray-900 text-xs uppercase tracking-wider">Votre récapitulatif</h3>
+                <span className="text-2xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">En direct</span>
               </div>
 
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-400">Demandeur :</span>
-                  <span className="font-semibold text-slate-800 text-right truncate max-w-[150px]">
+                <div className="flex justify-between py-1 border-b border-gray-50">
+                  <span className="text-gray-400">Demandeur :</span>
+                  <span className="font-semibold text-gray-800 text-right truncate max-w-[150px]">
                     {form.fullName || '—'}
                   </span>
                 </div>
 
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-400">Produit :</span>
-                  <span className="font-semibold text-slate-800 text-right truncate max-w-[150px]">
+                <div className="flex justify-between py-1 border-b border-gray-50">
+                  <span className="text-gray-400">Produit :</span>
+                  <span className="font-semibold text-gray-800 text-right truncate max-w-[150px]">
                     {form.product || '—'}
                   </span>
                 </div>
 
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-400">Quantité :</span>
-                  <span className="font-semibold text-slate-800 text-right">
+                <div className="flex justify-between py-1 border-b border-gray-50">
+                  <span className="text-gray-400">Quantité :</span>
+                  <span className="font-semibold text-gray-800 text-right">
                     {form.quantity || '—'}
                   </span>
                 </div>
 
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-400">Budget :</span>
-                  <span className="font-semibold text-slate-800 text-right">
+                <div className="flex justify-between py-1 border-b border-gray-50">
+                  <span className="text-gray-400">Budget :</span>
+                  <span className="font-semibold text-gray-800 text-right">
                     {form.budget || '—'}
                   </span>
                 </div>
 
                 <div className="flex justify-between py-1">
-                  <span className="text-slate-400">Délai :</span>
-                  <span className="font-semibold text-slate-800 text-right">
+                  <span className="text-gray-400">Délai :</span>
+                  <span className="font-semibold text-gray-800 text-right">
                     {form.deadline || '—'}
                   </span>
                 </div>
@@ -661,33 +658,33 @@ export default function DevisPage() {
             </div>
 
             {/* Carte Hotline & WhatsApp Direct */}
-            <div className="bg-slate-900 rounded-2xl p-5 text-white border border-slate-800 shadow-sm space-y-3">
+            <div className="bg-gray-900 rounded-2xl p-5 text-white border border-gray-800 shadow-sm space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                   <PhoneCall size={16} />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white">Besoin d'un chiffrage urgent ?</p>
-                  <p className="text-[11px] text-slate-400">Appelez directement nos estimateurs</p>
+                  <p className="text-2xs text-gray-400">Appelez directement nos estimateurs</p>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-gray-300 leading-relaxed">
                 Pour les appels d'offres ou événements sous 48h, contactez notre permanence commerciale.
               </p>
 
               <div className="pt-1 flex flex-col gap-2">
                 <a 
-                  href="https://wa.me/22670000000?text=Bonjour%20YopoePrint%2C%20j%27ai%20besoin%20d%27un%20devis%20urgent%20pour%20une%20impression." 
+                  href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20j%27ai%20besoin%20d%27un%20devis%20urgent%20pour%20une%20impression.`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-bold text-xs transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs transition-colors"
                 >
-                  WhatsApp Devis Urgent (+226 70 00 00 00)
+                  WhatsApp Devis Urgent ({CONTACT_PHONE_DISPLAY})
                 </a>
                 <a 
-                  href="tel:+22670000000" 
-                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-semibold transition-colors"
+                  href={`tel:${CONTACT_PHONE}`} 
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-semibold transition-colors"
                 >
                   Téléphone direct : +226 25 30 00 00
                 </a>

@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthContext } from '@/context/AuthContext'
+import { api } from '@/lib/api'
 import { MapPin, Plus, Trash2, Edit2, CheckCircle, Home, Building2, Map } from 'lucide-react'
+import { Alert } from '@/components/ui/Alert'
 
 interface Address {
   id: string
@@ -21,34 +23,60 @@ const EMPTY_FORM: Omit<Address, 'id'> = {
   fullName: '', phone: '', street: '', neighborhood: '', city: 'Ouagadougou', isDefault: false, labelType: 'home'
 }
 
-export default function AdressesPage() {
-  const { user } = useAuthContext()
+const toAddresses = (list: any[] = []): Address[] =>
+  list.map((a: any, i: number) => ({ ...a, id: a.id || String(i), labelType: a.labelType || 'home' }))
 
-  // Adresses mockées depuis le profil user (seront en DB dans la V2)
-  const [addresses, setAddresses] = useState<Address[]>(
-    (user?.addresses || []).map((a: any, i: number) => ({ ...a, id: a.id || String(i), labelType: a.labelType || 'home' }))
-  )
+export default function AdressesPage() {
+  const { user, refreshUser } = useAuthContext()
+
+  const [addresses, setAddresses] = useState<Address[]>(toAddresses(user?.addresses))
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  // Le profil arrive après le premier rendu (localStorage puis /auth/me)
+  useEffect(() => {
+    setAddresses(toAddresses(user?.addresses))
+  }, [user])
 
   const set = (key: keyof typeof form) => (value: string | boolean) =>
     setForm((f) => ({ ...f, [key]: value }))
 
-  const handleSave = () => {
-    if (!form.fullName || !form.phone || !form.city || !form.street) return
+  // Enregistre la liste complète côté API (PATCH /users/me) puis recharge le profil
+  const persist = async (next: Address[]) => {
+    setSaving(true)
+    setError('')
+    try {
+      await api.patch('/users/me', {
+        addresses: next.map(({ id, labelType, fullName, phone, street, neighborhood, city, isDefault }) =>
+          ({ id, labelType, fullName, phone, street, neighborhood, city, isDefault })),
+      })
+      await refreshUser()
+      return true
+    } catch (e: any) {
+      setError(e?.message || "Impossible d'enregistrer vos adresses. Réessayez.")
+      return false
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!form.fullName || !form.phone || !form.city || !form.street) {
+      setError('Renseignez le nom, le téléphone, la rue et la ville.')
+      return
+    }
     const newAddr: Address = { ...form, id: editId || Date.now().toString() }
 
-    if (form.isDefault) {
-      setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: false })))
-    }
+    let next = editId
+      ? addresses.map((a) => a.id === editId ? newAddr : a)
+      : [...addresses, newAddr]
+    if (newAddr.isDefault) next = next.map((a) => ({ ...a, isDefault: a.id === newAddr.id }))
 
-    if (editId) {
-      setAddresses((prev) => prev.map((a) => a.id === editId ? newAddr : a))
-    } else {
-      setAddresses((prev) => [...prev, newAddr])
-    }
+    if (!(await persist(next))) return
 
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -63,8 +91,8 @@ export default function AdressesPage() {
     setShowForm(true)
   }
 
-  const handleDelete = (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id))
+  const handleDelete = async (id: string) => {
+    await persist(addresses.filter((a) => a.id !== id))
   }
 
   const getLabelIcon = (type?: string) => {
@@ -91,11 +119,8 @@ export default function AdressesPage() {
       </div>
 
       {/* Feedback */}
-      {saved && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-xl text-sm font-semibold text-green-700 animate-in fade-in slide-in-from-top-2">
-          <CheckCircle size={18} /> Adresse sauvegardée avec succès !
-        </div>
-      )}
+      {saved && <Alert tone="success">Adresse enregistrée.</Alert>}
+      {error && <Alert>{error}</Alert>}
 
       {/* Formulaire */}
       {showForm && (
@@ -107,7 +132,7 @@ export default function AdressesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
             {/* Label Type */}
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+              <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 Type d'adresse
               </label>
               <div className="flex gap-3">
@@ -126,14 +151,14 @@ export default function AdressesPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Nom complet *</label>
+              <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nom complet *</label>
               <input type="text" placeholder="Ex: Salimata Kaboré"
                 value={form.fullName} onChange={(e) => set('fullName')(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all placeholder:text-gray-300"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Téléphone *</label>
+              <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Téléphone *</label>
               <input type="tel" placeholder="+226 70 00 00 00"
                 value={form.phone} onChange={(e) => set('phone')(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all placeholder:text-gray-300"
@@ -141,7 +166,7 @@ export default function AdressesPage() {
             </div>
             
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Adresse / Rue *</label>
+              <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Adresse / Rue *</label>
               <input type="text" placeholder="Ex: Avenue Kwame Nkrumah, Porte 123"
                 value={form.street} onChange={(e) => set('street')(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all placeholder:text-gray-300"
@@ -149,14 +174,14 @@ export default function AdressesPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Quartier</label>
+              <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Quartier</label>
               <input type="text" placeholder="Ex: ZAD, Ouaga 2000"
                 value={form.neighborhood} onChange={(e) => set('neighborhood')(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all placeholder:text-gray-300"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Ville *</label>
+              <label className="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ville *</label>
               <select value={form.city} onChange={(e) => set('city')(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all cursor-pointer">
                 {VILLES.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -175,9 +200,9 @@ export default function AdressesPage() {
           </div>
 
           <div className="flex gap-3 border-t border-gray-100 pt-6 mt-6">
-            <button onClick={handleSave}
-              className="bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-sm">
-              Enregistrer
+            <button onClick={handleSave} disabled={saving}
+              className="bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-sm disabled:opacity-60">
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
             </button>
             <button onClick={() => { setShowForm(false); setEditId(null) }}
               className="px-8 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:border-gray-400 hover:bg-gray-50 transition-all">
@@ -211,7 +236,7 @@ export default function AdressesPage() {
                   ${addr.isDefault ? 'border-2 border-gray-900 shadow-md' : 'border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'}`}>
                 
                 {addr.isDefault && (
-                  <div className="absolute top-0 right-0 bg-gray-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-bl-xl">
+                  <div className="absolute top-0 right-0 bg-gray-900 text-white text-2xs font-bold px-3 py-1.5 rounded-bl-xl">
                     PAR DÉFAUT
                   </div>
                 )}
@@ -236,8 +261,8 @@ export default function AdressesPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-gray-700 bg-gray-50 py-2.5 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
                     <Edit2 size={14} /> Modifier
                   </button>
-                  <button onClick={() => handleDelete(addr.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 py-2.5 rounded-lg hover:bg-red-100 transition-colors border border-red-100">
+                  <button onClick={() => handleDelete(addr.id)} disabled={saving}
+                    className="disabled:opacity-60 flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 py-2.5 rounded-lg hover:bg-red-100 transition-colors border border-red-100">
                     <Trash2 size={14} /> Supprimer
                   </button>
                 </div>

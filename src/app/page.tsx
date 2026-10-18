@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePopularProducts } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -15,9 +14,9 @@ import {
   Package, CheckCircle, Plus, Timer, ShoppingBag
 } from 'lucide-react'
 import { ProductCard } from '@/components/product/ProductCard'
-import { PRODUCTS } from '@/lib/data'
 import { bannersService, BannerSlide, DEFAULT_BANNERS } from '@/lib/banners.service'
 import { ProductScrollRail } from '@/components/product/ProductScrollRail'
+import { CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
 
 // ── 0.1 Ventes Flash de l'Imprimerie (Jumia Style) ──────────────────────────
 interface FlashSaleItem {
@@ -82,194 +81,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: 'Coton 190g premium · Marquage poitrine',
     qty: 20,
     price: 48000,
-    image: '/images/products/textile-pro.jpg',
-    href: '/catalogue/textile',
-  },
-]
-
-// ── 0.15 Top Bestsellers Rail (Style Jumia Top Ventes) ──────────────────────
-interface RailProduct {
-  id: string
-  name: string
-  category: string
-  leadTime: string
-  startingPrice: number
-  unitDesc: string
-  badge?: string
-  badgeColor?: string
-  image: string
-  href: string
-}
-
-const TOP_BESTSELLERS_RAIL: RailProduct[] = [
-  {
-    id: 'rail-cartes-350g',
-    name: 'Cartes de Visite 350g Couché Mat',
-    category: 'Carterie Pro',
-    leadTime: 'Livrable en 24h',
-    startingPrice: 8500,
-    unitDesc: 'les 250 cartes',
-    badge: 'N°1 Ventes',
-    badgeColor: 'bg-emerald-600',
-    image: '/images/products/cartes-visite.jpg',
-    href: '/catalogue/cartes',
-  },
-  {
-    id: 'rail-flyers-a5',
-    name: 'Flyers A5 Quadri Recto/Verso',
-    category: 'Publicité Papier',
-    leadTime: 'Livrable en 48h',
-    startingPrice: 14000,
-    unitDesc: 'les 500 flyers',
-    badge: 'Populaire',
-    badgeColor: 'bg-blue-600',
-    image: '/images/products/flyers-depliants.jpg',
-    href: '/catalogue/flyers',
-  },
-  {
-    id: 'rail-rollup-stand',
-    name: 'Roll-Up Stand Aluminium 85×200cm',
-    category: 'Salons & Foires',
-    leadTime: 'Prêt en 24h',
-    startingPrice: 28000,
-    unitDesc: 'structure + housse',
-    badge: 'Événementiel',
-    badgeColor: 'bg-purple-600',
-    image: '/images/products/rollup-salons.jpg',
-    href: '/catalogue/roll-up',
-  },
-  {
-    id: 'rail-bache-510g',
-    name: 'Bâche Publicitaire HD Oeillets 510g',
-    category: 'Grand Format',
-    leadTime: 'Livrable en 48h',
-    startingPrice: 18500,
-    unitDesc: 'dès 2×1 mètres',
-    badge: 'Résistant UV',
-    badgeColor: 'bg-amber-600',
-    image: '/images/products/affiches-baches.jpg',
-    href: '/catalogue/baches',
-  },
-  {
-    id: 'rail-sacs-kraft',
-    name: 'Sacs Shopping Kraft avec Poignées',
-    category: 'Packaging Boutique',
-    leadTime: 'Sous 4 jours',
-    startingPrice: 22000,
-    unitDesc: 'le lot de 50 sacs',
-    badge: 'Écologique',
-    badgeColor: 'bg-emerald-700',
-    image: '/images/products/packaging-kraft.jpg',
-    href: '/catalogue/sacs',
-  },
-  {
-    id: 'rail-tshirt-polo',
-    name: 'T-Shirts & Polos Personnalisés Coton',
-    category: 'Textile Entreprise',
-    leadTime: 'Sous 3 à 5 jours',
-    startingPrice: 24000,
-    unitDesc: 'le pack de 10 pièces',
-    badge: 'Marquage HD',
-    badgeColor: 'bg-rose-600',
-    image: '/images/products/textile-pro.jpg',
-    href: '/catalogue/textile',
-  },
-  {
-    id: 'rail-depliants-3volets',
-    name: 'Dépliants 3 Volets A4 Plié Format DL',
-    category: 'Plaquettes Pro',
-    leadTime: 'Livrable en 48h',
-    startingPrice: 25000,
-    unitDesc: 'les 250 plaquettes',
-    badge: 'Finition Mat',
-    badgeColor: 'bg-indigo-600',
-    image: '/images/products/brochures-catalogues.jpg',
-    href: '/catalogue/depliants',
-  },
-  {
-    id: 'rail-goodies-mugs',
-    name: 'Mugs Céramique & Gourdes Isothermes',
-    category: 'Goodies Cadeaux',
-    leadTime: 'Sous 72h',
-    startingPrice: 17500,
-    unitDesc: 'lot de 10 unités',
-    badge: 'Cadeau VIP',
-    badgeColor: 'bg-teal-600',
-    image: '/images/products/goodies-vip.jpg',
-    href: '/catalogue/goodies',
-  },
-]
-
-// ── 0.2 Tuiles Catégories Essentielles (Inspiration Jumia) ───────────────────
-interface EssentialTile {
-  id: string
-  title: string
-  badgeText: string
-  description: string
-  gradient: string
-  textColor: string
-  image: string
-  href: string
-}
-
-const ESSENTIAL_TILES: EssentialTile[] = [
-  {
-    id: 'bestsellers',
-    title: 'Meilleures Ventes',
-    badgeText: 'QUALITÉ PRO',
-    description: 'Cartes dorure & Flyers',
-    gradient: 'from-amber-500 via-orange-500 to-amber-600',
-    textColor: 'text-amber-950',
-    image: '/images/products/cartes-visite.jpg',
-    href: '/catalogue',
-  },
-  {
-    id: 'destockage',
-    title: 'Déstockage Atelier',
-    badgeText: 'JUSQU\'À -40%',
-    description: 'Fins de séries papier',
-    gradient: 'from-rose-500 via-red-600 to-rose-700',
-    textColor: 'text-rose-950',
-    image: '/images/products/brochures-catalogues.jpg',
-    href: '/catalogue',
-  },
-  {
-    id: 'salons',
-    title: 'Salons & Foires',
-    badgeText: 'SIAO & SNC',
-    description: 'Roll-ups, stands & bâches',
-    gradient: 'from-purple-600 via-indigo-600 to-violet-700',
-    textColor: 'text-purple-950',
-    image: '/images/products/rollup-salons.jpg',
-    href: '/catalogue/roll-up',
-  },
-  {
-    id: 'packaging',
-    title: 'Packaging Kraft',
-    badgeText: 'DÈS 450 F/U',
-    description: 'Sacs boutiques & boîtes',
-    gradient: 'from-emerald-600 via-teal-600 to-emerald-700',
-    textColor: 'text-emerald-950',
-    image: '/images/products/packaging-kraft.jpg',
-    href: '/catalogue/sacs',
-  },
-  {
-    id: 'entreprises',
-    title: 'Espace Entreprises',
-    badgeText: 'FACTURES DGI',
-    description: 'e-Sintax & Devis sous 2h',
-    gradient: 'from-blue-600 via-sky-600 to-blue-700',
-    textColor: 'text-blue-950',
-    image: '/images/products/cartes-visite.jpg',
-    href: '/entreprises',
-  },
-  {
-    id: 'textile',
-    title: 'Textile & Goodies',
-    badgeText: 'PERSONNALISÉ',
-    description: 'Polos, casquettes, stylos',
-    gradient: 'from-fuchsia-600 via-pink-600 to-rose-600',
-    textColor: 'text-fuchsia-950',
     image: '/images/products/textile-pro.jpg',
     href: '/catalogue/textile',
   },
@@ -499,7 +310,6 @@ const PAPERS_GUIDE = [
 // ── 5. Avis Clients d'Entreprises Vérifiés ───────────────────────────────────
 export default function StorefrontHomePage() {
   const router = useRouter()
-  const { products: apiProducts } = usePopularProducts()
 
   // Calculateur Express state
   const [calcProdKey, setCalcProdKey] = useState<string>('cartes')
@@ -507,7 +317,6 @@ export default function StorefrontHomePage() {
   const [selectedQty, setSelectedQty] = useState<number>(currentCalc.popularQty)
   const [selectedFinish, setSelectedFinish] = useState<string>(currentCalc.finishes[0].id)
   const [copiedPromo, setCopiedPromo] = useState(false)
-  const [bestsellerTab, setBestsellerTab] = useState<'all' | 'cartes' | 'flyers' | 'grand_format' | 'textile'>('all')
 
   // Bannières Dynamiques Carrousel Hero (Uploadées depuis le Backoffice)
   const [banners, setBanners] = useState<BannerSlide[]>(DEFAULT_BANNERS)
@@ -525,9 +334,11 @@ export default function StorefrontHomePage() {
     return () => { isMounted = false }
   }, [])
 
-  // Rotation automatique du carrousel (5.5 secondes, pause quand la souris survole)
+  // Rotation automatique du carrousel (5.5 secondes) : en pause au survol ou au focus clavier,
+  // et désactivée si l'utilisateur a demandé moins d'animations
   useEffect(() => {
     if (isCarouselHovered || banners.length <= 1) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const slideTimer = setInterval(() => {
       setHeroSlide(prev => (prev + 1) % banners.length)
     }, 5500)
@@ -569,23 +380,9 @@ export default function StorefrontHomePage() {
     setTimeout(() => setCopiedPromo(false), 2500)
   }
 
-  // Liste des produits filtrés pour la grille
-  const allAvailableProducts = apiProducts && apiProducts.length > 0 ? apiProducts : PRODUCTS
-  const filteredProducts = useMemo(() => {
-    if (bestsellerTab === 'all') return allAvailableProducts.slice(0, 8)
-    return allAvailableProducts.filter((p: any) => {
-      const c = (p.category || '').toLowerCase()
-      const s = (p.slug || '').toLowerCase()
-      if (bestsellerTab === 'cartes') return c.includes('carte') || s.includes('carte')
-      if (bestsellerTab === 'flyers') return c.includes('flyer') || c.includes('brochure') || s.includes('flyer')
-      if (bestsellerTab === 'grand_format') return c.includes('roll') || c.includes('signal') || c.includes('affiche') || s.includes('roll')
-      if (bestsellerTab === 'textile') return c.includes('textile') || s.includes('t-shirt') || s.includes('polo')
-      return true
-    }).slice(0, 8)
-  }, [allAvailableProducts, bestsellerTab])
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-900 font-sans antialiased">
+    <div className="min-h-screen bg-gray-100/70 text-gray-900 font-sans antialiased">
 
       {/* ═════════════════════════════════════════════════════════════
           1. GRANDE BANNIÈRE CARROUSEL HERO (1248 × 357 PX)
@@ -595,10 +392,10 @@ export default function StorefrontHomePage() {
         {/* Proposition de valeur — texte réel (SEO, lecteurs d'écran), pas dans l'image */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 px-1 mb-3 sm:mb-4">
           <div>
-            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
               Imprimerie en ligne au Burkina Faso
             </h1>
-            <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+            <p className="text-sm text-gray-600 mt-1 max-w-2xl">
               Cartes de visite, flyers, roll-up et bâches imprimés à Ouagadougou. Prix en FCFA, BAT gratuit avant impression, livraison partout au Burkina.
             </p>
           </div>
@@ -611,12 +408,14 @@ export default function StorefrontHomePage() {
         </div>
 
         <div
-          className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-slate-200/60 bg-slate-950 group"
+          className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-gray-200/60 bg-gray-200 group"
           onMouseEnter={() => setIsCarouselHovered(true)}
           onMouseLeave={() => setIsCarouselHovered(false)}
+          onFocusCapture={() => setIsCarouselHovered(true)}
+          onBlurCapture={() => setIsCarouselHovered(false)}
         >
-          {/* Conteneur dimension standard e-commerce : 1248 × 357 px */}
-          <div className="relative w-full h-[160px] sm:h-[240px] md:h-[357px] max-h-[357px] overflow-hidden">
+          {/* Conteneur dimension standard e-commerce : 1248 × 357 px (plus haut sur mobile pour le texte) */}
+          <div className="relative w-full h-[240px] sm:h-[280px] md:h-[357px] max-h-[357px] overflow-hidden">
             {banners.map((banner, idx) => {
               const isActive = heroSlide === idx
               return (
@@ -629,16 +428,38 @@ export default function StorefrontHomePage() {
                   <Link
                     href={banner.linkUrl || '/catalogue'}
                     className="block w-full h-full relative cursor-pointer"
-                    title={banner.title}
+                    tabIndex={isActive ? 0 : -1}
+                    aria-hidden={!isActive}
                   >
                     <Image
                       src={banner.imageUrl}
-                      alt={banner.altText || banner.title || 'Bannière YopoePrint'}
+                      alt={banner.ctaLabel ? '' : (banner.altText || banner.title || 'Bannière YopoePrint')}
                       fill
                       priority={idx === 0}
                       className="object-cover object-center w-full h-full"
                       sizes="(max-width: 1248px) 100vw, 1248px"
                     />
+                    {banner.ctaLabel && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/85 via-gray-950/55 to-gray-950/0" />
+                        <div className="absolute inset-0 flex flex-col justify-center gap-2 sm:gap-3 px-5 sm:px-10 md:px-14 max-w-[36rem]">
+                          {banner.badge && (
+                            <span className="self-start text-xs font-bold uppercase tracking-wider text-white bg-primary px-2.5 py-1 rounded-lg">
+                              {banner.badge}
+                            </span>
+                          )}
+                          <p className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight">
+                            {banner.title}
+                          </p>
+                          {banner.subtitle && (
+                            <p className="text-sm sm:text-base text-white/85 leading-snug">{banner.subtitle}</p>
+                          )}
+                          <span className="self-start mt-1 inline-flex items-center gap-1.5 bg-primary text-white text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-md group-hover:bg-primary/90 transition-colors">
+                            {banner.ctaLabel} <ArrowRight size={16} />
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </Link>
                 </div>
               )
@@ -684,8 +505,8 @@ export default function StorefrontHomePage() {
                 onClick={() => setHeroSlide(idx)}
                 className={`transition-all duration-300 rounded-full cursor-pointer ${
                   heroSlide === idx
-                    ? 'w-5 h-1.5 bg-slate-900 shadow-xs'
-                    : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
+                    ? 'w-5 h-1.5 bg-gray-900 shadow-xs'
+                    : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
                 }`}
                 aria-label={`Aller à la bannière ${idx + 1}`}
               />
@@ -698,26 +519,24 @@ export default function StorefrontHomePage() {
           2. VENTES FLASH | CHAQUE JOUR (STYLE JUMIA PUR)
       ═════════════════════════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-2">
-        {/* Conteneur Rouge Carmin Jumia */}
-        <div className="bg-[#b81d24] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-lg text-white">
+        {/* Bloc sombre neutre : la couleur d'action (vert) reste réservée aux boutons */}
+        <div className="bg-gray-900 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-lg text-white">
           
           {/* En-tête Ventes Flash */}
           <div className="flex items-center justify-between mb-2.5">
             <div>
-              <h2 className="font-display text-base sm:text-xl font-black text-white tracking-tight flex items-center gap-1.5">
+              <h2 className="font-display text-base sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-1.5">
                 <span>Offres de l'atelier</span>
               </h2>
-              <p className="text-[11px] text-white/80 mt-0.5">Prix de départ indicatifs, calculés au plus juste sur la fiche produit</p>
+              <p className="text-xs text-white/80 mt-0.5">Prix de départ indicatifs, calculés au plus juste sur la fiche produit</p>
 
             </div>
 
-            {/* Bouton Pill Blanc Flèche Suivante */}
             <Link
               href="/catalogue"
-              className="w-10 sm:w-11 h-6 sm:h-6.5 bg-white text-red-700 hover:bg-slate-100 rounded-full flex items-center justify-center font-black text-sm shadow-sm transition-transform active:scale-95"
-              aria-label="Voir tout le catalogue"
+              className="shrink-0 inline-flex items-center gap-1 h-9 px-3.5 bg-white text-gray-900 hover:bg-gray-100 rounded-full font-bold text-xs shadow-sm transition-colors"
             >
-              <ArrowRight size={14} />
+              Tout voir <ArrowRight size={14} />
             </Link>
           </div>
 
@@ -726,7 +545,7 @@ export default function StorefrontHomePage() {
             {FLASH_SALE_ITEMS.map((item) => (
               <div
                 key={item.id}
-                className="w-[148px] sm:w-[168px] md:w-[185px] shrink-0 snap-start bg-white text-slate-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group transition-all"
+                className="w-[148px] sm:w-[168px] md:w-[185px] shrink-0 snap-start bg-white text-gray-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group transition-all"
               >
                 {/* Zone Photo Produit */}
                 <div className="relative aspect-square w-full bg-white p-2 flex items-center justify-center">
@@ -741,14 +560,14 @@ export default function StorefrontHomePage() {
                   </Link>
 
                   {/* Badge Atelier Top-Left (Style Jumia Express) */}
-                  <span className="absolute top-2 left-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+                  <span className="absolute top-2 left-2 bg-blue-600 text-white text-2xs font-extrabold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
                     Atelier
                   </span>
 
                   {/* Bouton Rond Noir (+) Style Jumia Mobile */}
                   <button
                     onClick={(e) => handleQuickAddFlash(e, item)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-slate-900/90 hover:bg-slate-900 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md active:scale-90 transition-transform cursor-pointer"
+                    className="absolute top-2 right-2 w-7 h-7 bg-gray-900/90 hover:bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md active:scale-90 transition-transform cursor-pointer"
                     title="Configurer"
                     aria-label={`Configurer ${item.title}`}
                   >
@@ -760,15 +579,15 @@ export default function StorefrontHomePage() {
                 <div className="p-2 sm:p-2.5 flex flex-col justify-between flex-1 gap-1">
                   {/* Titre Produit (2 lignes max) */}
                   <Link href={item.href}>
-                    <h3 className="font-semibold text-[11px] sm:text-xs text-slate-900 line-clamp-2 leading-tight hover:text-red-700 min-h-[30px]">
+                    <h3 className="font-semibold text-2xs sm:text-xs text-gray-900 line-clamp-2 leading-tight hover:text-primary min-h-[30px]">
                       {item.title}
                     </h3>
                   </Link>
 
                   {/* Prix en FCFA & Réduction */}
                   <div className="pt-0.5">
-                    <span className="text-[10px] text-slate-400 font-medium block leading-none">Dès</span>
-                    <div className="font-mono font-black text-xs sm:text-sm text-slate-950">
+                    <span className="text-2xs text-gray-500 font-medium block leading-none">Dès</span>
+                    <div className="tabular-nums font-extrabold text-xs sm:text-sm text-gray-950">
                       {item.price.toLocaleString('fr-FR')} FCFA
                     </div>
                   </div>
@@ -782,183 +601,9 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════
-          3. TROUVEZ TOUS VOS SUPPORTS ESSENTIELS (TUILES COLORÉES JUMIA)
-      ═════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
-        
-        {/* Titre et Sous-titre Chauds Style Jumia */}
-        <div className="mb-3">
-          <h2 className="font-display text-xl sm:text-2xl font-black text-amber-600 tracking-tight">
-            Trouvez tous vos supports essentiels
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium">
-            Des articles d'impression professionnelle aux meilleurs tarifs du Burkina
-          </p>
-        </div>
-
-        {/* Grille des 6 Tuiles Colorées Raccourcis */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {ESSENTIAL_TILES.map((tile) => (
-            <Link
-              key={tile.id}
-              href={tile.href}
-              className={`group relative rounded-2xl p-3.5 bg-gradient-to-br ${tile.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[160px] overflow-hidden`}
-            >
-              {/* Fond décoratif doux */}
-              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform" />
-
-              {/* Titre & Flèche */}
-              <div className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-display text-sm font-extrabold text-white leading-tight">
-                    {tile.title}
-                  </h3>
-                  <ChevronRight size={14} className="text-white/80 group-hover:translate-x-1 transition-transform" />
-                </div>
-                <p className="text-[11px] text-white/80 mt-1 leading-snug">
-                  {tile.description}
-                </p>
-              </div>
-
-              {/* Image d'illustration miniature & Badge Capsule Blanc */}
-              <div className="relative z-10 flex flex-col items-center gap-2 pt-2">
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden shadow-md border border-white/30 bg-white/20">
-                  <Image
-                    src={tile.image}
-                    alt={tile.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-
-                <span className="w-full text-center text-[10px] font-black tracking-wider uppercase bg-white text-slate-900 px-2 py-1 rounded-full shadow-sm group-hover:bg-amber-300 transition-colors">
-                  {tile.badgeText}
-                </span>
-              </div>
-
-            </Link>
-          ))}
-        </div>
-
-      </section>
-
-      {/* ═════════════════════════════════════════════════════════════
-          3.5 RAIL DÉROULANT : NOS MEILLEURES VENTES D'IMPRIMERIE (STYLE JUMIA)
-      ═════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5">
-        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200/80">
-          
-          {/* En-tête de Section */}
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 font-mono">
-                  Sélection Atelier
-                </span>
-                <span className="hidden sm:inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  Top 8 Commandés
-                </span>
-              </div>
-              <h2 className="font-display text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-                Nos Meilleures Ventes d'Imprimerie
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                Les supports les plus plébiscités par nos clients à Ouagadougou et partout au Burkina
-              </p>
-            </div>
-            
-            <Link
-              href="/catalogue"
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 group shrink-0 transition-colors"
-            >
-              <span className="hidden sm:inline">Tout le catalogue</span>
-              <span className="sm:hidden">Voir tout</span>
-              <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Rail Scrollable avec boutons fléchés latéraux Desktop et Swipe Mobile */}
-          <ProductScrollRail trackClassName="gap-3 sm:gap-4">
-            {TOP_BESTSELLERS_RAIL.map((prod) => (
-              <div
-                key={prod.id}
-                className="w-[160px] sm:w-[190px] md:w-[220px] shrink-0 snap-start bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-lg hover:border-emerald-500/60 transition-all duration-300 group flex flex-col justify-between overflow-hidden"
-              >
-                {/* Zone Photo Produit */}
-                <div className="relative aspect-square w-full bg-slate-50 overflow-hidden">
-                  <Link href={prod.href} className="relative w-full h-full block">
-                    <Image
-                      src={prod.image}
-                      alt={prod.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="220px"
-                    />
-                  </Link>
-
-                  {/* Badge d'atelier */}
-                  {prod.badge && (
-                    <span className={`absolute top-2 left-2 ${prod.badgeColor || 'bg-slate-900'} text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-xs tracking-wider`}>
-                      {prod.badge}
-                    </span>
-                  )}
-
-                  {/* Délai d'atelier */}
-                  <span className="absolute bottom-2 left-2 bg-slate-950/75 backdrop-blur-xs text-white text-[9px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-1">
-                    <Clock size={10} className="text-emerald-400" />
-                    <span>{prod.leadTime}</span>
-                  </span>
-                </div>
-
-                {/* Corps de Carte Produit */}
-                <div className="p-3 flex flex-col justify-between flex-1 gap-2">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">
-                      {prod.category}
-                    </span>
-                    <Link href={prod.href}>
-                      <h3 className="font-bold text-xs sm:text-sm text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 min-h-[34px] leading-snug">
-                        {prod.name}
-                      </h3>
-                    </Link>
-                  </div>
-
-                  {/* Prix en FCFA */}
-                  <div className="pt-1 border-t border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block leading-none">Dès</span>
-                    <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="font-mono font-black text-sm sm:text-base text-slate-950">
-                        {new Intl.NumberFormat('fr-FR').format(prod.startingPrice)}
-                      </span>
-                      <span className="text-[11px] font-bold text-slate-700">FCFA</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 block truncate mt-0.5">
-                      {prod.unitDesc}
-                    </span>
-                  </div>
-
-                  {/* Bouton Action Rapide */}
-                  <Link
-                    href={prod.href}
-                    className="w-full mt-1 py-2 px-3 rounded-xl bg-slate-100 group-hover:bg-emerald-600 group-hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
-                  >
-                    <span>Configurer</span>
-                    <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-
-              </div>
-            ))}
-          </ProductScrollRail>
-
-        </div>
-      </section>
-
-      {/* ═════════════════════════════════════════════════════════════
           4. BANDEAU DE RÉASSURANCE HELLOPRINT (4 Piliers Concrets)
       ═════════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-b border-slate-200 py-6">
+      <section className="bg-white border-b border-gray-200 py-6">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             
@@ -967,8 +612,8 @@ export default function StorefrontHomePage() {
                 <FileCheck size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm text-slate-900">BAT Pré-Presse Gratuit</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Audit 300 DPI & fonds perdus offert sur chaque commande.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-gray-900">BAT Pré-Presse Gratuit</h4>
+                <p className="text-xs text-gray-500 mt-0.5">Audit 300 DPI & fonds perdus offert sur chaque commande.</p>
               </div>
             </div>
 
@@ -977,8 +622,8 @@ export default function StorefrontHomePage() {
                 <Clock size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm text-slate-900">Délais Respectés 24/48h</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Production en atelier à Ouaga et expéditions suivies.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-gray-900">Délais Respectés 24/48h</h4>
+                <p className="text-xs text-gray-500 mt-0.5">Production en atelier à Ouaga et expéditions suivies.</p>
               </div>
             </div>
 
@@ -987,8 +632,8 @@ export default function StorefrontHomePage() {
                 <Building2 size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm text-slate-900">Facturation Conforme DGI</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Factures normalisées avec mentions IFU et TVA incluses.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-gray-900">Facturation Conforme DGI</h4>
+                <p className="text-xs text-gray-500 mt-0.5">Factures normalisées avec mentions IFU et TVA incluses.</p>
               </div>
             </div>
 
@@ -997,8 +642,8 @@ export default function StorefrontHomePage() {
                 <ShieldCheck size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm text-slate-900">Satisfait ou Réimprimé</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Garantie stricte de conformité colorimétrique FOGRA39.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-gray-900">Satisfait ou Réimprimé</h4>
+                <p className="text-xs text-gray-500 mt-0.5">Garantie stricte de conformité colorimétrique FOGRA39.</p>
               </div>
             </div>
 
@@ -1009,7 +654,7 @@ export default function StorefrontHomePage() {
       {/* ═════════════════════════════════════════════════════════════
           3. GRILLE DES CATÉGORIES POPULAIRES (Standard Helloprint)
       ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-slate-50 border-b border-slate-200">
+      <section className="py-12 bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -1017,7 +662,7 @@ export default function StorefrontHomePage() {
               <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
                 Catalogue Général
               </p>
-              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900">
                 Choisissez votre catégorie d'impression
               </h2>
             </div>
@@ -1035,9 +680,9 @@ export default function StorefrontHomePage() {
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-emerald-600 hover:shadow-md transition-all group flex flex-col justify-between"
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-emerald-600 hover:shadow-md transition-all group flex flex-col justify-between"
               >
-                <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
+                <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
                   <Image
                     src={cat.img}
                     alt={cat.name}
@@ -1050,19 +695,19 @@ export default function StorefrontHomePage() {
 
                 <div className="p-4 flex flex-col flex-1 justify-between">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    <h3 className="font-bold text-sm text-gray-900 group-hover:text-emerald-700 transition-colors">
                       {cat.name}
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                    <p className="text-2xs text-gray-500 mt-0.5 line-clamp-1">
                       {cat.spec}
                     </p>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-900 font-mono text-[11px] sm:text-xs">
+                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs">
+                    <span className="font-bold text-gray-900 tabular-nums text-2xs sm:text-xs">
                       {cat.price}
                     </span>
-                    <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-2xs font-semibold text-emerald-700 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                       Configurer →
                     </span>
                   </div>
@@ -1077,25 +722,25 @@ export default function StorefrontHomePage() {
       {/* ═════════════════════════════════════════════════════════════
           4. CALCULATEUR DE PRIX INSTANTANÉ (L'arme n°1 de Helloprint)
       ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-white border-b border-slate-200">
+      <section className="py-12 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
           <div className="max-w-3xl mb-8">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold mb-2">
               <Calculator size={13} /> Chiffrage En Ligne Immédiat
             </span>
-            <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900">
               Calculez votre prix exact en 3 clics
             </h2>
-            <p className="text-sm text-slate-600 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               Pas besoin d'attendre un devis par email. Sélectionnez vos options et découvrez immédiatement le montant de votre tirage en FCFA.
             </p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 sm:p-8">
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 sm:p-8">
             
             {/* Étape 1 : Onglets de choix de produit */}
-            <div className="flex flex-wrap items-center gap-2 pb-6 border-b border-slate-200">
+            <div className="flex flex-wrap items-center gap-2 pb-6 border-b border-gray-200">
               {Object.keys(CALC_PRODUCTS).map((key) => {
                 const prod = CALC_PRODUCTS[key]
                 const isActive = calcProdKey === key
@@ -1106,8 +751,8 @@ export default function StorefrontHomePage() {
                     onClick={() => handleSelectCalcProduct(key)}
                     className={`py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300'
+                        ? 'bg-gray-900 text-white shadow-xs'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     {prod.name.split(' (')[0]}
@@ -1123,7 +768,7 @@ export default function StorefrontHomePage() {
                 
                 {/* Quantité */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                     1. Choisissez le tirage (Tarifs dégressifs) :
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -1136,8 +781,8 @@ export default function StorefrontHomePage() {
                           onClick={() => setSelectedQty(q)}
                           className={`py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border ${
                             isSel
-                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
-                              : 'bg-white border-slate-200 text-slate-800 hover:border-slate-400'
+                              ? 'bg-emerald-700 border-emerald-700 text-white shadow-xs'
+                              : 'bg-white border-gray-200 text-gray-800 hover:border-gray-400'
                           }`}
                         >
                           {new Intl.NumberFormat('fr-FR').format(q)} ex.
@@ -1149,7 +794,7 @@ export default function StorefrontHomePage() {
 
                 {/* Finitions */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                     2. Choisissez le papier ou la finition :
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1163,18 +808,18 @@ export default function StorefrontHomePage() {
                           className={`p-3 rounded-xl text-left transition-all cursor-pointer border ${
                             isSel
                               ? 'bg-emerald-50/80 border-emerald-600 ring-1 ring-emerald-600'
-                              : 'bg-white border-slate-200 hover:border-slate-300'
+                              : 'bg-white border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-xs text-slate-900">{f.label}</span>
+                            <span className="font-bold text-xs text-gray-900">{f.label}</span>
                             {f.extra > 0 && (
-                              <span className="text-[10px] font-bold text-emerald-700 font-mono">
+                              <span className="text-2xs font-bold text-emerald-700 tabular-nums">
                                 +{new Intl.NumberFormat('fr-FR').format(f.extra)} F
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-500">{f.desc}</p>
+                          <p className="text-2xs text-gray-500">{f.desc}</p>
                         </button>
                       )
                     })}
@@ -1184,26 +829,26 @@ export default function StorefrontHomePage() {
               </div>
 
               {/* Colonne Résumé Tarif & Commande Directe */}
-              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <div className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Total TTC Garanti
                   </span>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <span className="text-2xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
                     {currentCalc.leadTime}
                   </span>
                 </div>
 
                 <div className="mb-4">
-                  <p className="font-display font-black text-3xl text-slate-900 font-mono leading-none">
-                    {new Intl.NumberFormat('fr-FR').format(calculatedTotal)} <span className="text-sm font-sans font-bold text-slate-600">FCFA</span>
+                  <p className="font-display font-extrabold text-3xl text-gray-900 tabular-nums leading-none">
+                    {new Intl.NumberFormat('fr-FR').format(calculatedTotal)} <span className="text-sm font-sans font-bold text-gray-600">FCFA</span>
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     Soit <strong>{unitPrice} FCFA</strong> par exemplaire
                   </p>
                 </div>
 
-                <div className="space-y-1.5 text-xs text-slate-600 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div className="space-y-1.5 text-xs text-gray-600 mb-6 bg-gray-50 p-3 rounded-xl border border-gray-100">
                   <p className="flex items-center gap-1.5 font-medium">
                     <Check size={14} className="text-emerald-600" /> Produit : {currentCalc.name}
                   </p>
@@ -1221,13 +866,13 @@ export default function StorefrontHomePage() {
                 <button
                   type="button"
                   onClick={handleAddCalculatedToCart}
-                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShoppingCart size={16} />
                   <span>Configurer et commander</span>
                 </button>
 
-                <p className="text-[10px] text-center text-slate-400 mt-3">
+                <p className="text-2xs text-center text-gray-500 mt-3">
                   Paiement sécurisé Orange Money, Moov Money ou Virement DGI
                 </p>
               </div>
@@ -1240,79 +885,29 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════
-          5. GRILLE DES BESTSELLERS DE L'ATELIER (Fiches E-Commerce)
-      ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                Produits Populaires
-              </p>
-              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
-                Les meilleures ventes de nos clients
-              </h2>
-            </div>
-
-            {/* Onglets de filtrage propres */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {[
-                { id: 'all', label: 'Tout voir' },
-                { id: 'cartes', label: 'Cartes' },
-                { id: 'flyers', label: 'Flyers' },
-                { id: 'grand_format', label: 'Roll-ups & Bâches' },
-                { id: 'textile', label: 'Textile' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setBestsellerTab(tab.id as any)}
-                  className={`py-1.5 px-3.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    bestsellerTab === tab.id
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {filteredProducts.map((prod: any) => (
-              <ProductCard key={prod.slug || prod.id} product={prod} />
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ═════════════════════════════════════════════════════════════
           6. SALONS & ÉVÉNEMENTS (Bloc Signature Helloprint)
       ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-white border-b border-slate-200">
+      <section className="py-12 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
             {/* Bannière Stand à gauche */}
-            <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-8 flex flex-col justify-between relative overflow-hidden shadow-sm">
+            <div className="lg:col-span-5 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-2xl p-8 flex flex-col justify-between relative overflow-hidden shadow-sm">
               <div
                 className="absolute inset-0 bg-cover bg-center opacity-30"
                 style={{ backgroundImage: `url('/images/products/rollup-salons.jpg')` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-900/80 to-transparent" />
 
               <div className="relative z-10 space-y-4">
-                <span className="inline-block px-3 py-1 rounded-md text-xs font-extrabold uppercase tracking-wider bg-amber-500 text-slate-950">
+                <span className="inline-block px-3 py-1 rounded-lg text-xs font-extrabold uppercase tracking-wider bg-amber-500 text-gray-950">
                   Spécial Salons SIAO & Foires
                 </span>
-                <h3 className="font-display text-2xl sm:text-3xl font-black text-white leading-tight">
+                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-white leading-tight">
                   Équipez votre stand d’exposition en toute sérénité.
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-normal">
                   Tous les supports visuels indispensables pour marquer les esprits lors des salons professionnels, forums d’affaires et conférences internationales.
                 </p>
               </div>
@@ -1320,7 +915,7 @@ export default function StorefrontHomePage() {
               <div className="relative z-10 pt-8">
                 <Link
                   href="/entreprises"
-                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-xl transition-all shadow-md active:scale-95"
+                  className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-xl transition-all shadow-md active:scale-95"
                 >
                   <span>Configurer un pack stand sur mesure</span>
                   <ArrowRight size={15} />
@@ -1334,7 +929,7 @@ export default function StorefrontHomePage() {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-emerald-600 hover:shadow-md transition-all flex flex-col justify-between group"
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:border-emerald-600 hover:shadow-md transition-all flex flex-col justify-between group"
                 >
                   <div>
                     <div className="relative aspect-[16/9] w-full rounded-lg overflow-hidden bg-white mb-3">
@@ -1345,24 +940,24 @@ export default function StorefrontHomePage() {
                         sizes="300px"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900 text-white">
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-2xs font-bold bg-gray-900 text-white">
                         {item.badge}
                       </span>
                     </div>
 
-                    <h4 className="font-bold text-xs text-slate-900 group-hover:text-emerald-700 transition-colors leading-snug">
+                    <h4 className="font-bold text-xs text-gray-900 group-hover:text-emerald-700 transition-colors leading-snug">
                       {item.title}
                     </h4>
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                    <p className="text-2xs text-gray-500 mt-1 line-clamp-2">
                       {item.spec}
                     </p>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-900 font-mono">
+                  <div className="mt-3 pt-2.5 border-t border-gray-200 flex items-center justify-between text-xs">
+                    <span className="font-bold text-gray-900 tabular-nums">
                       {item.price}
                     </span>
-                    <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-0.5">
+                    <span className="text-2xs font-bold text-emerald-700 flex items-center gap-0.5">
                       Configurer →
                     </span>
                   </div>
@@ -1378,17 +973,17 @@ export default function StorefrontHomePage() {
       {/* ═════════════════════════════════════════════════════════════
           7. GUIDE DES MATIÈRES & PAPIERS D'ATELIER (Pédagogie Pro)
       ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-slate-50 border-b border-slate-200">
+      <section className="py-12 bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
           <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1 block">
               Savoir-Faire Atelier
             </span>
-            <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900">
               Guide des papiers & finitions d'impression
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-2">
+            <p className="text-xs sm:text-sm text-gray-600 mt-2">
               Chaque papier confère une tenue et une émotion distincte à vos supports. Découvrez les matières travaillées dans notre atelier.
             </p>
           </div>
@@ -1397,38 +992,38 @@ export default function StorefrontHomePage() {
             {PAPERS_GUIDE.map((mat) => (
               <div
                 key={mat.name}
-                className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between"
+                className="bg-white rounded-xl border border-gray-200 p-5 shadow-xs flex flex-col justify-between"
               >
                 <div>
-                  <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md mb-3 border border-emerald-100">
+                  <span className="inline-block text-2xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg mb-3 border border-emerald-100">
                     {mat.badge}
                   </span>
-                  <h3 className="font-bold text-sm text-slate-900 mb-1.5">
+                  <h3 className="font-bold text-sm text-gray-900 mb-1.5">
                     {mat.name}
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mb-3">
+                  <p className="text-xs text-gray-500 leading-relaxed mb-3">
                     {mat.desc}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-600">
-                  <span className="font-semibold text-slate-900">Usages :</span> {mat.usage}
+                <div className="pt-3 border-t border-gray-100 text-2xs text-gray-600">
+                  <span className="font-semibold text-gray-900">Usages :</span> {mat.usage}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Coffret d'échantillons gratuit pour les entreprises */}
-          <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mt-8 bg-white border border-gray-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-100">
                 <Package size={24} />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-slate-900">
+                <h4 className="font-bold text-sm text-gray-900">
                   Vous souhaitez toucher les papiers avant de commander ?
                 </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   Recevez notre nuancier complet avec échantillons de Couché Mat, Soft Touch, Kraft et Vernis 3D livré gratuitement à votre entreprise.
                 </p>
               </div>
@@ -1436,7 +1031,7 @@ export default function StorefrontHomePage() {
 
             <Link
               href="/contact?sujet=echantillons"
-              className="shrink-0 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all"
+              className="shrink-0 bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all"
             >
               Commander le nuancier d'échantillons gratuit →
             </Link>
@@ -1448,7 +1043,7 @@ export default function StorefrontHomePage() {
       {/* ═════════════════════════════════════════════════════════════
           9. ATELIER OUAGADOUGOU & HOTLINE ASSISTANCE
       ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-slate-900 text-white">
+      <section className="py-12 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
@@ -1456,30 +1051,30 @@ export default function StorefrontHomePage() {
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 uppercase tracking-wider">
                 <Phone size={14} /> Assistance Technique & Équipe Commerciale
               </span>
-              <h2 className="font-display text-2xl sm:text-4xl font-black text-white leading-tight">
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-tight">
                 Besoin d'un conseil d'imprimeur sur vos fichiers ou vos formats ?
               </h2>
-              <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+              <p className="text-sm text-gray-300 max-w-2xl leading-relaxed">
                 Notre studio pré-presse et notre service commercial à Ouagadougou vous accompagnent par téléphone ou sur WhatsApp. 
                 Réponse et analyse de vos maquettes sous 2 heures ouvrées.
               </p>
 
-              <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-slate-300">
+              <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-gray-300">
                 <span>📍 Atelier Gounghin & Showroom Ouaga 2000</span>
                 <span>⏰ Lundi au Samedi : 08h00 — 18h30</span>
-                <span>📞 Hotline : +226 70 00 00 00</span>
+                <span>📞 Hotline : {CONTACT_PHONE_DISPLAY}</span>
               </div>
             </div>
 
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
               <a
-                href="https://wa.me/22670000000?text=Bonjour%20YopoePrint,%20je%20souhaite%20un%20renseignement%20pour%20une%20commande%20d'impression."
+                href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20un%20renseignement%20pour%20une%20commande%20d'impression.`}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-2"
+                className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-2"
               >
                 <Phone size={16} />
-                <span>Échanger sur WhatsApp (+226)</span>
+                <span>Échanger sur WhatsApp</span>
               </a>
 
               <Link

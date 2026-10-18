@@ -52,10 +52,10 @@ export function PrepressGuide({ isOpen, onClose }: PrepressGuideProps) {
  Vos visuels doivent avoir une résolution de <strong>300 pixels par pouce (DPI)</strong> à taille réelle. Les images récupérées sur le web ou WhatsApp sont souvent compressées à 72 DPI et apparaîtront floues.
  </p>
  <div className="pl-7 flex gap-2">
- <span className="px-2 py-1 bg-green-50 border border-green-100 text-green-700 text-[10px] font-bold rounded-lg flex items-center gap-1">
+ <span className="px-2 py-1 bg-green-50 border border-green-100 text-green-700 text-2xs font-bold rounded-lg flex items-center gap-1">
  <CheckCircle2 size={10} /> PDF Vectoriel / TIFF (Recommandé)
  </span>
- <span className="px-2 py-1 bg-red-50 border border-red-100 text-red-700 text-[10px] font-bold rounded-lg flex items-center gap-1">
+ <span className="px-2 py-1 bg-red-50 border border-red-100 text-red-700 text-2xs font-bold rounded-lg flex items-center gap-1">
  <AlertTriangle size={10} /> Capture d&apos;écran / WhatsApp
  </span>
  </div>
@@ -74,11 +74,11 @@ export function PrepressGuide({ isOpen, onClose }: PrepressGuideProps) {
  <div className="pl-7">
  <div className="border border-dashed border-red-400 p-2 rounded relative bg-gray-50 max-w-xs mx-auto">
  <div className="absolute inset-1 border border-blue-400 rounded-sm" />
- <div className="h-16 flex items-center justify-center text-[10px] font-bold text-gray-400 select-none">
+ <div className="h-16 flex items-center justify-center text-2xs font-bold text-gray-400 select-none">
  Visuel / Fond perdu
  </div>
- <div className="absolute top-0 left-4 text-[8px] bg-red-100 text-red-700 px-1 rounded">Zone de coupe (Rouge)</div>
- <div className="absolute bottom-0 right-4 text-[8px] bg-blue-100 text-blue-700 px-1 rounded">Zone tranquille (Bleu - textes à l&apos;intérieur)</div>
+ <div className="absolute top-0 left-4 text-[10px] bg-red-100 text-red-700 px-1 rounded">Zone de coupe (Rouge)</div>
+ <div className="absolute bottom-0 right-4 text-[10px] bg-blue-100 text-blue-700 px-1 rounded">Zone tranquille (Bleu - textes à l&apos;intérieur)</div>
  </div>
  </div>
  </div>

@@ -7,7 +7,7 @@ import {
   ChevronRight, ShieldCheck, Truck, Clock, Upload,
   ShoppingCart, HelpCircle, FileCheck, FileWarning,
   AlertTriangle, Check, ChevronDown, Zap, RotateCcw,
-  ArrowRight
+  ArrowRight, Square, Copy, Ban, Sparkles,
 } from 'lucide-react'
 import { usePriceCalculator } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
@@ -36,8 +36,8 @@ function StepHeader({ step, label, sublabel }: { step: number; label: string; su
         {step}
       </span>
       <div>
-        <h3 className="text-[15px] font-bold text-gray-900 leading-none">{label}</h3>
-        {sublabel && <p className="text-[11px] text-gray-400 mt-0.5">{sublabel}</p>}
+        <h3 className="text-base font-bold text-gray-900 leading-none">{label}</h3>
+        {sublabel && <p className="text-2xs text-gray-600 mt-0.5">{sublabel}</p>}
       </div>
     </div>
   )
@@ -50,6 +50,20 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
       {children}
     </div>
   )
+}
+
+// Libellés des catégories (valeurs de l'enum ProductCategory de l'API)
+const CATEGORY_LABELS: Record<string, string> = {
+  'cartes-de-visite': 'Cartes de visite',
+  flyers: 'Flyers & dépliants',
+  affiches: 'Affiches & bâches',
+  brochures: 'Brochures',
+  'roll-up': 'Roll-up',
+  goodies: 'Goodies',
+  textile: 'Textile',
+  evenementiel: 'Événementiel',
+  signaletique: 'Signalétique',
+  corporate: 'Corporate',
 }
 
 export function ProductPageClient({ product }: ProductPageClientProps) {
@@ -169,7 +183,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
     const sizeInMB = file.size / (1024 * 1024)
     const formattedSize = sizeInMB.toFixed(2) + ' Mo'
     const extension = file.name.split('.').pop()?.toLowerCase() || ''
-    const allowed = ['pdf', 'ai', 'psd', 'jpg', 'jpeg', 'png', 'tiff']
+    const allowed = ['pdf', 'ai', 'psd', 'jpg', 'jpeg', 'png', 'tif', 'tiff']
     
     if (sizeInMB > 50)
       return setUploadState({ status: 'error', fileName: file.name, fileSize: formattedSize, message: 'Le fichier dépasse 50 Mo.' })
@@ -207,8 +221,8 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
       } else {
         toast.success('Fichier uploadé avec succès', 'Votre design est prêt pour l\'impression.')
       }
-    } catch (err) {
-      setUploadState({ status: 'error', fileName: file.name, fileSize: formattedSize, message: 'Erreur lors de l\'upload du fichier. Veuillez réessayer.' })
+    } catch (err: any) {
+      setUploadState({ status: 'error', fileName: file.name, fileSize: formattedSize, message: err?.message || 'Erreur lors de l\'upload du fichier. Veuillez réessayer.' })
       toast.error('Erreur d\'upload', 'Le fichier n\'a pas pu être envoyé. Vérifiez votre connexion.')
     }
   }
@@ -219,40 +233,48 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
   const badgeLabel    = product.badge === 'popular' ? 'Populaire' : product.badge === 'new' ? 'Nouveau' : product.badge === 'promo' ? 'Promo' : undefined
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-32 md:pb-10">
+    <div className="min-h-screen bg-gray-50 pb-32 md:pb-10">
 
       {/* ── Breadcrumb ──────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center gap-1.5 text-xs text-gray-400 overflow-x-auto whitespace-nowrap scrollbar-none">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap overflow-hidden">
           <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
           <ChevronRight size={12} />
           <Link href="/catalogue" className="hover:text-primary transition-colors">Catalogue</Link>
           <ChevronRight size={12} />
-          <Link href={`/catalogue/${product.category}`} className="hover:text-primary transition-colors capitalize">
-            {product.category}
+          <Link href={`/catalogue/${product.category}`} className="hover:text-primary transition-colors">
+            {CATEGORY_LABELS[product.category] || product.category}
           </Link>
           <ChevronRight size={12} />
-          <span className="text-gray-900 font-medium">{product.name}</span>
+          <span className="text-gray-900 font-medium truncate max-w-[45vw] sm:max-w-none" aria-current="page">{product.name}</span>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-[auto_1fr] gap-3 lg:gap-x-8 lg:gap-y-3">
+
+          {/* Nom du produit : premier élément sur mobile, colonne de droite sur desktop */}
+          <div className="lg:col-span-7 lg:col-start-6 lg:row-start-1 bg-white rounded-xl border border-gray-200 px-5 py-5 md:px-6 md:py-6">
+            {badgeLabel && (
+              <span className="inline-block mb-2 bg-gray-900 text-white text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded">
+                {badgeLabel}
+              </span>
+            )}
+            <h1 className="font-display text-xl md:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-1.5">
+              {product.name}
+            </h1>
+            <p className="text-gray-600 text-sm md:text-base">{product.shortDesc}</p>
+          </div>
 
           {/* ═══════════════════════════════════════════════════════════
               LEFT: Gallery + trust badges — sticky
           ═══════════════════════════════════════════════════════════ */}
-          <div className="lg:col-span-5">
-            <div className="sticky top-24 z-40 space-y-4">
+          <div className="lg:col-span-5 lg:col-start-1 lg:row-start-1 lg:row-span-2">
+            <div className="lg:sticky lg:top-24 z-30 space-y-4">
 
               {/* Image gallery card */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="relative">
-                  {badgeLabel && (
-                    <span className="absolute top-3 left-3 z-10 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded pointer-events-none select-none">
-                      {badgeLabel}
-                    </span>
-                  )}
                   <ProductImageGallery
                     slug={product.slug}
                     productName={product.name}
@@ -277,7 +299,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                   ].map(({ icon, label }) => (
                     <div key={label} className="flex flex-col items-center gap-1.5 py-3 px-2">
                       {icon}
-                      <span className="text-[10px] md:text-[11px] font-semibold text-gray-700 text-center leading-tight">{label}</span>
+                      <span className="text-2xs font-semibold text-gray-700 text-center leading-tight">{label}</span>
                     </div>
                   ))}
                 </div>
@@ -287,7 +309,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
               <div className="hidden md:block bg-white rounded-xl border border-gray-200 p-5">
                 <p className="text-sm text-gray-600 leading-relaxed">{product.shortDesc}</p>
                 {product.description && (
-                  <p className="text-xs text-gray-400 leading-relaxed mt-2 line-clamp-3">{product.description}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed mt-2 line-clamp-3">{product.description}</p>
                 )}
               </div>
 
@@ -295,8 +317,8 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
               <div className="hidden md:flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 <Zap size={18} className="text-amber-500 shrink-0" />
                 <div>
-                  <p className="text-[12px] font-bold text-amber-800">Production Express disponible</p>
-                  <p className="text-[11px] text-amber-600">Livraison en {deliveryDays}h ouvrées après validation du fichier</p>
+                  <p className="text-xs font-bold text-amber-800">Production Express disponible</p>
+                  <p className="text-2xs text-amber-700">Livraison en {deliveryDays}h ouvrées après validation du fichier</p>
                 </div>
               </div>
             </div>
@@ -305,15 +327,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
           {/* ═══════════════════════════════════════════════════════════
               RIGHT: Product name + Configurator
           ═══════════════════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 space-y-3">
-
-            {/* Product name block */}
-            <div className="bg-white rounded-xl border border-gray-200 px-5 py-5 md:px-6 md:py-6">
-              <h1 className="font-display text-xl md:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-1.5">
-                {product.name}
-              </h1>
-              <p className="text-gray-500 text-sm md:text-base">{product.shortDesc}</p>
-            </div>
+          <div className="lg:col-span-7 lg:col-start-6 lg:row-start-2 space-y-3">
 
             {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                 CONFIGURATOR CARD
@@ -343,16 +357,16 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                             </span>
                           )}
                           {/* Format miniature */}
-                          <div className={`w-10 h-12 border-2 rounded flex items-center justify-center text-[10px] font-bold shadow-sm
-                            ${sel ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
+                          <div className={`w-10 h-12 border-2 rounded flex items-center justify-center text-2xs font-bold shadow-sm
+                            ${sel ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
                             {f.label}
                           </div>
                           <div className="flex flex-col items-center mt-1">
-                            <span className={`text-[13px] font-bold leading-tight ${sel ? 'text-primary' : 'text-gray-900'}`}>
+                            <span className={`text-sm font-bold leading-tight ${sel ? 'text-primary' : 'text-gray-900'}`}>
                               {f.label}
                             </span>
                             {f.dimensions && (
-                              <span className={`text-[10px] mt-0.5 leading-tight ${sel ? 'text-primary/80' : 'text-gray-500'}`}>
+                              <span className={`text-2xs mt-0.5 leading-tight ${sel ? 'text-primary' : 'text-gray-500'}`}>
                                 {f.dimensions}
                               </span>
                             )}
@@ -386,17 +400,17 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                             {sel && <div className="w-2 h-2 bg-white rounded-full" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className={`block text-[14px] font-bold ${sel ? 'text-primary' : 'text-gray-900'}`}>
+                            <span className={`block text-sm font-bold ${sel ? 'text-primary' : 'text-gray-900'}`}>
                               {p.label}
                             </span>
                             {p.description && (
-                              <span className={`block text-[12px] mt-0.5 ${sel ? 'text-primary/80' : 'text-gray-500'}`}>
+                              <span className={`block text-xs mt-0.5 ${sel ? 'text-primary' : 'text-gray-500'}`}>
                                 {p.description}
                               </span>
                             )}
                           </div>
                           {p.priceExtra && (
-                            <span className={`text-[11px] font-bold shrink-0 ${sel ? 'text-primary' : 'text-gray-400'}`}>
+                            <span className={`text-2xs font-bold shrink-0 ${sel ? 'text-primary' : 'text-gray-500'}`}>
                               +{p.priceExtra} FCFA
                             </span>
                           )}
@@ -412,8 +426,8 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                 <StepHeader step={3} label="Type d'impression" sublabel="Recto uniquement ou recto-verso ?" />
                 <div className="grid grid-cols-2 gap-2.5">
                   {[
-                    { value: false, label: 'Recto seul', icon: '▭', desc: 'Impression 1 face' },
-                    { value: true,  label: 'Recto / Verso', icon: '⇌', desc: 'Impression 2 faces' },
+                    { value: false, label: 'Recto seul', icon: <Square size={22} />, desc: 'Impression 1 face' },
+                    { value: true,  label: 'Recto / Verso', icon: <Copy size={22} />, desc: 'Impression 2 faces' },
                   ].map(({ value, label, icon, desc }) => {
                     const sel = config.rectoverso === value
                     return (
@@ -430,9 +444,9 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                             <Check size={11} strokeWidth={3} className="text-white" />
                           </span>
                         )}
-                        <span className={`text-2xl leading-none ${sel ? 'text-primary' : 'text-gray-400'}`}>{icon}</span>
-                        <span className={`text-[13px] font-bold ${sel ? 'text-primary' : 'text-gray-900'}`}>{label}</span>
-                        <span className="text-[10px] text-gray-400">{desc}</span>
+                        <span className={sel ? 'text-primary' : 'text-gray-500'} aria-hidden="true">{icon}</span>
+                        <span className={`text-sm font-bold ${sel ? 'text-primary' : 'text-gray-900'}`}>{label}</span>
+                        <span className="text-2xs text-gray-500">{desc}</span>
                       </button>
                     )
                   })}
@@ -462,16 +476,16 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                           )}
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1
                             ${sel ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'}`}>
-                            {f.value === 'none' ? <span className="text-sm">Ø</span> : <span className="text-sm">✨</span>}
+                            {f.value === 'none' ? <Ban size={14} aria-hidden="true" /> : <Sparkles size={14} aria-hidden="true" />}
                           </div>
-                          <span className={`text-[12px] md:text-[13px] font-bold leading-tight ${sel ? 'text-primary' : 'text-gray-900'}`}>{f.label}</span>
+                          <span className={`text-xs md:text-sm font-bold leading-tight ${sel ? 'text-primary' : 'text-gray-900'}`}>{f.label}</span>
                           
                           {f.priceModifier > 0 ? (
-                            <span className={`text-[10px] font-semibold mt-1 px-2 py-0.5 rounded-full ${sel ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className={`text-2xs font-semibold mt-1 px-2 py-0.5 rounded-full ${sel ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'}`}>
                               +{f.priceModifier} FCFA
                             </span>
                           ) : (
-                            <span className={`text-[10px] mt-1 ${sel ? 'text-primary/80' : 'text-gray-400'}`}>Inclus</span>
+                            <span className={`text-2xs mt-1 ${sel ? 'text-primary' : 'text-gray-500'}`}>Inclus</span>
                           )}
                         </button>
                       )
@@ -486,7 +500,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                   <div className="flex items-center justify-between mb-4">
                     <StepHeader step={5} label="Quantité souhaitée" sublabel={`Min. ${formatPrice(product.minQuantity || 100)} ex.`} />
                     {currentUnit > 0 && !priceLoading && (
-                      <span className="text-[11px] font-semibold text-gray-400 shrink-0">
+                      <span className="text-2xs font-semibold text-gray-600 shrink-0">
                         {formatPrice(currentUnit)} FCFA/u
                       </span>
                     )}
@@ -498,13 +512,13 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                         <button
                           key={q}
                           onClick={() => setConfig(c => ({ ...c, quantity: q }))}
-                          className={`py-3 px-2 rounded-xl border-2 text-[13px] md:text-[14px] font-bold transition-all text-center
+                          className={`py-3 px-2 rounded-xl border-2 text-sm md:text-sm font-bold transition-all text-center
                             ${sel
                               ? 'border-primary bg-primary text-white shadow-md'
                               : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98]'}`}
                         >
                           {formatPrice(q)}
-                          <span className="block text-[9px] font-normal mt-0.5 opacity-70">ex.</span>
+                          <span className="block text-2xs font-normal mt-0.5 opacity-70">ex.</span>
                         </button>
                       )
                     })}
@@ -518,7 +532,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                   <StepHeader step={6} label="Fichier d'impression" />
                   <button
                     onClick={() => setPrepressOpen(true)}
-                    className="flex items-center gap-1 text-[11px] text-primary font-semibold hover:underline underline-offset-4"
+                    className="flex items-center gap-1 text-2xs text-primary font-semibold hover:underline underline-offset-4"
                   >
                     <HelpCircle size={13} />
                     Guide technique
@@ -529,7 +543,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
-                  accept=".pdf,.ai,.psd,.jpg,.jpeg,.png,.tiff"
+                  accept=".pdf,.ai,.psd,.jpg,.jpeg,.png,.tif,.tiff"
                   className="hidden"
                 />
 
@@ -547,13 +561,13 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                     {uploadState.status === 'idle' && (
                       <>
                         <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
-                          <Upload size={22} className="text-gray-400" />
+                          <Upload size={22} className="text-gray-500" />
                         </div>
                         <div>
                           <p className="font-bold text-gray-900 text-sm">Déposer ou cliquer pour envoyer</p>
-                          <p className="text-gray-400 text-xs mt-1">PDF recommandé · AI, PSD, JPG, PNG · Max 50 Mo</p>
+                          <p className="text-gray-600 text-xs mt-1">PDF recommandé · AI, PSD, JPG, PNG · Max 50 Mo</p>
                         </div>
-                        <span className="text-[11px] bg-gray-200 text-gray-600 px-3 py-1 rounded-full font-semibold">
+                        <span className="text-2xs bg-gray-200 text-gray-600 px-3 py-1 rounded-full font-semibold">
                           Choisir un fichier
                         </span>
                       </>
@@ -576,10 +590,10 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                         <FileCheck size={36} className="text-primary" />
                         <div>
                           <p className="font-bold text-gray-900 text-sm">{uploadState.fileName}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{uploadState.fileSize}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{uploadState.fileSize}</p>
                         </div>
                         <div className="flex flex-col gap-2 mt-2">
-                          <span className="flex items-center justify-center gap-1.5 text-[12px] bg-green-100 text-primary px-3 py-1.5 rounded-full font-bold">
+                          <span className="flex items-center justify-center gap-1.5 text-xs bg-green-100 text-primary px-3 py-1.5 rounded-full font-bold">
                             <Check size={12} strokeWidth={3} /> Fichier conforme
                           </span>
                           <button
@@ -587,7 +601,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                               e.stopPropagation();
                               setIsBatModalOpen(true);
                             }}
-                            className="flex items-center justify-center gap-1.5 text-[12px] bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-full font-bold hover:bg-indigo-100 transition-colors"
+                            className="flex items-center justify-center gap-1.5 text-xs bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-full font-bold hover:bg-indigo-100 transition-colors"
                           >
                             👁️ Voir mon Bon À Tirer (BAT)
                           </button>
@@ -601,7 +615,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                           <p className="font-bold text-gray-900 text-sm">{uploadState.fileName}</p>
                           <p className="text-xs text-amber-700 mt-0.5">{uploadState.message}</p>
                         </div>
-                        <span className="text-[11px] text-amber-700 underline">Remplacer le fichier</span>
+                        <span className="text-2xs text-amber-700 underline">Remplacer le fichier</span>
                       </>
                     )}
                     {uploadState.status === 'error' && (
@@ -611,7 +625,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                           <p className="font-bold text-gray-900 text-sm">{uploadState.fileName}</p>
                           <p className="text-xs text-red-600 mt-0.5">{uploadState.message}</p>
                         </div>
-                        <span className="text-[11px] text-red-600 underline">Choisir un autre fichier</span>
+                        <span className="text-2xs text-red-600 underline">Choisir un autre fichier</span>
                       </>
                     )}
                   </div>
@@ -626,8 +640,8 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                       { label: 'Format conseillé', value: 'PDF/X-1a' },
                     ].map(({ label, value }) => (
                       <div key={label} className="bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-2 text-center">
-                        <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">{label}</p>
-                        <p className="text-[11px] font-bold text-gray-700 mt-0.5">{value}</p>
+                        <p className="text-2xs text-gray-600 uppercase tracking-wide font-semibold">{label}</p>
+                        <p className="text-2xs font-bold text-gray-700 mt-0.5">{value}</p>
                       </div>
                     ))}
                   </div>
@@ -637,7 +651,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                 <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-amber-900 min-w-0">
                     <span className="text-base shrink-0">💡</span>
-                    <span className="leading-tight text-[11px]">Pas encore de maquette ? Vous pouvez commander maintenant et l'envoyer par WhatsApp.</span>
+                    <span className="leading-tight text-2xs">Pas encore de maquette ? Vous pouvez commander maintenant et l'envoyer par WhatsApp.</span>
                   </div>
                   <button
                     type="button"
@@ -647,7 +661,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                       fileSize: 'À fournir après commande',
                       message: 'Visuel différé sélectionné'
                     })}
-                    className="shrink-0 px-3 py-1.5 bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-bold rounded-lg transition-colors text-[11px]"
+                    className="shrink-0 px-3 py-1.5 bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-bold rounded-lg transition-colors text-2xs"
                   >
                     Envoyer plus tard
                   </button>
@@ -665,12 +679,12 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] text-gray-400 font-medium truncate">Total · {formatPrice(config.quantity)} ex.</p>
+                  <p className="text-2xs text-gray-500 font-medium truncate">Total · {formatPrice(config.quantity)} ex.</p>
                   {priceLoading ? (
                     <div className="h-6 w-20 bg-gray-100 rounded animate-pulse mt-0.5" />
                   ) : (
                     <p className="font-display text-xl font-extrabold text-gray-900 leading-none">
-                      {formatPrice(currentPrice)} <span className="text-xs font-normal text-gray-400">FCFA</span>
+                      {formatPrice(currentPrice)} <span className="text-xs font-normal text-gray-500">FCFA</span>
                     </p>
                   )}
                 </div>
@@ -685,7 +699,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                   </button>
                   <button
                     onClick={handleBuyNow}
-                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl font-bold text-xs bg-[#FF6B00] text-white hover:bg-[#E66000] active:scale-95 transition-all shadow-md"
+                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl font-bold text-xs bg-primary text-white hover:bg-primary/90 active:scale-95 transition-all shadow-md"
                   >
                     <span>Commander</span>
                     <ArrowRight size={14} />
@@ -698,7 +712,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
             <div className="hidden md:block md:sticky md:bottom-4 z-20 bg-white rounded-xl border border-gray-200 px-6 py-5 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)]">
               <div className="flex items-center justify-between gap-6">
                 <div>
-                  <p className="text-xs text-gray-400 font-medium mb-1">
+                  <p className="text-xs text-gray-600 font-medium mb-1">
                     Total TTC — {formatPrice(config.quantity)} exemplaires
                   </p>
                   {priceLoading ? (
@@ -708,11 +722,11 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                       <p className="font-display text-4xl font-extrabold text-gray-900 tracking-tight">
                         {formatPrice(currentPrice)}
                       </p>
-                      <span className="text-lg font-bold text-gray-400">FCFA</span>
+                      <span className="text-lg font-bold text-gray-600">FCFA</span>
                     </div>
                   )}
                   {currentUnit > 0 && !priceLoading && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-600 mt-1">
                       soit <strong className="text-gray-700">{formatPrice(currentUnit)} FCFA</strong> / ex.
                     </p>
                   )}
@@ -724,7 +738,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                 <div className="flex flex-col gap-2.5 shrink-0 min-w-[240px]">
                   <button
                     onClick={handleBuyNow}
-                    className="flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl font-bold text-base bg-[#FF6B00] text-white hover:bg-[#E66000] shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
+                    className="flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl font-bold text-base bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
                   >
                     Commander maintenant <ArrowRight size={18} />
                   </button>

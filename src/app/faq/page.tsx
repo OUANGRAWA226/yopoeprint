@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Search, ChevronDown, MessageSquare, Phone, MapPin, Mail, Paperclip, Send } from 'lucide-react'
+import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
 
 // ─── DONNÉES DE LA FAQ ──────────────────────────────────────────────────────────
 const FAQ_CATEGORIES = ['Populaires', 'Fichiers & PAO', 'Paiement', 'Livraison']
@@ -222,8 +223,8 @@ export default function FAQContactPage() {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Téléphone & WhatsApp</p>
-                    <p className="text-sm text-gray-500 mt-0.5">+226 70 00 00 00</p>
-                    <p className="text-[11px] text-gray-400 mt-1">Lun-Sam, 8h00 - 18h00</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{CONTACT_PHONE_DISPLAY}</p>
+                    <p className="text-2xs text-gray-600 mt-1">Lun-Sam, 8h00 - 18h00</p>
                   </div>
                 </div>
                 

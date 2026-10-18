@@ -12,6 +12,7 @@ import {
  ChevronRight, RotateCcw, Copy, ShieldCheck, Eye, Sparkles
 } from 'lucide-react'
 import { BatInteractiveModal } from '@/components/orders/BatInteractiveModal'
+import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY } from '@/lib/contact'
 
 // ─── Config statuts ───────────────────────────────────────────
 const STATUSES = [
@@ -123,7 +124,7 @@ function ProgressTimeline({ status, history }: { status: string; history?: any[]
  </p>
  {/* Date depuis l'historique */}
  {history && done && (
- <p className={`text-[10px] mt-1 font-medium ${colors.text}`}>
+ <p className={`text-2xs mt-1 font-medium ${colors.text}`}>
  {history.find((h: any) => h.status === s.key)?.date
  ? formatDate(history.find((h: any) => h.status === s.key).date)
  : current ? 'En cours…' : ''}
@@ -131,7 +132,7 @@ function ProgressTimeline({ status, history }: { status: string; history?: any[]
  )}
  </div>
  {current && (
- <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold
+ <span className={`shrink-0 px-2 py-0.5 rounded-full text-2xs font-bold
  ${colors.bg} text-white`}>
  En cours
  </span>
@@ -214,7 +215,7 @@ function SuiviContent() {
  <div className="min-h-screen bg-gray-50">
 
  {/* ── Hero ──────────────────────────────────────────── */}
- <div className=" bg-secondary py-14">
+ <div className="bg-gray-900 py-14">
  <div className="max-w-2xl mx-auto px-6 text-center">
  <div className="gold-bar mx-auto" />
  <h1 className="font-display text-4xl font-extrabold text-white mt-3 mb-3">
@@ -256,7 +257,7 @@ function SuiviContent() {
  </div>
 
  {/* Indication numéro */}
- <p className="text-white/40 text-xs mt-3">
+ <p className="text-white/70 text-xs mt-3">
  Vous trouverez votre numéro dans l&apos;email de confirmation reçu après votre commande
  </p>
  </div>
@@ -325,7 +326,7 @@ function SuiviContent() {
  <Copy size={14} />
  </button>
  </div>
- <p className="text-gray-400 text-xs mt-1">
+ <p className="text-gray-600 text-xs mt-1">
  Commandé le {formatDateShort(order.createdAt)}
  </p>
  </div>
@@ -350,7 +351,7 @@ function SuiviContent() {
  <div>
  <p className="font-bold text-red-600 text-sm">Commande annulée</p>
  <p className="text-red-500 text-xs mt-0.5">
- Contactez-nous au +226 70 00 00 00 pour plus d&apos;informations.
+ Contactez-nous au {CONTACT_PHONE_DISPLAY} pour plus d&apos;informations.
  </p>
  </div>
  </div>
@@ -420,7 +421,7 @@ function SuiviContent() {
              <ShieldCheck size={24} />
            </div>
            <div>
-             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-gray-900 mb-1.5">
+             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-amber-400 text-gray-900 mb-1.5">
                <Sparkles size={11} /> Action requise de votre part
              </div>
              <h3 className="font-bold text-white text-base">Votre Bon À Tirer (BAT) est prêt !</h3>
@@ -547,7 +548,7 @@ function SuiviContent() {
  </div>
  <div className="flex items-center justify-between text-sm">
  <span className="text-gray-400">Statut</span>
- <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold
+ <span className={`px-2 py-0.5 rounded-full text-2xs font-bold
  ${order.paymentStatus === 'paid'
  ? 'bg-green-100 text-green-700'
  : order.paymentStatus === 'pending'
@@ -568,11 +569,11 @@ function SuiviContent() {
  <p className="text-gray-500 text-xs mb-4 leading-relaxed">
  Notre équipe est disponible pour vous aider du lundi au samedi de 8h à 18h.
  </p>
- <a href="tel:+22670000000"
+ <a href={`tel:${CONTACT_PHONE}`}
  className="flex items-center gap-2 bg-foreground text-white px-4 py-2.5
  rounded-xl text-sm font-bold hover:bg-foreground transition-all">
  <Phone size={14} />
- +226 70 00 00 00
+ {CONTACT_PHONE_DISPLAY}
  </a>
  </div>
 
@@ -600,7 +601,7 @@ function SuiviContent() {
  className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 text-center">
  <div className="text-4xl mb-3">{icon}</div>
  <h3 className="font-bold text-foreground text-sm mb-2">{title}</h3>
- <p className="text-gray-400 text-xs leading-relaxed">{desc}</p>
+ <p className="text-gray-600 text-xs leading-relaxed">{desc}</p>
  </div>
  ))}
  </div>

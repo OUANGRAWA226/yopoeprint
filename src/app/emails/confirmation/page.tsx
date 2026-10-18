@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
 
 export const metadata = {
   title: 'Prévisualisation Email - Confirmation de commande',
@@ -107,10 +108,10 @@ export default function EmailConfirmationPreview() {
             Besoin d'aide avec votre commande ?
           </p>
           <p className="text-sm text-gray-600 mb-6">
-            Répondez directement à cet email ou contactez-nous sur WhatsApp au <strong>+226 70 00 00 00</strong>.
+            Répondez directement à cet email ou contactez-nous sur WhatsApp au <strong>{CONTACT_PHONE_DISPLAY}</strong>.
           </p>
           
-          <div className="text-[11px] text-gray-400 space-y-1">
+          <div className="text-2xs text-gray-400 space-y-1">
             <p>© 2026 YopoePrint. Tous droits réservés.</p>
             <p>Quartier Koulouba, Ouagadougou, Burkina Faso</p>
             <p className="mt-4">

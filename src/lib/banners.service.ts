@@ -11,6 +11,10 @@ export interface BannerSlide {
   mobileImageUrl?: string
   linkUrl: string
   badge?: string
+  // Texte affiché en HTML par-dessus la photo (accessible, traduisible, net sur mobile).
+  // Laisser vide pour une bannière dont l'image porte déjà son propre texte.
+  subtitle?: string
+  ctaLabel?: string
   altText?: string
   order: number
   active: boolean
@@ -21,32 +25,38 @@ export interface BannerSlide {
 // Bannières initiales configurées au format standardisé 1248 × 357 px
 export const DEFAULT_BANNERS: BannerSlide[] = [
   {
-    id: 'banner-promo-atelier',
-    title: 'Offre Spéciale Atelier : Impression Offset & Numérique HD',
-    imageUrl: '/images/banners/banner-promo-atelier.jpg',
-    linkUrl: '/catalogue',
-    badge: 'Offre Atelier',
-    altText: 'YopoePrint - Cartes de visite, Roll-up et flyers haute définition',
+    id: 'hero-cartes-visite',
+    title: 'Cartes de visite imprimées à Ouagadougou',
+    subtitle: 'Papier 350 g, dorure ou pelliculage. BAT gratuit avant impression.',
+    ctaLabel: 'Créer mes cartes',
+    imageUrl: '/images/products/cartes-visite.jpg',
+    linkUrl: '/catalogue/cartes-de-visite',
+    badge: 'Livrées en 48 h',
+    altText: 'Pile de cartes de visite imprimées',
     order: 1,
     active: true,
   },
   {
-    id: 'banner-pack-salons',
-    title: 'Pack Salons & Foires : SIAO, SNC et Événements Pro',
-    imageUrl: '/images/banners/banner-pack-salons.jpg',
+    id: 'hero-salons',
+    title: 'Roll-up et stands pour vos salons',
+    subtitle: 'SIAO, SNC, foires : structure aluminium, visuel HD et sac de transport.',
+    ctaLabel: 'Voir les roll-up',
+    imageUrl: '/images/products/rollup-salons.jpg',
     linkUrl: '/catalogue/roll-up',
-    badge: 'Spécial SIAO & SNC',
-    altText: 'Stands d’exposition, roll-ups aluminium et comptoirs événementiels',
+    badge: 'Événementiel',
+    altText: 'Roll-up exposé sur un salon professionnel',
     order: 2,
     active: true,
   },
   {
-    id: 'banner-cartes-luxe',
-    title: 'Cartes de Visite Prestige : Dorure à Chaud & Vernis 3D',
-    imageUrl: '/images/banners/banner-cartes-luxe.jpg',
-    linkUrl: '/catalogue/cartes',
-    badge: 'Finitions Luxe',
-    altText: 'Cartes de visite 350g et 450g avec dorure or et finitions velours',
+    id: 'hero-flyers',
+    title: 'Flyers et dépliants en couleurs',
+    subtitle: 'Prix dégressifs en FCFA, recto ou recto-verso, livraison partout au Burkina.',
+    ctaLabel: 'Calculer mon prix',
+    imageUrl: '/images/products/flyers-depliants.jpg',
+    linkUrl: '/catalogue/flyers',
+    badge: 'Prix en FCFA',
+    altText: 'Flyers et dépliants imprimés en quadrichromie',
     order: 3,
     active: true,
   },

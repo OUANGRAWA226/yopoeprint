@@ -78,10 +78,10 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
   return (
-    <div className="min-h-screen bg-slate-50/60">
+    <div className="min-h-screen bg-gray-50/60">
 
       {/* ── Header Espace Client Slate-950 ────────────────── */}
-      <div className="bg-slate-950 py-7 px-4 md:px-6 relative overflow-hidden border-b border-slate-800">
+      <div className="bg-gray-950 py-7 px-4 md:px-6 relative overflow-hidden border-b border-gray-800">
         {/* Subtle grid pattern */}
         <div 
           className="absolute inset-0 opacity-[0.05] pointer-events-none" 
@@ -99,22 +99,22 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Espace Client</p>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Espace Client</p>
+                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   Compte vérifié
                 </span>
               </div>
               <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
                 {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Compte Professionnel'}
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 {user?.email || 'client@yopoeprint.bf'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-900 border border-gray-800 text-xs text-gray-300">
               <Star size={14} className="text-amber-400 fill-amber-400" />
               <span className="font-bold text-white">{user?.loyaltyPoints || 0}</span> points fidélité
             </div>
@@ -134,7 +134,7 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
 
           {/* ── Sidebar ───────────────────────────────────── */}
           <aside className="hidden lg:block">
-            <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm sticky top-24">
+            <div className="bg-white border border-gray-200/80 rounded-2xl overflow-hidden shadow-sm sticky top-24">
               
               {/* Navigation */}
               <nav className="p-3 space-y-1">
@@ -144,19 +144,19 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
                     <Link key={href} href={href}
                       className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all
                         ${isActive
-                          ? 'bg-slate-900 text-white shadow-sm'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                          ? 'bg-gray-900 text-white shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                     >
-                      <Icon size={17} className={isActive ? 'text-primary' : 'text-slate-400'} />
+                      <Icon size={17} className={isActive ? 'text-primary' : 'text-gray-400'} />
                       <span className="flex-1 text-xs sm:text-sm">{label}</span>
-                      {isActive && <ChevronRight size={14} className="text-slate-400" />}
+                      {isActive && <ChevronRight size={14} className="text-gray-400" />}
                     </Link>
                   )
                 })}
               </nav>
 
               {/* Séparateur */}
-              <div className="border-t border-slate-100 p-3">
+              <div className="border-t border-gray-100 p-3">
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all group"
@@ -167,18 +167,18 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
               </div>
 
               {/* Points fidélité */}
-              <div className="m-3 p-4 bg-slate-950 rounded-xl relative overflow-hidden border border-slate-800">
+              <div className="m-3 p-4 bg-gray-950 rounded-xl relative overflow-hidden border border-gray-800">
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Programme Privilège</span>
+                    <span className="text-2xs font-bold text-gray-400 uppercase tracking-wider">Programme Privilège</span>
                     <Star size={12} className="text-amber-400 fill-amber-400" />
                   </div>
-                  <p className="font-display text-xl font-bold text-white font-mono">
-                    {user?.loyaltyPoints || 0} <span className="text-xs font-normal text-slate-400">pts</span>
+                  <p className="font-display text-xl font-bold text-white tabular-nums">
+                    {user?.loyaltyPoints || 0} <span className="text-xs font-normal text-gray-400">pts</span>
                   </p>
-                  <div className="mt-2.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400">Remise disponible :</span>
-                    <span className="font-bold text-emerald-400 font-mono">
+                  <div className="mt-2.5 pt-2.5 border-t border-gray-800/80 flex items-center justify-between text-2xs">
+                    <span className="text-gray-400">Remise disponible :</span>
+                    <span className="font-bold text-emerald-400 tabular-nums">
                       {Math.floor((user?.loyaltyPoints || 0) / 10) * 100} FCFA
                     </span>
                   </div>

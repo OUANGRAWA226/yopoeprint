@@ -295,7 +295,7 @@ export function BatInteractiveModal({
                     <div className="hidden sm:flex items-center gap-1 pl-2 border-l border-gray-200">
                       <button
                         onClick={() => setShowBleed(!showBleed)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg text-2xs font-bold border transition-colors ${
                           showBleed
                             ? 'bg-red-50 text-red-700 border-red-200'
                             : 'bg-white text-gray-400 border-gray-200'
@@ -306,7 +306,7 @@ export function BatInteractiveModal({
                       </button>
                       <button
                         onClick={() => setShowTrim(!showTrim)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg text-2xs font-bold border transition-colors ${
                           showTrim
                             ? 'bg-gray-900 text-white border-gray-900'
                             : 'bg-white text-gray-400 border-gray-200'
@@ -317,7 +317,7 @@ export function BatInteractiveModal({
                       </button>
                       <button
                         onClick={() => setShowSafety(!showSafety)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg text-2xs font-bold border transition-colors ${
                           showSafety
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : 'bg-white text-gray-400 border-gray-200'
@@ -338,7 +338,7 @@ export function BatInteractiveModal({
                     >
                       <ZoomOut size={13} />
                     </button>
-                    <span className="text-[11px] font-mono font-bold text-gray-600 px-1 min-w-[38px] text-center">
+                    <span className="text-2xs font-mono font-bold text-gray-600 px-1 min-w-[38px] text-center">
                       {Math.round(zoom * 100)}%
                     </span>
                     <button
@@ -351,7 +351,7 @@ export function BatInteractiveModal({
                     {zoom !== 1 && (
                       <button
                         onClick={handleResetZoom}
-                        className="px-1.5 h-7 flex items-center justify-center rounded-lg hover:bg-white text-[10px] font-bold text-blue-600"
+                        className="px-1.5 h-7 flex items-center justify-center rounded-lg hover:bg-white text-2xs font-bold text-blue-600"
                         title="Réinitialiser zoom"
                       >
                         100%
@@ -429,7 +429,7 @@ export function BatInteractiveModal({
                             {/* 1. Bleed Area (Bord perdu externe) */}
                             {showBleed && (
                               <div className="absolute inset-0 border-2 border-red-500/80 border-dashed pointer-events-none z-20">
-                                <span className="absolute top-1 left-1.5 text-[9px] font-bold text-red-700 bg-red-100/90 px-1.5 py-0.5 rounded shadow-xs">
+                                <span className="absolute top-1 left-1.5 text-[10px] font-bold text-red-700 bg-red-100/90 px-1.5 py-0.5 rounded shadow-xs">
                                   Bord perdu (+3mm)
                                 </span>
                               </div>
@@ -438,7 +438,7 @@ export function BatInteractiveModal({
                             {/* 2. Trim Line (Ligne de massicotage) */}
                             {showTrim && (
                               <div className="absolute inset-[3.5%] border-2 border-black/80 pointer-events-none z-20">
-                                <span className="absolute -top-3 right-2 text-[9px] font-bold text-gray-900 bg-white/90 px-1.5 py-0.5 rounded border border-gray-300 shadow-xs">
+                                <span className="absolute -top-3 right-2 text-[10px] font-bold text-gray-900 bg-white/90 px-1.5 py-0.5 rounded border border-gray-300 shadow-xs">
                                   Ligne de coupe
                                 </span>
                               </div>
@@ -447,7 +447,7 @@ export function BatInteractiveModal({
                             {/* 3. Safety Zone (Zone tranquille intérieure) */}
                             {showSafety && (
                               <div className="absolute inset-[8.5%] border-2 border-emerald-500/80 border-dotted pointer-events-none z-20">
-                                <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded shadow-xs">
+                                <span className="absolute bottom-1 right-1.5 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded shadow-xs">
                                   Zone sécurisée (Textes/Logos)
                                 </span>
                               </div>
@@ -490,7 +490,7 @@ export function BatInteractiveModal({
                     Zone de sécurité protégée
                   </span>
                 </div>
-                <span className="text-gray-400 font-mono text-[11px]">
+                <span className="text-gray-400 font-mono text-2xs">
                   Résolution certifiée 300 DPI · Profil CMJN ISO Coated
                 </span>
               </div>
@@ -649,7 +649,7 @@ export function BatInteractiveModal({
                       <h4 className="font-display font-bold text-gray-900 text-sm">
                         Points de contrôle obligatoires
                       </h4>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-gray-600 mt-0.5">
                         Cochez chaque case pour débloquer la validation pour impression.
                       </p>
                     </div>
@@ -666,7 +666,7 @@ export function BatInteractiveModal({
                           <p className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
                             Orthographe & Textes vérifiés
                           </p>
-                          <p className="text-gray-500 text-[11px] mt-0.5">
+                          <p className="text-gray-500 text-2xs mt-0.5">
                             Coordonnées, numéros de téléphone, adresses et typographies sont exacts.
                           </p>
                         </div>
@@ -683,7 +683,7 @@ export function BatInteractiveModal({
                           <p className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
                             Positionnement & Zone de sécurité
                           </p>
-                          <p className="text-gray-500 text-[11px] mt-0.5">
+                          <p className="text-gray-500 text-2xs mt-0.5">
                             Aucun élément critique n&apos;est trop proche du trait de massicot.
                           </p>
                         </div>
@@ -700,7 +700,7 @@ export function BatInteractiveModal({
                           <p className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
                             Netteté des photos & Couleurs
                           </p>
-                          <p className="text-gray-500 text-[11px] mt-0.5">
+                          <p className="text-gray-500 text-2xs mt-0.5">
                             J&apos;accepte les légères tolérances chromatiques propres à l&apos;impression CMJN.
                           </p>
                         </div>
@@ -717,7 +717,7 @@ export function BatInteractiveModal({
                           <p className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
                             Bon À Tirer ferme et définitif
                           </p>
-                          <p className="text-gray-500 text-[11px] mt-0.5">
+                          <p className="text-gray-500 text-2xs mt-0.5">
                             Je confirme que le tirage sera réalisé strictement selon cette épreuve.
                           </p>
                         </div>

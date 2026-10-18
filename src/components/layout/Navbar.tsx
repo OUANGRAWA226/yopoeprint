@@ -16,6 +16,7 @@ import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { productsService } from '@/lib/products.service'
 import { Logo } from '@/components/shared/Logo'
+import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
 
 // ─── Structure de Données E-Commerce Professionnelle (Standard Helloprint & Jumia) ───
 export interface NavCategory {
@@ -581,13 +582,13 @@ export function Navbar() {
       {/* ══════════════════════════════════════════════════════
           MOBILE HEADER (STYLE JUMIA WEB MOBILE)
       ══════════════════════════════════════════════════════ */}
-      <header className="md:hidden sticky top-0 z-50 bg-white border-b border-slate-200/80 shadow-xs">
+      <header className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-200/80 shadow-xs">
         {/* Ligne 1 : Hamburger + Logo Centré + Compte & Panier */}
         <div className="px-3 h-13 flex items-center justify-between">
           {/* Menu Hamburger Gauche */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform"
+            className="p-1.5 text-gray-800 hover:bg-gray-100 rounded-lg active:scale-95 transition-transform"
             aria-label="Ouvrir le menu"
           >
             <Menu size={23} />
@@ -600,7 +601,7 @@ export function Navbar() {
           <div className="flex items-center gap-1">
             <Link
               href={mounted && isLoggedIn ? "/mon-compte" : "/connexion"}
-              className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform"
+              className="p-1.5 text-gray-800 hover:bg-gray-100 rounded-lg active:scale-95 transition-transform"
               aria-label="Mon compte"
             >
               <User size={22} />
@@ -608,12 +609,12 @@ export function Navbar() {
 
             <button
               onClick={openCart}
-              className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg relative active:scale-95 transition-transform"
+              className="p-1.5 text-gray-800 hover:bg-gray-100 rounded-lg relative active:scale-95 transition-transform"
               aria-label="Panier"
             >
               <ShoppingCart size={22} />
               {mounted && itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-gray-950 text-2xs font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}
@@ -624,21 +625,21 @@ export function Navbar() {
         {/* Ligne 2 : Barre de Recherche Pleine Largeur (Style Jumia Mobile) */}
         <div className="px-3 pb-2.5">
           <form onSubmit={handleSearchSubmit} className="relative">
-            <div className="flex items-center bg-slate-100/90 rounded-xl px-3.5 py-2 border border-slate-200/70 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-              <Search size={16} className="text-slate-400 shrink-0 mr-2.5" />
+            <div className="flex items-center bg-gray-100/90 rounded-xl px-3.5 py-2 border border-gray-200/70 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+              <Search size={16} className="text-gray-400 shrink-0 mr-2.5" />
               <input
                 type="text"
                 placeholder="Cherchez sur YopoePrint"
                 value={navSearch}
                 onChange={(e) => setNavSearch(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
-                className="w-full bg-transparent text-xs text-slate-900 placeholder:text-slate-400 outline-none font-medium"
+                className="w-full bg-transparent text-xs text-gray-900 placeholder:text-gray-400 outline-none font-medium"
               />
             </div>
 
             {/* Dropdown de Résultats Prédictifs Mobile */}
             {searchFocused && navSearch.trim().length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60] text-slate-900">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60] text-gray-900">
                 {searchLoading ? (
                   <div className="p-4 flex items-center justify-center gap-2 text-xs text-gray-500">
                     <Loader2 size={14} className="animate-spin text-emerald-600" />
@@ -651,10 +652,10 @@ export function Navbar() {
                         key={prod.id || prod._id}
                         href={`/produit/${prod.slug}`}
                         onClick={() => { setSearchFocused(false); setNavSearch('') }}
-                        className="flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 border-b border-gray-50 last:border-0"
+                        className="flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 border-b border-gray-50 last:border-0"
                       >
-                        <span className="font-bold text-xs text-slate-900 truncate max-w-[200px]">{prod.name}</span>
-                        <span className="font-bold text-xs text-emerald-600 font-mono">
+                        <span className="font-bold text-xs text-gray-900 truncate max-w-[200px]">{prod.name}</span>
+                        <span className="font-bold text-xs text-emerald-600 tabular-nums">
                           {new Intl.NumberFormat('fr-FR').format(prod.basePrice)} F
                         </span>
                       </Link>
@@ -670,29 +671,24 @@ export function Navbar() {
       {/* ══════════════════════════════════════════════════════
           HEADER PRINCIPAL DESKTOP (Standard Apple & Helloprint)
       ══════════════════════════════════════════════════════ */}
-      <header className="hidden md:block sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-xs transition-colors">
+      <header className="hidden md:block sticky top-0 z-50 bg-white border-b border-gray-200/90 shadow-xs transition-colors">
         
         {/* LIGNE 0 : TOP BAR ANNONCES & SERVICE ATELIER (High Header en couleur) */}
-        <div className="bg-[#008537] text-white text-xs py-1.5 px-4 shadow-xs">
+        <div className="bg-primary text-white text-xs py-1.5 px-4 shadow-xs">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             
             {/* Gauche : Réassurance logistique atelier Ouaga & Bobo */}
-            <div className="flex items-center gap-3 text-[11px] text-emerald-50">
+            <div className="flex items-center gap-3 text-2xs text-emerald-50">
               <span className="inline-flex items-center gap-1.5 text-white font-medium">
                 <Truck size={13} className="text-white shrink-0" />
                 <span>Livraison offerte dès <strong className="font-bold underline decoration-white/40">75 000 FCFA</strong> à Ouaga et Bobo</span>
               </span>
-              <span className="text-white/30 hidden xl:inline">•</span>
-              <span className="hidden xl:inline-flex items-center gap-1 text-emerald-100">
-                <CheckCircle2 size={12} className="text-white shrink-0" />
-                Vérification PAO & BAT 300 DPI offerts
-              </span>
             </div>
 
             {/* Droite : Code Promo 1-Click + Contact Hotline */}
-            <div className="flex items-center gap-4 text-[11px]">
+            <div className="flex items-center gap-4 text-2xs">
               <div className="flex items-center gap-1.5">
-                <span className="text-amber-200 font-semibold inline-flex items-center gap-1">
+                <span className="text-white font-semibold inline-flex items-center gap-1">
                   <Flame size={12} className="text-amber-200 shrink-0 fill-amber-300" />
                   -15% 1ère commande :
                 </span>
@@ -715,23 +711,13 @@ export function Navbar() {
                   )}
                 </button>
               </div>
-
-              <span className="text-white/30 hidden lg:inline">•</span>
-
-              <Link
-                href="/contact"
-                className="hidden lg:inline-flex items-center gap-1.5 text-white hover:text-emerald-100 transition-colors"
-              >
-                <Phone size={12} className="text-white shrink-0" />
-                <span>Hotline Atelier : <strong className="font-semibold">+226 70 00 00 00</strong></span>
-              </Link>
             </div>
 
           </div>
         </div>
 
         {/* LIGNE 1 : LOGO ORIGINAL + RECHERCHE CENTRALE + ACTIONS UTILISATEUR */}
-        <div className="bg-white border-b border-slate-100">
+        <div className="bg-white border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
             
             {/* Logo YopoePrint ORIGINAL (Vert & Noir sur fond blanc) */}
@@ -741,18 +727,18 @@ export function Navbar() {
             <div className="hidden md:flex flex-1 max-w-xl mx-4 relative" ref={searchContainerRef}>
               <form onSubmit={handleSearchSubmit} className="w-full relative">
                 <div className="relative flex items-center">
-                  <Search size={16} className="absolute left-4 text-slate-400 pointer-events-none" />
+                  <Search size={16} className="absolute left-4 text-gray-400 pointer-events-none" />
                   <input
                     type="text"
                     placeholder="Rechercher cartes, flyers, roll-up, bâches, t-shirts…"
                     value={navSearch}
                     onChange={(e) => setNavSearch(e.target.value)}
                     onFocus={() => setSearchFocused(true)}
-                    className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:placeholder:text-slate-400 rounded-full py-2.5 pl-11 pr-24 text-xs sm:text-sm border border-slate-200/90 focus:border-[#008537] focus:ring-2 focus:ring-[#008537]/15 outline-none transition-all duration-200 shadow-2xs"
+                    className="w-full bg-gray-100 hover:bg-gray-100/80 focus:bg-white text-gray-900 placeholder:text-gray-400 focus:placeholder:text-gray-400 rounded-full py-2.5 pl-11 pr-24 text-xs sm:text-sm border border-gray-200/90 focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none transition-all duration-200 shadow-2xs"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-[#008537] hover:bg-[#00702e] text-white font-bold px-3.5 py-1.5 rounded-full text-xs transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary hover:bg-emerald-800 text-white font-bold px-3.5 py-1.5 rounded-full text-xs transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
                   >
                     {searchLoading ? <Loader2 size={13} className="animate-spin" /> : <span>Trouver</span>}
                   </button>
@@ -761,15 +747,15 @@ export function Navbar() {
 
               {/* Dropdown de Résultats Prédictifs */}
               {searchFocused && navSearch.trim().length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 overflow-hidden z-[60] text-slate-900 animate-in fade-in slide-in-from-top-1">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-gray-200 overflow-hidden z-[60] text-gray-900 animate-in fade-in slide-in-from-top-1">
                   {searchLoading ? (
-                    <div className="p-5 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
-                      <Loader2 size={15} className="animate-spin text-[#008537]" />
+                    <div className="p-5 flex items-center justify-center gap-2 text-xs text-gray-500 font-medium">
+                      <Loader2 size={15} className="animate-spin text-primary" />
                       <span>Recherche des produits en atelier...</span>
                     </div>
                   ) : navSearchResults.length > 0 ? (
                     <div className="py-2">
-                      <div className="px-4 py-2 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <div className="px-4 py-2 border-b border-gray-100 text-2xs font-bold uppercase tracking-wider text-gray-400">
                         Suggestions immédiates
                       </div>
                       {navSearchResults.map((prod) => (
@@ -777,22 +763,22 @@ export function Navbar() {
                           key={prod.id || prod._id}
                           href={`/produit/${prod.slug}`}
                           onClick={() => { setSearchFocused(false); setNavSearch('') }}
-                          className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors group"
+                          className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors group"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-lg shrink-0 group-hover:bg-emerald-50">
+                            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-lg shrink-0 group-hover:bg-emerald-50">
                               {prod.emoji || '📦'}
                             </div>
                             <div>
-                              <p className="font-bold text-xs text-slate-900 group-hover:text-[#008537] transition-colors">
+                              <p className="font-bold text-xs text-gray-900 group-hover:text-primary transition-colors">
                                 {prod.name}
                               </p>
-                              <p className="text-[11px] text-slate-500">{prod.category}</p>
+                              <p className="text-2xs text-gray-500">{prod.category}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10px] text-slate-400 block font-medium">Dès</span>
-                            <span className="font-bold text-xs text-[#008537] font-mono">
+                            <span className="text-2xs text-gray-400 block font-medium">Dès</span>
+                            <span className="font-bold text-xs text-primary tabular-nums">
                               {new Intl.NumberFormat('fr-FR').format(prod.basePrice)} FCFA
                             </span>
                           </div>
@@ -800,15 +786,15 @@ export function Navbar() {
                       ))}
                       <button
                         onClick={handleSearchSubmit}
-                        className="w-full text-center text-xs font-bold text-[#008537] hover:text-[#00702e] bg-slate-50 hover:bg-slate-100 py-3 border-t border-slate-100 transition-colors cursor-pointer"
+                        className="w-full text-center text-xs font-bold text-primary hover:text-emerald-800 bg-gray-50 hover:bg-gray-100 py-3 border-t border-gray-100 transition-colors cursor-pointer"
                       >
                         Voir tous les résultats pour "{navSearch}" →
                       </button>
                     </div>
                   ) : (
-                    <div className="p-6 text-center text-xs text-slate-500">
-                      <p className="font-bold text-slate-800 mb-1">Aucun résultat trouvé pour "{navSearch}"</p>
-                      <p className="text-[11px] text-slate-400">Essayez avec "cartes", "flyers", "roll-up" ou "bâche".</p>
+                    <div className="p-6 text-center text-xs text-gray-500">
+                      <p className="font-bold text-gray-800 mb-1">Aucun résultat trouvé pour "{navSearch}"</p>
+                      <p className="text-2xs text-gray-500">Essayez avec "cartes", "flyers", "roll-up" ou "bâche".</p>
                     </div>
                   )}
                 </div>
@@ -821,7 +807,7 @@ export function Navbar() {
               {/* Bouton Devis Express B2B */}
               <Link
                 href="/devis"
-                className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100/80 text-[#008537] text-xs font-bold border border-emerald-200/80 hover:border-emerald-300 transition-all shadow-2xs"
+                className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100/80 text-primary text-xs font-bold border border-emerald-200/80 hover:border-emerald-300 transition-all shadow-2xs"
               >
                 <Zap size={14} className="text-amber-500 fill-amber-500" />
                 <span>Devis sous 2h</span>
@@ -832,9 +818,9 @@ export function Navbar() {
                 <div className="hidden sm:flex items-center gap-2 pl-2">
                   <Link
                     href="/mon-compte"
-                    className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-slate-100 text-slate-800 text-xs font-semibold transition-colors"
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-gray-100 text-gray-800 text-xs font-semibold transition-colors"
                   >
-                    <div className="w-7 h-7 rounded-full bg-emerald-100 text-[#008537] flex items-center justify-center font-bold text-xs border border-emerald-200">
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 text-primary flex items-center justify-center font-bold text-xs border border-emerald-200">
                       {user?.firstName ? user.firstName[0].toUpperCase() : 'U'}
                     </div>
                     <span className="max-w-[100px] truncate">{user?.firstName || 'Mon Compte'}</span>
@@ -842,7 +828,7 @@ export function Navbar() {
                   <button
                     onClick={logout}
                     title="Déconnexion"
-                    className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="p-2 text-gray-400 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
                   >
                     <LogOut size={16} />
                   </button>
@@ -850,9 +836,9 @@ export function Navbar() {
               ) : (
                 <Link
                   href="/connexion"
-                  className="hidden sm:flex items-center gap-1.5 py-1.5 px-3.5 rounded-full hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-semibold transition-colors border border-slate-200/80"
+                  className="hidden sm:flex items-center gap-1.5 py-1.5 px-3.5 rounded-full hover:bg-gray-100 text-gray-700 hover:text-gray-900 text-xs font-semibold transition-colors border border-gray-200/80"
                 >
-                  <User size={15} className="text-slate-500" />
+                  <User size={15} className="text-gray-500" />
                   <span>Connexion</span>
                 </Link>
               )}
@@ -860,12 +846,12 @@ export function Navbar() {
               {/* Panier Interactif */}
               <button
                 onClick={openCart}
-                className="relative flex items-center gap-2 py-2 px-4 rounded-full bg-[#008537] hover:bg-[#00702e] text-white font-black text-xs transition-all shadow-sm hover:shadow active:scale-95 ml-1 cursor-pointer"
+                className="relative flex items-center gap-2 py-2 px-4 rounded-full bg-primary hover:bg-emerald-800 text-white font-extrabold text-xs transition-all shadow-sm hover:shadow active:scale-95 ml-1 cursor-pointer"
               >
                 <ShoppingCart size={15} />
                 <span className="hidden sm:inline">Panier</span>
                 {mounted && itemCount > 0 && (
-                  <span className="bg-white text-[#008537] text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                  <span className="bg-white text-primary text-2xs font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -876,7 +862,7 @@ export function Navbar() {
         </div>
 
         {/* LIGNE 2 : BARRE DE CATÉGORIES (Fond Blanc, Sans Collision, Avec Dropdown Plus) */}
-        <nav className="border-t border-slate-100 bg-white relative">
+        <nav className="border-t border-gray-100 bg-white relative">
           <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between">
             
             <div className="flex items-center py-0 flex-1 min-w-0">
@@ -890,10 +876,10 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setAllProductsOpen(!allProductsOpen)}
-                  className={`flex items-center gap-2 py-2.5 px-4 text-xs font-extrabold transition-all border-r border-slate-200 shrink-0 cursor-pointer ${
+                  className={`flex items-center gap-2 py-2.5 px-4 text-xs font-extrabold transition-all border-r border-gray-200 shrink-0 cursor-pointer ${
                     allProductsOpen
-                      ? 'bg-[#008537] text-white'
-                      : 'bg-slate-900 text-white hover:bg-slate-800'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
                   }`}
                 >
                   <LayoutGrid size={15} />
@@ -919,10 +905,10 @@ export function Navbar() {
                         href={cat.href}
                         className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                           isActive
-                            ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                            ? 'text-primary border-primary bg-emerald-50/60 font-bold'
                             : isCurrentRoute
-                              ? 'text-[#008537] border-[#008537] font-bold'
-                              : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                              ? 'text-primary border-primary font-bold'
+                              : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                         }`}
                       >
                         <span>{cat.label}</span>
@@ -941,10 +927,10 @@ export function Navbar() {
                     href={NAV_CATEGORIES[5].href}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                       activeMega === 5
-                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        ? 'text-primary border-primary bg-emerald-50/60 font-bold'
                         : pathname.includes(NAV_CATEGORIES[5].href.replace('/catalogue/', ''))
-                          ? 'text-[#008537] border-[#008537] font-bold'
-                          : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                          ? 'text-primary border-primary font-bold'
+                          : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
                     <span>{NAV_CATEGORIES[5].label}</span>
@@ -961,10 +947,10 @@ export function Navbar() {
                     href={NAV_CATEGORIES[6].href}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                       activeMega === 6
-                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        ? 'text-primary border-primary bg-emerald-50/60 font-bold'
                         : pathname.includes(NAV_CATEGORIES[6].href.replace('/catalogue/', ''))
-                          ? 'text-[#008537] border-[#008537] font-bold'
-                          : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                          ? 'text-primary border-primary font-bold'
+                          : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
                     <span>{NAV_CATEGORIES[6].label}</span>
@@ -981,10 +967,10 @@ export function Navbar() {
                     href={NAV_CATEGORIES[7].href}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                       activeMega === 7
-                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
+                        ? 'text-primary border-primary bg-emerald-50/60 font-bold'
                         : pathname.includes(NAV_CATEGORIES[7].href.replace('/catalogue/', ''))
-                          ? 'text-[#008537] border-[#008537] font-bold'
-                          : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                          ? 'text-primary border-primary font-bold'
+                          : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
                     <span>{NAV_CATEGORIES[7].label}</span>
@@ -1002,8 +988,8 @@ export function Navbar() {
                     onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                     className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 cursor-pointer ${
                       moreMenuOpen
-                        ? 'text-[#008537] border-[#008537] bg-emerald-50/60 font-bold'
-                        : 'text-slate-700 hover:text-[#008537] border-transparent hover:border-[#008537]'
+                        ? 'text-primary border-primary bg-emerald-50/60 font-bold'
+                        : 'text-gray-700 hover:text-primary border-transparent hover:border-primary'
                     }`}
                   >
                     <span>Autres supports</span>
@@ -1013,7 +999,7 @@ export function Navbar() {
                   {/* Panneau Déroulant "Autres supports" */}
                   {moreMenuOpen && (
                     <div
-                      className="absolute top-full left-0 w-64 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 text-slate-800 animate-in fade-in slide-in-from-top-1 duration-150"
+                      className="absolute top-full left-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50 text-gray-800 animate-in fade-in slide-in-from-top-1 duration-150"
                       onMouseEnter={handleMoreEnter}
                       onMouseLeave={handleMoreLeave}
                     >
@@ -1022,46 +1008,46 @@ export function Navbar() {
                         href={NAV_CATEGORIES[5].href}
                         onClick={() => setMoreMenuOpen(false)}
                         onMouseEnter={() => handleCatEnter(5)}
-                        className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-slate-50 hover:text-[#008537] transition-colors"
+                        className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-gray-50 hover:text-primary transition-colors"
                       >
                         <div className="flex items-center gap-2">
-                          <Shirt size={14} className="text-[#008537]" />
+                          <Shirt size={14} className="text-primary" />
                           <span className="font-medium">{NAV_CATEGORIES[5].label}</span>
                         </div>
-                        <ChevronRight size={13} className="text-slate-400" />
+                        <ChevronRight size={13} className="text-gray-400" />
                       </Link>
                       {/* Goodies (si sous xl) */}
                       <Link
                         href={NAV_CATEGORIES[6].href}
                         onClick={() => setMoreMenuOpen(false)}
                         onMouseEnter={() => handleCatEnter(6)}
-                        className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-slate-50 hover:text-[#008537] transition-colors"
+                        className="xl:hidden flex items-center justify-between px-3.5 py-2 text-xs hover:bg-gray-50 hover:text-primary transition-colors"
                       >
                         <div className="flex items-center gap-2">
-                          <Gift size={14} className="text-[#008537]" />
+                          <Gift size={14} className="text-primary" />
                           <span className="font-medium">{NAV_CATEGORIES[6].label}</span>
                         </div>
-                        <ChevronRight size={13} className="text-slate-400" />
+                        <ChevronRight size={13} className="text-gray-400" />
                       </Link>
                       {/* Packaging (si sous 2xl) */}
                       <Link
                         href={NAV_CATEGORIES[7].href}
                         onClick={() => setMoreMenuOpen(false)}
                         onMouseEnter={() => handleCatEnter(7)}
-                        className="flex items-center justify-between px-3.5 py-2 text-xs hover:bg-slate-50 hover:text-[#008537] transition-colors"
+                        className="flex items-center justify-between px-3.5 py-2 text-xs hover:bg-gray-50 hover:text-primary transition-colors"
                       >
                         <div className="flex items-center gap-2">
-                          <Box size={14} className="text-[#008537]" />
+                          <Box size={14} className="text-primary" />
                           <span className="font-medium">{NAV_CATEGORIES[7].label}</span>
                         </div>
-                        <ChevronRight size={13} className="text-slate-400" />
+                        <ChevronRight size={13} className="text-gray-400" />
                       </Link>
 
-                      <div className="border-t border-slate-100 my-1 pt-1">
+                      <div className="border-t border-gray-100 my-1 pt-1">
                         <Link
                           href="/catalogue"
                           onClick={() => setMoreMenuOpen(false)}
-                          className="flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold text-[#008537] hover:text-[#00702e] transition-colors"
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 text-2xs font-bold text-primary hover:text-emerald-800 transition-colors"
                         >
                           <span>Voir tout le catalogue ({NAV_CATEGORIES.length} univers)</span>
                           <ArrowRight size={11} />
@@ -1090,19 +1076,19 @@ export function Navbar() {
               <div className="hidden lg:block absolute left-0 right-0 top-full z-50 pointer-events-none">
                 <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
                   <div
-                    className="absolute left-4 md:left-6 top-0 z-50 w-[960px] max-w-[calc(100vw-3rem)] bg-white rounded-b-3xl shadow-[0_30px_80px_rgba(0,0,0,0.25)] border border-slate-200/90 text-slate-900 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 pointer-events-auto"
+                    className="absolute left-4 md:left-6 top-0 z-50 w-[960px] max-w-[calc(100vw-3rem)] bg-white rounded-b-3xl shadow-[0_30px_80px_rgba(0,0,0,0.25)] border border-gray-200/90 text-gray-900 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 pointer-events-auto"
                     onMouseEnter={handleMasterEnter}
                     onMouseLeave={handleMasterLeave}
                   >
                     {/* EN-TÊTE ÉPURÉ */}
-                    <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-200/80">
+                    <div className="flex items-center justify-between px-6 py-3.5 bg-gray-50 border-b border-gray-200/80">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="font-display font-black text-xs uppercase tracking-wider text-slate-900">
+                        <span className="font-display font-extrabold text-xs uppercase tracking-wider text-gray-900">
                           Catalogue Industriel de l'Atelier
                         </span>
-                        <span className="text-slate-400 text-xs">•</span>
-                        <span className="text-xs text-slate-500 font-medium">
+                        <span className="text-gray-400 text-xs">•</span>
+                        <span className="text-xs text-gray-500 font-medium">
                           Tarifs direct usine en FCFA
                         </span>
                       </div>
@@ -1119,7 +1105,7 @@ export function Navbar() {
                     <div className="flex items-stretch min-h-[440px]">
                       
                       {/* 1. VOLET GAUCHE : LISTE DES RAYONS AVEC ICÔNES ET INDICATEURS */}
-                      <div className="w-[300px] shrink-0 bg-slate-50/90 p-2.5 border-r border-slate-200/80 space-y-1">
+                      <div className="w-[300px] shrink-0 bg-gray-50/90 p-2.5 border-r border-gray-200/80 space-y-1">
                         {NAV_CATEGORIES.map((cat, idx) => {
                           const Icon = cat.icon
                           const isSelected = masterCatIndex === idx
@@ -1130,21 +1116,21 @@ export function Navbar() {
                               onClick={() => setMasterCatIndex(idx)}
                               className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-white text-emerald-950 shadow-xs border border-slate-200/90 font-bold'
-                                  : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900 font-medium'
+                                  ? 'bg-white text-emerald-950 shadow-xs border border-gray-200/90 font-bold'
+                                  : 'text-gray-700 hover:bg-gray-100/90 hover:text-gray-900 font-medium'
                               }`}
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                                   isSelected
-                                    ? 'bg-emerald-600 text-white shadow-2xs'
-                                    : 'bg-white text-slate-600 border border-slate-200'
+                                    ? 'bg-emerald-700 text-white shadow-2xs'
+                                    : 'bg-white text-gray-600 border border-gray-200'
                                 }`}>
                                   <Icon size={14} />
                                 </div>
                                 <span className="text-xs truncate">{cat.label}</span>
                               </div>
-                              <ChevronRight size={13} className={`shrink-0 ml-1 transition-transform ${isSelected ? 'text-emerald-600 translate-x-0.5' : 'text-slate-400'}`} />
+                              <ChevronRight size={13} className={`shrink-0 ml-1 transition-transform ${isSelected ? 'text-emerald-600 translate-x-0.5' : 'text-gray-400'}`} />
                             </button>
                           )
                         })}
@@ -1158,12 +1144,12 @@ export function Navbar() {
                             
                             <div>
                               {/* Titre de rayon et tarif direct */}
-                              <div className="flex items-center justify-between pb-3 mb-5 border-b border-slate-100">
+                              <div className="flex items-center justify-between pb-3 mb-5 border-b border-gray-100">
                                 <div>
-                                  <h3 className="font-display font-black text-base text-slate-950">
+                                  <h3 className="font-display font-extrabold text-base text-gray-950">
                                     {activeCatData.label}
                                   </h3>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-xs text-gray-500">
                                     Production en atelier à Ouagadougou · Papier certifié et finitions offset
                                   </p>
                                 </div>
@@ -1180,10 +1166,10 @@ export function Navbar() {
                               <div className="grid grid-cols-12 gap-6 items-start">
                                 
                                 {/* Colonnes de liens Formats et Papiers */}
-                                <div className="col-span-7 grid grid-cols-2 gap-5 divide-x divide-slate-100">
+                                <div className="col-span-7 grid grid-cols-2 gap-5 divide-x divide-gray-100">
                                   {activeCatData.columns.slice(0, 2).map((col, cIdx) => (
                                     <div key={cIdx} className={cIdx > 0 ? 'pl-5' : ''}>
-                                      <h4 className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 mb-3">
+                                      <h4 className="font-extrabold text-2xs uppercase tracking-wider text-gray-400 mb-3">
                                         {col.title}
                                       </h4>
                                       <ul className="space-y-1.5">
@@ -1191,7 +1177,7 @@ export function Navbar() {
                                           <li key={iIdx}>
                                             <Link
                                               href={item.href}
-                                              className="group/item flex items-center text-xs text-slate-700 hover:text-emerald-700 hover:font-bold transition-colors py-0.5"
+                                              className="group/item flex items-center text-xs text-gray-700 hover:text-emerald-700 hover:font-bold transition-colors py-0.5"
                                             >
                                               <span className="truncate group-hover/item:translate-x-0.5 transition-transform">
                                                 {item.label}
@@ -1205,8 +1191,8 @@ export function Navbar() {
                                 </div>
 
                                 {/* Carte Encart Produit Vedette */}
-                                <div className="col-span-5 bg-slate-50 rounded-2xl border border-slate-200/80 p-3.5 flex flex-col justify-between group">
-                                  <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-slate-100 mb-2.5">
+                                <div className="col-span-5 bg-gray-50 rounded-2xl border border-gray-200/80 p-3.5 flex flex-col justify-between group">
+                                  <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-gray-100 mb-2.5">
                                     <Image
                                       src={activeCatData.featured.imageUrl}
                                       alt={activeCatData.featured.title}
@@ -1216,17 +1202,17 @@ export function Navbar() {
                                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                                       sizes="240px"
                                     />
-                                    <div className="absolute top-2 left-2 bg-emerald-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-xs">
+                                    <div className="absolute top-2 left-2 bg-emerald-700 text-white text-2xs font-extrabold uppercase px-2 py-0.5 rounded-full shadow-xs">
                                       {activeCatData.featured.badge}
                                     </div>
                                   </div>
 
                                   <div className="space-y-1">
-                                    <h5 className="font-bold text-xs text-slate-900 leading-snug line-clamp-1">
+                                    <h5 className="font-bold text-xs text-gray-900 leading-snug line-clamp-1">
                                       {activeCatData.featured.title}
                                     </h5>
                                     <div className="flex items-baseline gap-2 pt-0.5">
-                                      <span className="font-mono font-black text-sm text-slate-950">
+                                      <span className="tabular-nums font-extrabold text-sm text-gray-950">
                                         {activeCatData.featured.price}
                                       </span>
                                     </div>
@@ -1234,7 +1220,7 @@ export function Navbar() {
 
                                   <Link
                                     href={activeCatData.featured.href}
-                                    className="mt-3 w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-950 hover:bg-emerald-600 text-white text-[11px] font-bold transition-all shadow-xs active:scale-95"
+                                    className="mt-3 w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gray-950 hover:bg-emerald-700 text-white text-2xs font-bold transition-all shadow-xs active:scale-95"
                                   >
                                     <span>Découvrir</span>
                                     <ArrowRight size={12} />
@@ -1245,7 +1231,7 @@ export function Navbar() {
                             </div>
 
                             {/* Puces bas de panneau droit */}
-                            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-2xs text-gray-500">
                               <span className="flex items-center gap-1 font-medium">
                                 <CheckCircle2 size={13} className="text-emerald-600" /> BAT 300 DPI offert
                               </span>
@@ -1281,15 +1267,15 @@ export function Navbar() {
 
               {/* Panneau Déroulant Compact & Épuré */}
               <div
-                className="hidden lg:block absolute left-0 right-0 top-full z-50 bg-white border-b border-gray-200 shadow-xl text-slate-900 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
+                className="hidden lg:block absolute left-0 right-0 top-full z-50 bg-white border-b border-gray-200 shadow-xl text-gray-900 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
                 onMouseEnter={handleMegaEnter}
                 onMouseLeave={handleMegaLeave}
               >
                 <div className="max-w-6xl mx-auto px-6 py-4">
                   
                   {/* Ligne En-tête Compacte */}
-                  <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-slate-100">
-                    <span className="font-display font-black text-sm text-slate-900 tracking-tight">
+                  <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-gray-100">
+                    <span className="font-display font-extrabold text-sm text-gray-900 tracking-tight">
                       {activeCategory.label}
                     </span>
                     <Link
@@ -1305,10 +1291,10 @@ export function Navbar() {
                   <div className="grid grid-cols-12 gap-8 items-start">
                     
                     {/* 3 Colonnes de Liens Produits (9/12) */}
-                    <div className="col-span-9 grid grid-cols-3 gap-6 divide-x divide-slate-100">
+                    <div className="col-span-9 grid grid-cols-3 gap-6 divide-x divide-gray-100">
                       {activeCategory.columns.map((col, cIdx) => (
                         <div key={cIdx} className={cIdx > 0 ? 'pl-6' : ''}>
-                          <h4 className="font-mono text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                          <h4 className="font-mono text-2xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                             {col.title}
                           </h4>
                           <ul className="space-y-1">
@@ -1316,7 +1302,7 @@ export function Navbar() {
                               <li key={iIdx}>
                                 <Link
                                   href={item.href}
-                                  className="text-xs text-slate-700 hover:text-emerald-600 hover:font-bold transition-colors block py-0.5 whitespace-normal leading-snug"
+                                  className="text-xs text-gray-700 hover:text-emerald-600 hover:font-bold transition-colors block py-0.5 whitespace-normal leading-snug"
                                 >
                                   {item.label}
                                 </Link>
@@ -1328,12 +1314,12 @@ export function Navbar() {
                     </div>
 
                     {/* Visuel Miniature Discret & Élégant (3/12) */}
-                    <div className="col-span-3 border-l border-slate-100 pl-6 flex flex-col justify-center">
+                    <div className="col-span-3 border-l border-gray-100 pl-6 flex flex-col justify-center">
                       <Link
                         href={activeCategory.featured?.href || activeCategory.href}
-                        className="group block relative rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-2.5 hover:border-emerald-500/50 hover:shadow-xs transition-all"
+                        className="group block relative rounded-xl overflow-hidden bg-gray-50 border border-gray-200/80 p-2.5 hover:border-emerald-500/50 hover:shadow-xs transition-all"
                       >
-                        <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-100 mb-2">
+                        <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-gray-100 mb-2">
                           <Image
                             src={activeCategory.featured?.imageUrl || '/images/products/flyers-depliants.jpg'}
                             alt={activeCategory.label}
@@ -1342,10 +1328,10 @@ export function Navbar() {
                             sizes="200px"
                           />
                         </div>
-                        <p className="font-bold text-xs text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                        <p className="font-bold text-xs text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
                           {activeCategory.featured?.title || activeCategory.label}
                         </p>
-                        <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-1">
+                        <span className="text-2xs font-bold text-emerald-600 flex items-center gap-1 mt-1">
                           <span>Découvrir</span>
                           <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
                         </span>
@@ -1374,13 +1360,13 @@ export function Navbar() {
           />
 
           {/* Drawer glissant depuis la GAUCHE (Style Jumia Mobile) */}
-          <div className="fixed top-0 left-0 bottom-0 z-[70] w-[84vw] max-w-xs sm:max-w-sm bg-white md:hidden flex flex-col shadow-2xl text-slate-900 animate-in slide-in-from-left duration-250">
+          <div className="fixed top-0 left-0 bottom-0 z-[70] w-[84vw] max-w-xs sm:max-w-sm bg-white md:hidden flex flex-col shadow-2xl text-gray-900 animate-in slide-in-from-left duration-250">
             
             {/* Header du Drawer (Croix Gauche + Logo YopoePrint) */}
-            <div className="px-3 h-14 border-b border-slate-100 flex items-center gap-2.5 bg-white shrink-0">
+            <div className="px-3 h-14 border-b border-gray-100 flex items-center gap-2.5 bg-white shrink-0">
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 text-slate-800 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform cursor-pointer"
+                className="p-1.5 text-gray-800 hover:bg-gray-100 rounded-lg active:scale-95 transition-transform cursor-pointer"
                 aria-label="Fermer le menu"
               >
                 <X size={22} className="stroke-[2.2]" />
@@ -1392,59 +1378,59 @@ export function Navbar() {
             <div className="flex-1 overflow-y-auto overscroll-contain">
               
               {/* SECTION 1 : BESOIN D'AIDE ? & VOTRE COMPTE (Style Jumia) */}
-              <div className="border-b border-slate-100 divide-y divide-slate-100">
+              <div className="border-b border-gray-100 divide-y divide-gray-100">
                 <Link
                   href="/contact"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 text-xs font-black tracking-wider text-slate-800 uppercase transition-colors"
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 text-xs font-extrabold tracking-wider text-gray-800 uppercase transition-colors"
                 >
                   <span>BESOIN D'AIDE?</span>
-                  <ChevronRight size={16} className="text-slate-400" />
+                  <ChevronRight size={16} className="text-gray-400" />
                 </Link>
 
                 <Link
                   href={isLoggedIn ? "/mon-compte" : "/connexion"}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 text-xs font-black tracking-wider text-slate-800 uppercase transition-colors"
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 text-xs font-extrabold tracking-wider text-gray-800 uppercase transition-colors"
                 >
                   <span>
                     {isLoggedIn && user?.firstName ? `VOTRE COMPTE (${user.firstName})` : 'VOTRE COMPTE YOPOEPRINT'}
                   </span>
-                  <ChevronRight size={16} className="text-slate-400" />
+                  <ChevronRight size={16} className="text-gray-400" />
                 </Link>
               </div>
 
               {/* SECTION 1.5 : RACCOURCIS AVEC ICÔNES LIGNES ÉPURÉES (Style Jumia) */}
-              <div className="py-1.5 border-b border-slate-100">
+              <div className="py-1.5 border-b border-gray-100">
                 <Link
                   href={isLoggedIn ? "/mon-compte" : "/connexion"}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3.5 px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-3.5 px-4 py-2.5 text-gray-700 hover:text-emerald-700 hover:bg-gray-50 transition-colors"
                 >
-                  <Package size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
-                  <span className="text-xs font-medium text-slate-800">Vos commandes</span>
+                  <Package size={18} className="text-gray-500 stroke-[1.8] shrink-0" />
+                  <span className="text-xs font-medium text-gray-800">Vos commandes</span>
                 </Link>
 
                 <Link
                   href="/devis"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3.5 px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-3.5 px-4 py-2.5 text-gray-700 hover:text-emerald-700 hover:bg-gray-50 transition-colors"
                 >
-                  <FileCheck size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
-                  <span className="text-xs font-medium text-slate-800">Vos devis d'imprimerie</span>
+                  <FileCheck size={18} className="text-gray-500 stroke-[1.8] shrink-0" />
+                  <span className="text-xs font-medium text-gray-800">Vos devis d'imprimerie</span>
                 </Link>
 
                 <div
                   onClick={() => {
                     handleCopyPromo()
                   }}
-                  className="flex items-center justify-between px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between px-4 py-2.5 text-gray-700 hover:text-emerald-700 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
-                    <Tag size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
-                    <span className="text-xs font-medium text-slate-800">Bons d'achat & Promo</span>
+                    <Tag size={18} className="text-gray-500 stroke-[1.8] shrink-0" />
+                    <span className="text-xs font-medium text-gray-800">Bons d'achat & Promo</span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                  <span className="text-2xs font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                     {copiedPromo ? 'Copié !' : '-15% YOPPRINT15'}
                   </span>
                 </div>
@@ -1452,17 +1438,17 @@ export function Navbar() {
                 <Link
                   href="/catalogue"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3.5 px-4 py-2.5 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-3.5 px-4 py-2.5 text-gray-700 hover:text-emerald-700 hover:bg-gray-50 transition-colors"
                 >
-                  <Heart size={18} className="text-slate-500 stroke-[1.8] shrink-0" />
-                  <span className="text-xs font-medium text-slate-800">Favoris</span>
+                  <Heart size={18} className="text-gray-500 stroke-[1.8] shrink-0" />
+                  <span className="text-xs font-medium text-gray-800">Favoris</span>
                 </Link>
               </div>
 
               {/* SECTION 2 : NOS CATÉGORIES (Style Jumia avec Icônes fines) */}
               <div className="py-2.5">
                 <div className="flex items-center justify-between px-4 py-1.5 mb-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-2xs font-bold uppercase tracking-wider text-gray-500">
                     NOS CATÉGORIES
                   </span>
                   <Link
@@ -1482,10 +1468,10 @@ export function Navbar() {
                         key={cat.id}
                         href={cat.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3.5 px-4 py-2.5 hover:bg-slate-50 text-slate-800 hover:text-emerald-700 transition-colors group"
+                        className="flex items-center gap-3.5 px-4 py-2.5 hover:bg-gray-50 text-gray-800 hover:text-emerald-700 transition-colors group"
                       >
-                        <Icon size={18} className="text-slate-500 group-hover:text-emerald-600 stroke-[1.8] shrink-0" />
-                        <span className="text-xs font-medium text-slate-800 group-hover:text-emerald-700">
+                        <Icon size={18} className="text-gray-500 group-hover:text-emerald-600 stroke-[1.8] shrink-0" />
+                        <span className="text-xs font-medium text-gray-800 group-hover:text-emerald-700">
                           {cat.label}
                         </span>
                       </Link>
@@ -1495,12 +1481,12 @@ export function Navbar() {
               </div>
 
               {/* SECTION 3 : ASSISTANCE ATELIER RAPIDE */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/80 mt-2 space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <Phone size={14} className="text-[#008537] shrink-0" />
-                  <span>Hotline Atelier : +226 70 00 00 00</span>
+              <div className="p-4 border-t border-gray-100 bg-gray-50/80 mt-2 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-800">
+                  <Phone size={14} className="text-primary shrink-0" />
+                  <span>Hotline Atelier : {CONTACT_PHONE_DISPLAY}</span>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-2xs text-gray-500 leading-relaxed">
                   Ouagadougou & Bobo-Dioulasso · Facturation IFU normalisée
                 </p>
               </div>
@@ -1516,7 +1502,7 @@ export function Navbar() {
       ══════════════════════════════════════════════════════ */}
       {searchOpen && (
         <div className="fixed inset-0 z-[60] bg-white md:hidden flex flex-col">
-          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 p-3 border-b border-gray-200 bg-slate-50">
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 p-3 border-b border-gray-200 bg-gray-50">
             <div className="flex-1 relative flex items-center">
               <Search size={18} className="absolute left-3 text-gray-400" />
               <input
@@ -1525,13 +1511,13 @@ export function Navbar() {
                 autoFocus
                 value={navSearch}
                 onChange={(e) => setNavSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-full text-xs font-medium text-slate-900 outline-none focus:border-emerald-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-900 outline-none focus:border-emerald-500"
               />
             </div>
             <button
               type="button"
               onClick={() => setSearchOpen(false)}
-              className="p-2 text-gray-500 hover:text-slate-900"
+              className="p-2 text-gray-500 hover:text-gray-900"
             >
               <X size={20} />
             </button>
@@ -1540,19 +1526,19 @@ export function Navbar() {
           <div className="flex-1 overflow-y-auto p-4">
             {navSearchResults.length > 0 ? (
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Produits trouvés</p>
+                <p className="text-2xs font-bold uppercase tracking-wider text-gray-400 mb-2">Produits trouvés</p>
                 {navSearchResults.map((prod) => (
                   <Link
                     key={prod.id || prod._id}
                     href={`/produit/${prod.slug}`}
                     onClick={() => { setSearchOpen(false); setNavSearch('') }}
-                    className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-slate-50"
+                    className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50"
                   >
                     <div>
-                      <p className="font-bold text-xs text-slate-900">{prod.name}</p>
-                      <p className="text-[11px] text-gray-500">{prod.category}</p>
+                      <p className="font-bold text-xs text-gray-900">{prod.name}</p>
+                      <p className="text-2xs text-gray-500">{prod.category}</p>
                     </div>
-                    <span className="font-bold text-xs text-emerald-600 font-mono">
+                    <span className="font-bold text-xs text-emerald-600 tabular-nums">
                       {new Intl.NumberFormat('fr-FR').format(prod.basePrice)} F
                     </span>
                   </Link>
@@ -1560,13 +1546,13 @@ export function Navbar() {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Recherches fréquentes</p>
+                <p className="text-2xs font-bold uppercase tracking-wider text-gray-400">Recherches fréquentes</p>
                 <div className="flex flex-wrap gap-2">
                   {['Flyers A5', 'Cartes de visite', 'Roll-up 85×200', 'Bâche PVC', 'Brochures', 'T-shirts'].map((term) => (
                     <button
                       key={term}
                       onClick={() => setNavSearch(term)}
-                      className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700"
+                      className="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700"
                     >
                       {term}
                     </button>

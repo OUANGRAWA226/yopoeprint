@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Logo } from '@/components/shared/Logo'
+import { CONTACT_PHONE_DISPLAY } from '@/lib/contact'
 
 const FOOTER_LINKS = {
   produits: [
@@ -43,22 +44,28 @@ export function Footer() {
             </p>
 
             {/* Payment methods — prominent on mobile */}
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-2">
+            <p className="text-2xs text-gray-400 uppercase tracking-widest font-semibold mb-2">
               Paiements acceptés
             </p>
             <div className="flex flex-wrap gap-2">
-              {['📱 Orange Money', '💙 Moov Money', 'Visa', 'Mastercard'].map((p) => (
-                <span key={p} className="bg-white/10 border border-white/15 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-gray-300">
-                  {p}
+              {[
+                { label: 'Orange Money', dot: 'bg-orange-500' },
+                { label: 'Moov Money', dot: 'bg-sky-500' },
+                { label: 'Visa', dot: null },
+                { label: 'Mastercard', dot: null },
+              ].map(({ label, dot }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/15 rounded-lg px-2.5 py-1.5 text-2xs font-semibold text-gray-300">
+                  {dot && <span className={`w-2 h-2 rounded-full ${dot}`} aria-hidden="true" />}
+                  {label}
                 </span>
               ))}
             </div>
 
             {/* Contact */}
             <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
-              <p className="text-[11px] text-gray-500 mb-0.5">Besoin d'aide ?</p>
-              <p className="text-base font-bold text-primary">+226 70 00 00 00</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">Lun–Sam · 8h–18h (WhatsApp)</p>
+              <p className="text-2xs text-gray-400 mb-0.5">Besoin d'aide ?</p>
+              <p className="text-base font-bold text-emerald-400">{CONTACT_PHONE_DISPLAY}</p>
+              <p className="text-2xs text-gray-400 mt-0.5">Lun–Sam · 8h–18h (WhatsApp)</p>
             </div>
           </div>
 
@@ -69,13 +76,13 @@ export function Footer() {
             { title: 'Aide', links: FOOTER_LINKS.aide },
           ].map(({ title, links }) => (
             <div key={title}>
-              <h4 className="text-primary text-[10px] md:text-[11px] font-bold uppercase tracking-widest mb-3 md:mb-4">
+              <h4 className="text-emerald-400 text-2xs font-bold uppercase tracking-widest mb-3 md:mb-4">
                 {title}
               </h4>
               <ul className="space-y-2 md:space-y-2.5">
                 {links.map(({ label, href }) => (
                   <li key={label}>
-                    <Link href={href} className="text-[13px] text-gray-400 hover:text-primary transition-colors leading-snug">
+                    <Link href={href} className="text-sm text-gray-300 hover:text-emerald-400 transition-colors leading-snug">
                       {label}
                     </Link>
                   </li>
@@ -88,8 +95,8 @@ export function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-white/10 px-4 md:px-6 py-4 max-w-7xl mx-auto flex
-                      flex-col sm:flex-row items-center justify-between gap-2 text-[11px] md:text-[12px] text-gray-500">
-        <span>© 2025 YopoePrint · Ouagadougou, Burkina Faso</span>
+                      flex-col sm:flex-row items-center justify-between gap-2 text-2xs md:text-xs text-gray-400">
+        <span>© {new Date().getFullYear()} YopoePrint · Ouagadougou, Burkina Faso</span>
         <span>Fait avec ❤️ au Burkina</span>
       </div>
     </footer>

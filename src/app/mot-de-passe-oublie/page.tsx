@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, MailCheck } from 'lucide-react'
 import { Logo } from '@/components/shared/Logo'
+import { api } from '@/lib/api'
+import { Alert } from '@/components/ui/Alert'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -20,12 +22,15 @@ export default function ForgotPasswordPage() {
     
     setLoading(true)
     setError('')
-    
-    // Simulation d'appel API
-    setTimeout(() => {
-      setLoading(false)
+
+    try {
+      await api.post('/auth/forgot-password', { email: email.trim() })
       setSuccess(true)
-    }, 1500)
+    } catch (err: any) {
+      setError(err?.message || 'Envoi impossible pour le moment. Réessayez dans quelques minutes.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -61,7 +66,7 @@ export default function ForgotPasswordPage() {
             <Logo theme="light" size="md" />
           </div>
 
-          <Link href="/connexion" className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors mb-8">
+          <Link href="/connexion" className="inline-flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors mb-8">
             <ArrowLeft size={16} /> Retour à la connexion
           </Link>
 
@@ -89,12 +94,7 @@ export default function ForgotPasswordPage() {
                 <p className="text-gray-500 text-sm">Saisissez l'adresse email associée à votre compte pour recevoir un lien de réinitialisation.</p>
               </div>
 
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-start gap-3">
-                  <span className="mt-0.5">⚠️</span>
-                  <p>{error}</p>
-                </div>
-              )}
+              {error && <Alert className="mb-6">{error}</Alert>}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>

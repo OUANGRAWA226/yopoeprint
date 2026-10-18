@@ -6,6 +6,7 @@ import {
   CheckCircle2, ArrowRight, Download, Calculator,
   Briefcase, Layers, Printer, BarChart3, Star
 } from 'lucide-react'
+import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
 
 export const metadata = {
   title: 'Espace Entreprises & Grands Comptes — YopoePrint Burkina Faso',
@@ -125,10 +126,10 @@ const SECTORS = [
 
 export default function EntreprisesPage() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
 
       {/* ── 1. Hero Corporate B2B ────────────────────────────────────────────── */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white py-16 md:py-24 overflow-hidden border-b border-white/10">
+      <section className="relative bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 text-white py-16 md:py-24 overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-700/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 relative z-10">
@@ -141,18 +142,18 @@ export default function EntreprisesPage() {
                 Solutions Dédiées Entreprises, PME & Institutions
               </div>
 
-              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.15]">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-[1.15]">
                 L’imprimerie industrielle partenaire de votre <span className="text-emerald-400">croissance</span> au Faso.
               </h1>
 
-              <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
+              <p className="text-gray-300 text-base md:text-lg leading-relaxed max-w-2xl">
                 Bénéficiez d’un compte professionnel avec <strong>facturation normalisée DGI</strong>, d’un studio de contrôle PAO dédié, de tarifs dégressifs jusqu’à <strong>-35%</strong> et d’une livraison directe dans vos locaux à Ouaga et Bobo.
               </p>
 
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
                 <Link
                   href="/devis"
-                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-7 py-4 rounded-xl text-sm sm:text-base transition-all shadow-lg shadow-emerald-950/40 active:scale-95"
+                  className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-7 py-4 rounded-xl text-sm sm:text-base transition-all shadow-lg shadow-emerald-950/40 active:scale-95"
                 >
                   <Calculator size={18} />
                   Demander un devis entreprise (sous 2h)
@@ -167,7 +168,7 @@ export default function EntreprisesPage() {
               </div>
 
               {/* Rassurance rapide */}
-              <div className="pt-6 border-t border-white/10 flex flex-wrap items-center gap-6 text-xs text-slate-300">
+              <div className="pt-6 border-t border-white/10 flex flex-wrap items-center gap-6 text-xs text-gray-300">
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={16} className="text-emerald-400" /> Factures DGI avec TVA & IFU
                 </span>
@@ -186,7 +187,7 @@ export default function EntreprisesPage() {
                 <div className="flex items-center justify-between pb-6 border-b border-white/10 mb-6">
                   <div>
                     <h3 className="font-display font-bold text-white text-lg">Pôle Grands Comptes</h3>
-                    <p className="text-xs text-slate-400">Atelier & Studio Pré-presse Ouagadougou</p>
+                    <p className="text-xs text-gray-400">Atelier & Studio Pré-presse Ouagadougou</p>
                   </div>
                   <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
                 </div>
@@ -195,9 +196,9 @@ export default function EntreprisesPage() {
                   <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/5">
                     <Phone size={18} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-slate-400">Ligne directe Entreprises :</p>
-                      <a href="tel:+22670000000" className="font-bold text-white hover:text-emerald-300 font-mono text-base">
-                        +226 70 00 00 00 / 76 00 00 00
+                      <p className="text-xs text-gray-400">Ligne directe Entreprises :</p>
+                      <a href={`tel:${CONTACT_PHONE}`} className="font-bold text-white hover:text-emerald-300 tabular-nums text-base">
+                        {CONTACT_PHONE_DISPLAY}
                       </a>
                     </div>
                   </div>
@@ -205,7 +206,7 @@ export default function EntreprisesPage() {
                   <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/5">
                     <Mail size={18} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-slate-400">Email service commercial :</p>
+                      <p className="text-xs text-gray-400">Email service commercial :</p>
                       <a href="mailto:entreprises@yopoeprint.bf" className="font-bold text-white hover:text-emerald-300 text-sm">
                         entreprises@yopoeprint.bf
                       </a>
@@ -215,8 +216,8 @@ export default function EntreprisesPage() {
                   <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/5">
                     <Clock size={18} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-slate-400">Réactivité garantie :</p>
-                      <p className="font-semibold text-slate-200 text-xs">
+                      <p className="text-xs text-gray-400">Réactivité garantie :</p>
+                      <p className="font-semibold text-gray-200 text-xs">
                         Réponse & chiffrage sous 2h ouvrées (Lun - Sam : 08h - 18h30)
                       </p>
                     </div>
@@ -224,7 +225,7 @@ export default function EntreprisesPage() {
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-white/10 text-center">
-                  <p className="text-xs text-slate-300 mb-3">Besoin d'un échantillon papier avant de commander ?</p>
+                  <p className="text-xs text-gray-300 mb-3">Besoin d'un échantillon papier avant de commander ?</p>
                   <Link
                     href="/contact?sujet=echantillons"
                     className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
@@ -240,24 +241,24 @@ export default function EntreprisesPage() {
       </section>
 
       {/* ── 2. Bandeau Chiffres Clés de Confiance ───────────────────────────── */}
-      <section className="bg-white border-b border-slate-200 py-8 shadow-xs">
+      <section className="bg-white border-b border-gray-200 py-8 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <p className="font-display font-black text-2xl sm:text-4xl text-slate-900">500+</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">Entreprises partenaires</p>
+              <p className="font-display font-extrabold text-2xl sm:text-4xl text-gray-900">500+</p>
+              <p className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">Entreprises partenaires</p>
             </div>
             <div>
-              <p className="font-display font-black text-2xl sm:text-4xl text-emerald-600">99.4%</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">BAT approuvés du 1er coup</p>
+              <p className="font-display font-extrabold text-2xl sm:text-4xl text-emerald-600">99.4%</p>
+              <p className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">BAT approuvés du 1er coup</p>
             </div>
             <div>
-              <p className="font-display font-black text-2xl sm:text-4xl text-slate-900">24/48h</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">Délai standard atelier</p>
+              <p className="font-display font-extrabold text-2xl sm:text-4xl text-gray-900">24/48h</p>
+              <p className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">Délai standard atelier</p>
             </div>
             <div>
-              <p className="font-display font-black text-2xl sm:text-4xl text-emerald-600">100%</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">Facturation normalisée DGI</p>
+              <p className="font-display font-extrabold text-2xl sm:text-4xl text-emerald-600">100%</p>
+              <p className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">Facturation normalisée DGI</p>
             </div>
           </div>
         </div>
@@ -268,10 +269,10 @@ export default function EntreprisesPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900">
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-gray-900">
               Pourquoi les directions achats et marketing nous choisissent ?
             </h2>
-            <p className="text-sm sm:text-base text-slate-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Une infrastructure pensée pour les exigences des entreprises modernes : transparence, rigueur colorimétrique et réactivité absolue.
             </p>
           </div>
@@ -282,28 +283,28 @@ export default function EntreprisesPage() {
               return (
                 <div
                   key={adv.title}
-                  className="bg-white rounded-3xl p-7 border border-slate-200/80 shadow-xs hover:shadow-lg hover:border-emerald-500/40 transition-all duration-200 flex flex-col justify-between group"
+                  className="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs hover:shadow-lg hover:border-emerald-500/40 transition-all duration-200 flex flex-col justify-between group"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-200">
                         <Icon size={24} />
                       </div>
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-mono">
+                      <span className="text-2xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 tabular-nums">
                         {adv.badge}
                       </span>
                     </div>
 
-                    <h3 className="font-display font-bold text-lg text-slate-900 mb-2.5">
+                    <h3 className="font-display font-bold text-lg text-gray-900 mb-2.5">
                       {adv.title}
                     </h3>
 
-                    <p className="text-sm text-slate-600 leading-relaxed">
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       {adv.desc}
                     </p>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
+                  <div className="mt-6 pt-4 border-t border-gray-100 flex items-center text-xs font-bold text-emerald-700 group-hover:translate-x-1 transition-transform">
                     En savoir plus <ChevronRight size={14} className="ml-1" />
                   </div>
                 </div>
@@ -315,21 +316,21 @@ export default function EntreprisesPage() {
       </section>
 
       {/* ── 4. Packs Corporate Clés en Main ─────────────────────────────────── */}
-      <section id="packs" className="py-16 md:py-24 bg-white border-y border-slate-200">
+      <section id="packs" className="py-16 md:py-24 bg-white border-y border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
 
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
             <div>
-              <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest block mb-2">
+              <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block mb-2">
                 Offres Prêtes à l’emploi
               </span>
-              <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900">
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-gray-900">
                 Nos 4 Packs Entreprises les plus demandés
               </h2>
             </div>
             <Link
               href="/devis?type=pack"
-              className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4"
+              className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 hover:text-emerald-700 underline underline-offset-4"
             >
               Personnaliser un pack sur mesure →
             </Link>
@@ -339,30 +340,30 @@ export default function EntreprisesPage() {
             {CORPORATE_PACKS.map((pack) => (
               <div
                 key={pack.id}
-                className="bg-slate-50/70 border border-slate-200 rounded-3xl p-7 sm:p-8 flex flex-col justify-between hover:bg-white hover:shadow-xl hover:border-emerald-500/50 transition-all duration-200 relative group overflow-hidden"
+                className="bg-gray-50/70 border border-gray-200 rounded-3xl p-7 sm:p-8 flex flex-col justify-between hover:bg-white hover:shadow-xl hover:border-emerald-500/50 transition-all duration-200 relative group overflow-hidden"
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
                       {pack.badge}
                     </span>
-                    <span className="text-xs font-semibold text-slate-500 font-mono">
+                    <span className="text-xs font-semibold text-gray-500 tabular-nums">
                       {pack.leadTime}
                     </span>
                   </div>
 
-                  <h3 className="font-display font-extrabold text-xl text-slate-900 mb-2">
+                  <h3 className="font-display font-extrabold text-xl text-gray-900 mb-2">
                     {pack.title}
                   </h3>
 
-                  <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                  <p className="text-sm text-gray-600 mb-6 leading-relaxed">
                     {pack.desc}
                   </p>
 
                   <div className="space-y-2.5 mb-8">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ce pack inclut :</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ce pack inclut :</p>
                     {pack.items.map((it, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700">
+                      <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700">
                         <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
                         <span>{it}</span>
                       </div>
@@ -370,15 +371,15 @@ export default function EntreprisesPage() {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="pt-6 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <span className="text-[11px] text-slate-400 block font-semibold">Tarif indicatif :</span>
-                    <span className="font-display font-black text-xl text-slate-900">{pack.highlight}</span>
+                    <span className="text-2xs text-gray-500 block font-semibold">Tarif indicatif :</span>
+                    <span className="font-display font-extrabold text-xl text-gray-900">{pack.highlight}</span>
                   </div>
 
                   <Link
                     href={`/devis?pack=${encodeURIComponent(pack.title)}`}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-900 hover:bg-emerald-600 text-white text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-95"
                   >
                     Commander ce pack <ArrowRight size={14} />
                   </Link>
@@ -395,22 +396,22 @@ export default function EntreprisesPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6">
 
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900">
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-gray-900">
               Des solutions adaptées à chaque secteur au Faso
             </h2>
-            <p className="text-sm sm:text-base text-slate-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Que vous soyez une multinationale, un ministère ou une PME en pleine expansion, nous maîtrisons les contraintes techniques de votre métier.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {SECTORS.map((sec) => (
-              <div key={sec.name} className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition-all">
-                <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold mb-3.5">
+              <div key={sec.name} className="p-6 rounded-2xl bg-white border border-gray-200 shadow-2xs hover:border-gray-300 transition-all">
+                <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 font-bold mb-3.5">
                   <Briefcase size={18} />
                 </div>
-                <h4 className="font-bold text-base text-slate-900 mb-1.5">{sec.name}</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">{sec.desc}</p>
+                <h4 className="font-bold text-base text-gray-900 mb-1.5">{sec.name}</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">{sec.desc}</p>
               </div>
             ))}
           </div>
@@ -419,30 +420,30 @@ export default function EntreprisesPage() {
       </section>
 
       {/* ── 6. Formulaire Express de Prise de Contact B2B ──────────────────── */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-slate-900 to-blue-950 text-white relative">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-gray-900 to-blue-950 text-white relative">
         <div className="max-w-4xl mx-auto px-4 md:px-6 text-center space-y-6">
           <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
             <Building2 size={32} />
           </div>
 
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
             Vous avez un projet d'impression pour votre entreprise ?
           </h2>
 
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Transmettez-nous votre cahier des charges ou votre appel d’offres. Notre équipe commerciale prépare votre chiffrage certifié et un Bon À Tirer d’essai dans les plus brefs délais.
           </p>
 
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/devis"
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-8 py-4 rounded-xl text-sm sm:text-base transition-all shadow-xl shadow-emerald-950 active:scale-95"
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold px-8 py-4 rounded-xl text-sm sm:text-base transition-all shadow-xl shadow-emerald-950 active:scale-95"
             >
               Déposer une demande de devis B2B <ArrowRight size={16} />
             </Link>
 
             <a
-              href="https://wa.me/22670000000?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20pour%20un%20compte%20entreprise."
+              href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20des%20informations%20pour%20un%20compte%20entreprise.`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-4 rounded-xl text-sm sm:text-base border border-white/20 transition-all"
@@ -451,8 +452,8 @@ export default function EntreprisesPage() {
             </a>
           </div>
 
-          <p className="text-xs text-slate-400 pt-6">
-            YopoePrint — Ouagadougou, Secteur 15 Ouaga 2000 & Zone Industrielle Gounghin · Tél : +226 70 00 00 00
+          <p className="text-xs text-gray-400 pt-6">
+            YopoePrint — Ouagadougou, Secteur 15 Ouaga 2000 & Zone Industrielle Gounghin · Tél : {CONTACT_PHONE_DISPLAY}
           </p>
         </div>
       </section>

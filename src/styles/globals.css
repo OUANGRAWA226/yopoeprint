@@ -10,19 +10,19 @@
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    --primary: 146 100% 26%;
+    --primary: 146 100% 24%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 10%;
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
-    --accent: 146 100% 26%;
+    --accent: 146 100% 24%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 146 100% 26%;
+    --ring: 146 100% 24%;
     --radius: 0.5rem;
   }
 }
@@ -66,6 +66,14 @@
     max-width: 100%;
     height: auto;
   }
+}
+
+/* ── Focus clavier visible partout ──
+   Hors @layer et plus spécifique que .outline-none : un composant ne peut plus masquer le focus.
+   Les champs de saisie gardent leur propre style (bordure + anneau au focus). */
+:is(a, button, summary, [role='button'], [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
 /* ── Hide scrollbar but keep scroll functionality ── */
@@ -132,5 +140,21 @@
   /* Safe area support for bottom nav */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ── Réduction des animations (réglage système de l'utilisateur) ──
+   Coupe défilement doux, animations décoratives et transitions longues ;
+   les indicateurs de chargement (animate-spin) restent pour signaler l'attente. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *:not(.animate-spin),
+  *:not(.animate-spin)::before,
+  *:not(.animate-spin)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

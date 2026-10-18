@@ -76,7 +76,7 @@ export function ProductScrollRail({
         onClick={scrollLeft}
         disabled={!canScrollLeft}
         aria-label="Faire défiler vers la gauche"
-        className={`absolute -left-3.5 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-slate-800 shadow-[0_6px_20px_rgba(0,0,0,0.18)] border border-slate-200/90 hidden md:flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 ${
+        className={`absolute -left-3.5 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-800 shadow-[0_6px_20px_rgba(0,0,0,0.18)] border border-gray-200/90 hidden md:flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 hover:bg-gray-50 hover:text-emerald-700 hover:border-emerald-300 ${
           canScrollLeft
             ? 'opacity-95 hover:opacity-100 hover:scale-105 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
@@ -104,7 +104,7 @@ export function ProductScrollRail({
         onClick={scrollRight}
         disabled={!canScrollRight}
         aria-label="Faire défiler vers la droite"
-        className={`absolute -right-3.5 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-slate-800 shadow-[0_6px_20px_rgba(0,0,0,0.18)] border border-slate-200/90 hidden md:flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 ${
+        className={`absolute -right-3.5 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-800 shadow-[0_6px_20px_rgba(0,0,0,0.18)] border border-gray-200/90 hidden md:flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 hover:bg-gray-50 hover:text-emerald-700 hover:border-emerald-300 ${
           canScrollRight
             ? 'opacity-95 hover:opacity-100 hover:scale-105 pointer-events-auto'
             : 'opacity-0 pointer-events-none'

@@ -21,6 +21,7 @@ import {
   Building2,
   ArrowRight
 } from 'lucide-react'
+import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
 
 // Sujets pré-configurés
 const SUBJECT_OPTIONS = [
@@ -88,10 +89,10 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="bg-slate-50/60 min-h-screen text-slate-800">
+    <div className="bg-gray-50/60 min-h-screen text-gray-800">
       
       {/* ── HEADER ARCHITECTURAL SLATE-950 ── */}
-      <section className="relative bg-slate-950 text-white pt-16 pb-28 px-4 overflow-hidden">
+      <section className="relative bg-gray-950 text-white pt-16 pb-28 px-4 overflow-hidden">
         {/* Grille technique d'imprimerie en arrière-plan */}
         <div 
           className="absolute inset-0 opacity-[0.07] pointer-events-none" 
@@ -108,13 +109,13 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto relative z-10 text-center space-y-4">
           
           {/* Fil d'Ariane & Badge */}
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
             <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
             <span>/</span>
             <span className="text-primary">Contact & Support</span>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-300 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-900/90 border border-gray-800 text-xs font-medium text-gray-300 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Atelier & Showroom de production • Ouagadougou</span>
           </div>
@@ -123,20 +124,20 @@ export default function ContactPage() {
             Parlons de vos projets d'impression
           </h1>
           
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Conseil technique pré-presse, devis sur mesure ou suivi de commande : 
             nos experts vous répondent à Ouagadougou avec réactivité et rigueur.
           </p>
 
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
             <span className="flex items-center gap-1.5">
               <Clock size={14} className="text-primary" /> Réponse moyenne : <strong>15 minutes</strong>
             </span>
-            <span className="hidden sm:inline text-slate-700">•</span>
+            <span className="hidden sm:inline text-gray-700">•</span>
             <span className="flex items-center gap-1.5">
               <FileCheck size={14} className="text-emerald-400" /> Factures normalisées <strong>DGI e-Sintax</strong>
             </span>
-            <span className="hidden sm:inline text-slate-700">•</span>
+            <span className="hidden sm:inline text-gray-700">•</span>
             <span className="flex items-center gap-1.5">
               <ShieldCheck size={14} className="text-primary" /> Vérification PAO <strong>100% offerte</strong>
             </span>
@@ -152,18 +153,18 @@ export default function ContactPage() {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Carte Coordonnées Principales */}
-            <div className="bg-white rounded-2xl p-6 sm:p-7 shadow-xl shadow-slate-200/50 border border-slate-200/80">
-              <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+            <div className="bg-white rounded-2xl p-6 sm:p-7 shadow-xl shadow-gray-200/50 border border-gray-200/80">
+              <div className="flex items-center justify-between pb-5 border-b border-gray-100">
                 <div>
-                  <h2 className="font-display text-xl font-bold text-slate-900">Coordonnées directes</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">YopoePrint Burkina Faso</p>
+                  <h2 className="font-display text-xl font-bold text-gray-900">Coordonnées directes</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">YopoePrint Burkina Faso</p>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700">
                   <Building2 size={20} />
                 </div>
               </div>
               
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-gray-100">
                 
                 {/* Téléphone Hotline */}
                 <div className="py-4.5 first:pt-4 last:pb-0 group">
@@ -174,22 +175,22 @@ export default function ContactPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Téléphone standard</p>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100/70 text-emerald-800">Direct</span>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Téléphone standard</p>
+                          <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-emerald-100/70 text-emerald-800">Direct</span>
                         </div>
                         <a 
-                          href="tel:+22670000000" 
-                          className="font-bold text-slate-900 text-base hover:text-primary transition-colors block mt-0.5"
+                          href={`tel:${CONTACT_PHONE}`} 
+                          className="font-bold text-gray-900 text-base hover:text-primary transition-colors block mt-0.5"
                         >
-                          +226 70 00 00 00
+                          {CONTACT_PHONE_DISPLAY}
                         </a>
-                        <p className="text-xs text-slate-500 mt-0.5">Fixe atelier : +226 25 30 00 00</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Fixe atelier : +226 25 30 00 00</p>
                       </div>
                     </div>
                     <button
-                      onClick={() => handleCopy('+22670000000', 'phone')}
+                      onClick={() => handleCopy(CONTACT_PHONE, 'phone')}
                       title="Copier le numéro"
-                      className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                      className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                       aria-label="Copier le numéro"
                     >
                       {copiedPhone ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
@@ -205,20 +206,20 @@ export default function ContactPage() {
                         <Mail size={18} />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Courriel officiel</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Courriel officiel</p>
                         <a 
                           href="mailto:contact@yopoeprint.bf" 
-                          className="font-bold text-slate-900 text-sm sm:text-base hover:text-primary transition-colors block mt-0.5"
+                          className="font-bold text-gray-900 text-sm sm:text-base hover:text-primary transition-colors block mt-0.5"
                         >
                           contact@yopoeprint.bf
                         </a>
-                        <p className="text-xs text-slate-500 mt-0.5">Devis : devis@yopoeprint.bf</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Devis : devis@yopoeprint.bf</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleCopy('contact@yopoeprint.bf', 'email')}
                       title="Copier l'email"
-                      className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                      className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                       aria-label="Copier l'email"
                     >
                       {copiedEmail ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
@@ -233,11 +234,11 @@ export default function ContactPage() {
                       <MapPin size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Showroom & Retrait</p>
-                      <p className="font-bold text-slate-900 text-sm mt-0.5">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Showroom & Retrait</p>
+                      <p className="font-bold text-gray-900 text-sm mt-0.5">
                         Zone Industrielle de Kossodo & Centre-ville
                       </p>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                         Ouagadougou, Burkina Faso.<br />
                         <span className="text-emerald-700 font-medium">Point retrait gratuit disponible sans frais.</span>
                       </p>
@@ -248,20 +249,20 @@ export default function ContactPage() {
                 {/* Horaires d'ouverture */}
                 <div className="pt-4.5">
                   <div className="flex gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
                       <Clock size={18} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Horaires d'atelier</p>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Horaires d'atelier</p>
+                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Ouvert
                         </span>
                       </div>
-                      <p className="text-sm font-semibold text-slate-800 mt-1">
+                      <p className="text-sm font-semibold text-gray-800 mt-1">
                         Lundi au Vendredi : 08h00 – 18h30
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-gray-500 mt-0.5">
                         Samedi : 08h30 – 13h30 (Permanence livraison)
                       </p>
                     </div>
@@ -272,7 +273,7 @@ export default function ContactPage() {
             </div>
 
             {/* Carte WhatsApp Pro Redesignée (Élégante & B2B) */}
-            <div className="relative bg-slate-900 rounded-2xl p-6 sm:p-7 text-white shadow-xl shadow-slate-900/10 border border-slate-800 overflow-hidden">
+            <div className="relative bg-gray-900 rounded-2xl p-6 sm:p-7 text-white shadow-xl shadow-gray-900/10 border border-gray-800 overflow-hidden">
               {/* Reflet d'accent vert subtil */}
               <div className="absolute top-0 right-0 w-44 h-44 bg-emerald-500/15 blur-3xl rounded-full pointer-events-none" />
               
@@ -289,13 +290,13 @@ export default function ContactPage() {
                   <h3 className="font-display font-bold text-lg text-white">
                     Assistance Instantanée WhatsApp
                   </h3>
-                  <p className="text-slate-300 text-xs leading-relaxed mt-1">
+                  <p className="text-gray-300 text-xs leading-relaxed mt-1">
                     Besoin d'un retour immédiat sur vos fichiers PAO ou d'un devis rapide ? 
                     Échangez directement avec nos techniciens d'impression.
                   </p>
                 </div>
 
-                <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800 text-xs text-slate-400 space-y-1">
+                <div className="bg-gray-950/60 rounded-xl p-3 border border-gray-800 text-xs text-gray-400 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-emerald-400 font-bold">✓</span> Envoi de maquettes & BAT en direct
                   </div>
@@ -305,10 +306,10 @@ export default function ContactPage() {
                 </div>
 
                 <a 
-                  href="https://wa.me/22670000000?text=Bonjour%20YopoePrint%2C%20j%27aimerais%20avoir%20des%20renseignements%20sur%20vos%20services%20d%27impression." 
+                  href={`${WHATSAPP_URL}?text=Bonjour%20YopoePrint%2C%20j%27aimerais%20avoir%20des%20renseignements%20sur%20vos%20services%20d%27impression.`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
+                  className="w-full inline-flex items-center justify-center gap-2.5 bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
                 >
                   <MessageCircle size={18} />
                   <span>Démarrer une conversation WhatsApp</span>
@@ -319,14 +320,14 @@ export default function ContactPage() {
           </div>
 
           {/* ── COLONNE DROITE : FORMULAIRE PRO AVEC SÉLECTEUR DE SUJET (7 colonnes) ── */}
-          <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-9 shadow-xl shadow-slate-200/50 border border-slate-200/80">
+          <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-9 shadow-xl shadow-gray-200/50 border border-gray-200/80">
             
-            <div className="flex items-start justify-between pb-6 border-b border-slate-100">
+            <div className="flex items-start justify-between pb-6 border-b border-gray-100">
               <div>
-                <h2 className="font-display text-2xl font-bold text-slate-900">
+                <h2 className="font-display text-2xl font-bold text-gray-900">
                   Transmettez votre demande
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
                   Remplissez ce formulaire pour recevoir une réponse détaillée avec devis chiffré.
                 </p>
               </div>
@@ -341,8 +342,8 @@ export default function ContactPage() {
                   <CheckCircle2 size={36} />
                 </div>
                 <div className="max-w-md mx-auto space-y-2">
-                  <h3 className="font-display text-2xl font-bold text-slate-900">Message bien reçu !</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <h3 className="font-display text-2xl font-bold text-gray-900">Message bien reçu !</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     Merci <strong>{fullName || 'cher client'}</strong>. Votre demande a été assignée à notre équipe commerciale à Ouagadougou. Vous recevrez un accusé et une proposition sous 2h ouvrées.
                   </p>
                 </div>
@@ -352,7 +353,7 @@ export default function ContactPage() {
                       setSuccess(false)
                       setMessage('')
                     }}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors"
                   >
                     Envoyer une autre demande
                   </button>
@@ -363,7 +364,7 @@ export default function ContactPage() {
                 
                 {/* 1. Sélection du Sujet via Pills Visuelles */}
                 <div className="space-y-2.5">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Objet de votre demande <span className="text-primary">*</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -377,13 +378,13 @@ export default function ContactPage() {
                           className={`text-left p-3 rounded-xl border text-xs transition-all relative
                             ${isSelected 
                               ? 'border-primary bg-primary/5 text-primary shadow-sm font-semibold' 
-                              : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50/50'}`}
+                              : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-gray-50/50'}`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-slate-900">{opt.label}</span>
+                            <span className="font-bold text-gray-900">{opt.label}</span>
                             {isSelected && <Check size={14} className="text-primary" />}
                           </div>
-                          <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{opt.desc}</p>
+                          <p className="text-2xs text-gray-500 mt-0.5 line-clamp-1">{opt.desc}</p>
                         </button>
                       )
                     })}
@@ -393,7 +394,7 @@ export default function ContactPage() {
                 {/* 2. Coordonnées de contact (2 colonnes) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Nom complet <span className="text-primary">*</span>
                     </label>
                     <input 
@@ -402,12 +403,12 @@ export default function ContactPage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Ex: Idrissa Ouédraogo"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Téléphone (WhatsApp de préférence) <span className="text-primary">*</span>
                     </label>
                     <input 
@@ -416,7 +417,7 @@ export default function ContactPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Ex: +226 70 12 34 56"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -424,7 +425,7 @@ export default function ContactPage() {
                 {/* 3. Email & Entreprise */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Adresse Email <span className="text-primary">*</span>
                     </label>
                     <input 
@@ -433,20 +434,20 @@ export default function ContactPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="vous@entreprise.com"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Société / Organisation <span className="text-slate-400 font-normal lowercase">(facultatif)</span>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Société / Organisation <span className="text-gray-500 font-normal lowercase">(facultatif)</span>
                     </label>
                     <input 
                       type="text" 
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       placeholder="Ex: SA, SARL, Agence, ONG..."
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -454,10 +455,10 @@ export default function ContactPage() {
                 {/* 4. Message détaillé */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Précisez votre demande ou cahier des charges <span className="text-primary">*</span>
                     </label>
-                    <span className="text-[11px] text-slate-400">Min. 10 caractères</span>
+                    <span className="text-2xs text-gray-500">Min. 10 caractères</span>
                   </div>
                   <textarea 
                     required
@@ -465,12 +466,12 @@ export default function ContactPage() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Indiquez les quantités prévues, formats souhaités (A4, A5, sur-mesure), papier, finitions (vernis sélectif, pelliculage) et votre date butoir..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
                   />
                 </div>
 
                 {/* Note rassurante sur les fichiers */}
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center justify-between gap-3">
+                <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-600 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <FileCheck size={16} className="text-primary shrink-0" />
                     <span>Vous avez déjà une maquette prête ? Vous pourrez la transmettre par email ou WhatsApp dès notre prise de contact.</span>
@@ -497,7 +498,7 @@ export default function ContactPage() {
                     )}
                   </button>
 
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
                     <ShieldCheck size={16} className="text-emerald-600" />
                     <span>Devis gratuit sans engagement</span>
                   </div>
@@ -511,34 +512,34 @@ export default function ContactPage() {
         </div>
 
         {/* ── SECTION FAQ EXPANDABLE (RÉASSURANCE CLIENT) ── */}
-        <div className="mt-16 bg-white rounded-2xl p-6 sm:p-10 border border-slate-200 shadow-sm max-w-4xl mx-auto">
+        <div className="mt-16 bg-white rounded-2xl p-6 sm:p-10 border border-gray-200 shadow-sm max-w-4xl mx-auto">
           <div className="text-center max-w-xl mx-auto mb-8">
-            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-700">
+            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-700">
               <HelpCircle size={20} />
             </div>
-            <h3 className="font-display text-2xl font-bold text-slate-900">Questions fréquentes</h3>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1">
+            <h3 className="font-display text-2xl font-bold text-gray-900">Questions fréquentes</h3>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">
               Tout ce que vous devez savoir pour commander en toute sérénité.
             </p>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-gray-100">
             {FAQS.map((faq, idx) => {
               const isOpen = openFaq === idx
               return (
                 <div key={idx} className="py-4 first:pt-0 last:pb-0">
                   <button
                     onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full flex items-center justify-between text-left gap-4 font-semibold text-slate-900 text-sm sm:text-base hover:text-primary transition-colors"
+                    className="w-full flex items-center justify-between text-left gap-4 font-semibold text-gray-900 text-sm sm:text-base hover:text-primary transition-colors"
                   >
                     <span>{faq.q}</span>
                     <ChevronDown 
                       size={18} 
-                      className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} 
+                      className={`text-gray-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} 
                     />
                   </button>
                   {isOpen && (
-                    <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed animate-in fade-in duration-200 pr-6">
+                    <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed animate-in fade-in duration-200 pr-6">
                       {faq.a}
                     </p>
                   )}

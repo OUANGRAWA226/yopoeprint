@@ -8,6 +8,8 @@ import { useCart } from '@/context/CartContext'
 import { uploadService } from '@/lib/upload.service'
 import { CheckCircle, Clock, Truck, Phone, ArrowRight, FileWarning, UploadCloud, FileCheck, MapPin, Download, FileText, Printer } from 'lucide-react'
 import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { CONTACT_PHONE, CONTACT_PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact'
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(n) }
 
@@ -28,6 +30,25 @@ function toViewOrder(order: any) {
       fileUrl: it.designFileUrl,
     })),
   }
+}
+
+// Squelette à la forme du reçu : bandeau de confirmation, récapitulatif, articles
+function ReceiptSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50" aria-busy="true" aria-label="Chargement de votre commande">
+      <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
+        <Skeleton className="h-36 rounded-2xl" />
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+          {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14" />)}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ConfirmationDetails() {
@@ -52,12 +73,12 @@ function ConfirmationDetails() {
     setIsUploading(true)
     setUploadProgress(10) // Démarrage
 
-    try {
-      // Fake progress interval while uploading
-      const interval = setInterval(() => {
-        setUploadProgress((p) => Math.min(p + 15, 90))
-      }, 500)
+    // Fake progress interval while uploading
+    const interval = setInterval(() => {
+      setUploadProgress((p) => Math.min(p + 15, 90))
+    }, 500)
 
+    try {
       // Upload réel
       const res = await uploadService.uploadFile(file, 'orders')
       
@@ -80,10 +101,11 @@ function ConfirmationDetails() {
           }
         })
       }, 500)
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      clearInterval(interval)
       setIsUploading(false)
-      setError('Erreur lors de l\'upload du fichier')
+      setError(err?.message || 'Erreur lors de l\'upload du fichier')
     }
   }
 
@@ -100,20 +122,11 @@ function ConfirmationDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center">
-        <div className="text-center animate-in fade-in duration-500">
-          <span className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin block mx-auto mb-4" />
-          <p className="text-gray-500 font-medium">Préparation de votre reçu…</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <ReceiptSkeleton />
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">❌</span>
@@ -131,17 +144,17 @@ function ConfirmationDetails() {
   const hasMissingFiles = order?.items?.some((item: any) => !item.fileUrl)
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20">
 
       {/* ── HERO SUCCÈS ────────────────────────────────────────── */}
-      <div className="bg-[#10B981] pt-16 pb-24 relative overflow-hidden">
+      <div className="bg-emerald-500 pt-16 pb-24 relative overflow-hidden">
         {/* Confetti / Pattern simulation */}
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10"></div>
         
         <div className="max-w-2xl mx-auto px-4 text-center relative z-10">
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-black/10 animate-in zoom-in duration-500 delay-150">
-            <CheckCircle size={48} className="text-[#10B981]" />
+            <CheckCircle size={48} className="text-emerald-500" />
           </div>
           <h1 className="font-display text-4xl font-extrabold text-white mb-3 tracking-tight animate-in slide-in-from-bottom-4 duration-500 delay-300">
             Commande validée ! 🎉
@@ -187,12 +200,12 @@ function ConfirmationDetails() {
                     <input 
                       type="file" 
                       className="hidden" 
-                      accept=".pdf,.ai,.psd,.jpg,.jpeg,.png,.zip" 
+                      accept=".pdf,.ai,.psd,.jpg,.jpeg,.png,.tif,.tiff" 
                       onChange={handleFileUpload} 
                     />
                   </label>
                   <a
-                    href={`https://wa.me/22670000000?text=${encodeURIComponent(`Bonjour YopoePrint, voici mes fichiers pour ma commande ${order?.orderNumber || ''}`)}`}
+                    href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Bonjour YopoePrint, voici mes fichiers pour ma commande ${order?.orderNumber || ''}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-5 py-2.5 bg-[#25D366] text-white rounded-xl font-bold text-sm hover:bg-[#20ba59] transition-colors inline-flex items-center justify-center gap-2 shadow-xs"
@@ -263,7 +276,7 @@ function ConfirmationDetails() {
                 </div>
                 <div className="pt-2">
                   <h3 className="font-bold text-gray-400 text-sm">Impression & Façonnage</h3>
-                  <p className="text-xs text-gray-400 mt-1">La magie opère dans nos ateliers.</p>
+                  <p className="text-xs text-gray-600 mt-1">La magie opère dans nos ateliers.</p>
                 </div>
               </div>
 
@@ -274,7 +287,7 @@ function ConfirmationDetails() {
                 </div>
                 <div className="pt-2">
                   <h3 className="font-bold text-gray-400 text-sm">Expédition</h3>
-                  <p className="text-xs text-gray-400 mt-1">Votre commande est en route vers vous.</p>
+                  <p className="text-xs text-gray-600 mt-1">Votre commande est en route vers vous.</p>
                 </div>
               </div>
             </div>
@@ -319,10 +332,10 @@ function ConfirmationDetails() {
                   <span className="text-2xl mt-0.5">{item.emoji || '📦'}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-900 text-sm truncate">{item.productName}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{fmt(item.quantity)} ex. • {item.formatId}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{fmt(item.quantity)} ex. • {item.formatId}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-mono font-bold text-gray-900 text-sm">{fmt(item.price)} F</p>
+                    <p className="tabular-nums font-bold text-gray-900 text-sm">{fmt(item.price)} F</p>
                   </div>
                 </div>
               ))}
@@ -331,11 +344,11 @@ function ConfirmationDetails() {
             <div className="space-y-2 mb-6">
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Sous-total</span>
-                <span className="font-mono">{fmt(order.total)} F</span>
+                <span className="tabular-nums">{fmt(order.total)} F</span>
               </div>
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Frais de livraison</span>
-                <span className="font-mono">Inclus</span>
+                <span className="tabular-nums">Inclus</span>
               </div>
             </div>
 
@@ -370,8 +383,8 @@ function ConfirmationDetails() {
           <Link href="/catalogue" className="px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-xl font-bold text-sm hover:border-primary hover:text-primary transition-all text-center flex items-center justify-center gap-2 shadow-xs">
             Continuer mes achats <ArrowRight size={16} />
           </Link>
-          <a href="tel:+22670000000" className="px-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all text-center flex items-center justify-center gap-2 shadow-xs">
-            <Phone size={16} /> Besoin d'aide ? (+226 70 00 00 00)
+          <a href={`tel:${CONTACT_PHONE}`} className="px-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all text-center flex items-center justify-center gap-2 shadow-xs">
+            <Phone size={16} /> Besoin d'aide ? ({CONTACT_PHONE_DISPLAY})
           </a>
         </div>
 
@@ -409,14 +422,7 @@ function ConfirmationDetails() {
 
 export default function ConfirmationPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center">
-        <div className="text-center">
-          <span className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin block mx-auto mb-4" />
-          <p className="text-gray-500 font-medium">Chargement…</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<ReceiptSkeleton />}>
       <ConfirmationDetails />
     </Suspense>
   )

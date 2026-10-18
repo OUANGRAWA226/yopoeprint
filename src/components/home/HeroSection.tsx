@@ -73,7 +73,7 @@ export function HeroSection() {
  {/* Text Area */}
  <div className="animate-fade-up">
  <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30
- text-primary text-[11px] font-bold px-3.5 py-1.5 rounded-full
+ text-primary text-2xs font-bold px-3.5 py-1.5 rounded-full
  mb-6 uppercase tracking-widest">
  <Sparkles size={12} className="text-primary" />
  ★ N°1 de l&apos;imprimerie en ligne au Burkina Faso
@@ -108,7 +108,7 @@ export function HeroSection() {
  <strong className="block font-display text-3xl text-primary font-bold mb-0.5">
  {value}
  </strong>
- <span className="text-[11px] text-white/60 tracking-wider uppercase font-semibold">{label}</span>
+ <span className="text-2xs text-white/60 tracking-wider uppercase font-semibold">{label}</span>
  </div>
  ))}
  </div>
@@ -132,7 +132,7 @@ export function HeroSection() {
 
  {/* Badges */}
  <div className="flex justify-between items-start mb-4">
- <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${prod.badgeBg} uppercase tracking-wider`}>
+ <span className={`text-2xs font-bold px-2.5 py-1 rounded-full ${prod.badgeBg} uppercase tracking-wider`}>
  {prod.badge}
  </span>
  <span className="text-3xl group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500">
@@ -142,7 +142,7 @@ export function HeroSection() {
 
  {/* Title & Desc */}
  <div className="relative z-10 mt-6">
- <h3 className={`font-display text-lg lg:text-xl font-black ${prod.textColor} mb-1`}>
+ <h3 className={`font-display text-lg lg:text-xl font-extrabold ${prod.textColor} mb-1`}>
  {prod.title}
  </h3>
  <p className={`text-xs ${prod.textColor} opacity-60 leading-relaxed font-medium`}>

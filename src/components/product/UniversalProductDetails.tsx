@@ -588,7 +588,7 @@ export function UniversalProductDetails({ product }: UniversalProductProps) {
                   }`}
                 >
                   {card.highlight && (
-                    <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">
+                    <span className="absolute top-2 right-2 bg-amber-700 text-white text-2xs font-extrabold uppercase px-2 py-0.5 rounded">
                       Inclus
                     </span>
                   )}
@@ -599,7 +599,7 @@ export function UniversalProductDetails({ product }: UniversalProductProps) {
                   <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                     {card.desc}
                   </p>
-                  <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
+                  <div className="mt-3 flex items-center gap-1.5 text-2xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
                     <Check size={12} /> {card.tag}
                   </div>
                 </div>
@@ -711,7 +711,7 @@ export function UniversalProductDetails({ product }: UniversalProductProps) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {product.papers.map((paper, idx) => (
                     <div key={paper.id || idx} className="p-4 rounded-xl border border-gray-200 bg-white">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary">
+                      <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary">
                         Option {idx + 1}
                       </span>
                       <h5 className="font-bold text-gray-900 text-sm mt-2">{paper.label}</h5>
@@ -721,11 +721,11 @@ export function UniversalProductDetails({ product }: UniversalProductProps) {
                         </p>
                       )}
                       {paper.priceExtra ? (
-                        <span className="inline-block mt-2 text-[11px] font-bold text-primary">
+                        <span className="inline-block mt-2 text-2xs font-bold text-primary">
                           +{paper.priceExtra} FCFA
                         </span>
                       ) : (
-                        <span className="inline-block mt-2 text-[11px] font-bold text-gray-400">
+                        <span className="inline-block mt-2 text-2xs font-bold text-gray-400">
                           Inclus sans surcoût
                         </span>
                       )}
@@ -791,24 +791,24 @@ export function UniversalProductDetails({ product }: UniversalProductProps) {
               <div className="lg:col-span-7 space-y-4">
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Format cible</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Format cible</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">{profile.paoDimensions}</p>
-                    <p className="text-[11px] text-gray-500 mt-1">À l'échelle 1:1</p>
+                    <p className="text-2xs text-gray-500 mt-1">À l'échelle 1:1</p>
                   </div>
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Profil couleur</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Profil couleur</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">{profile.paoColor}</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Pas de profil RVB</p>
+                    <p className="text-2xs text-gray-500 mt-1">Pas de profil RVB</p>
                   </div>
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Résolution d'image</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Résolution d'image</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">{profile.paoResolution}</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Netteté optimale</p>
+                    <p className="text-2xs text-gray-500 mt-1">Netteté optimale</p>
                   </div>
                   <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-gray-400 font-semibold uppercase text-[10px]">Fichiers acceptés</p>
+                    <p className="text-gray-400 font-semibold uppercase text-2xs">Fichiers acceptés</p>
                     <p className="font-extrabold text-gray-900 text-sm mt-0.5">PDF HD, AI, PSD, TIFF</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Polices vectorisées</p>
+                    <p className="text-2xs text-gray-500 mt-1">Polices vectorisées</p>
                   </div>
                 </div>
 
@@ -842,13 +842,13 @@ export function UniversalProductDetails({ product }: UniversalProductProps) {
                   <div className="w-full h-full border border-gray-300 rounded flex items-center justify-center relative bg-gray-50/30">
                     {/* Zone de sécurité */}
                     <div className="w-[85%] h-[80%] border-2 border-emerald-400 bg-emerald-50/60 rounded flex flex-col items-center justify-center p-2 text-center">
-                      <span className="text-[10px] font-bold text-emerald-800">Zone de Sécurité</span>
-                      <span className="text-[8px] text-emerald-600 mt-0.5">Textes & Logos</span>
+                      <span className="text-2xs font-bold text-emerald-800">Zone de Sécurité</span>
+                      <span className="text-[10px] text-emerald-600 mt-0.5">Textes & Logos</span>
                     </div>
                   </div>
-                  <span className="absolute -bottom-5 text-[9px] text-red-500 font-bold">Ligne de coupe + Fond perdu</span>
+                  <span className="absolute -bottom-5 text-[10px] text-red-500 font-bold">Ligne de coupe + Fond perdu</span>
                 </div>
-                <p className="text-[10px] text-gray-500 mt-8 text-center leading-tight">
+                <p className="text-2xs text-gray-500 mt-8 text-center leading-tight">
                   Représentation des marges de sécurité et du débord de coupe
                 </p>
               </div>

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Star, CheckCircle2, User, MessageSquare } from 'lucide-react'
+import { WHATSAPP_URL } from '@/lib/contact'
 
 export interface ProductReview {
   name: string
@@ -17,7 +18,7 @@ interface ProductReviewsProps {
   reviews?: ProductReview[]
 }
 
-const WHATSAPP_REVIEW_URL = 'https://wa.me/22670000000?text=Bonjour%20YopoePrint,%20je%20souhaite%20donner%20mon%20avis'
+const WHATSAPP_REVIEW_URL = `${WHATSAPP_URL}?text=Bonjour%20YopoePrint,%20je%20souhaite%20donner%20mon%20avis`
 
 export function ProductReviews({ productName = 'ce produit', reviews = [] }: ProductReviewsProps) {
   const count = reviews.length
@@ -55,7 +56,7 @@ export function ProductReviews({ productName = 'ce produit', reviews = [] }: Pro
           <div className="md:col-span-4 flex items-center gap-4">
             <div className="text-5xl font-display font-extrabold text-gray-900">{average.toFixed(1)}</div>
             <div>
-              <div className="flex text-[#FFB800] mb-1">
+              <div className="flex text-amber-400 mb-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} size={20} fill={star <= Math.round(average) ? 'currentColor' : 'none'} />
                 ))}
@@ -75,13 +76,13 @@ export function ProductReviews({ productName = 'ce produit', reviews = [] }: Pro
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-gray-900 text-sm">{review.name}</p>
                       {review.verified && (
-                        <span className="flex items-center gap-1 text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 text-2xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full">
                           <CheckCircle2 size={10} /> Achat vérifié
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <div className="flex text-[#FFB800]">
+                      <div className="flex text-amber-400">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star key={star} size={12} fill={star <= review.rating ? 'currentColor' : 'none'} />
                         ))}

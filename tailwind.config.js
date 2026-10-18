@@ -50,6 +50,10 @@ module.exports = {
           pale:    '#FDF6E3',
         },
       },
+      fontSize: {
+        // Plus petite taille de l'interface : libellés courts, badges, mentions (jamais de paragraphe)
+        '2xs': '11px',
+      },
       fontFamily: {
         sans:    ['var(--font-inter)', 'system-ui', 'sans-serif'],
         display: ['var(--font-poppins)', 'sans-serif'],

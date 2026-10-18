@@ -74,7 +74,7 @@ export function CartDrawer() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <ShoppingBag size={20} className="text-gray-700" />
-            <h2 className="font-bold text-gray-900 text-[16px]">
+            <h2 className="font-bold text-gray-900 text-base">
               Mon panier
               {itemCount > 0 && (
                 <span className="ml-2 text-xs font-bold bg-primary text-white px-2 py-0.5 rounded-full">
@@ -96,7 +96,7 @@ export function CartDrawer() {
           <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
             {remaining > 0 ? (
               <>
-                <p className="text-[12px] text-gray-600 mb-1.5">
+                <p className="text-xs text-gray-600 mb-1.5">
                   ➕ Plus que <strong className="text-primary">{fmt(remaining)} FCFA</strong> pour la livraison offerte
                 </p>
                 <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -107,7 +107,7 @@ export function CartDrawer() {
                 </div>
               </>
             ) : (
-              <p className="text-[12px] font-bold text-primary flex items-center gap-2">
+              <p className="text-xs font-bold text-primary flex items-center gap-2">
                 🎁 Livraison gratuite débloquée !
               </p>
             )}
@@ -144,7 +144,7 @@ export function CartDrawer() {
 
                   {/* Infos */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-[13px] leading-tight truncate">
+                    <p className="font-bold text-gray-900 text-sm leading-tight truncate">
                       {item.productName}
                     </p>
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -153,7 +153,7 @@ export function CartDrawer() {
                         item.paperLabel,
                         item.rectoverso ? 'R/V' : 'Recto',
                       ].filter(Boolean).map((tag) => (
-                        <span key={tag} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                        <span key={tag} className="text-2xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
                           {tag}
                         </span>
                       ))}
@@ -168,7 +168,7 @@ export function CartDrawer() {
                         >
                           <Minus size={11} />
                         </button>
-                        <span className="text-[12px] font-bold text-gray-900 w-14 text-center">
+                        <span className="text-xs font-bold text-gray-900 w-14 text-center">
                           {fmt(item.quantity)}
                         </span>
                         <button
@@ -180,8 +180,8 @@ export function CartDrawer() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-gray-900 text-[13px]">
-                          {fmt(item.price)} <span className="text-[10px] text-gray-400 font-normal">FCFA</span>
+                        <p className="font-bold text-gray-900 text-sm">
+                          {fmt(item.price)} <span className="text-2xs text-gray-400 font-normal">FCFA</span>
                         </p>
                         <button
                           onClick={() => removeItem(item.id)}
@@ -210,7 +210,7 @@ export function CartDrawer() {
                     <Check size={14} className="text-green-600 shrink-0" />
                     <div>
                       <p className="text-xs font-bold text-green-800">{appliedPromo.code}</p>
-                      <p className="text-[10px] text-green-600">
+                      <p className="text-2xs text-green-600">
                         {appliedPromo.discountType === 'percentage'
                           ? `−${appliedPromo.discountValue}%`
                           : `−${fmt(appliedPromo.discountValue)} FCFA`
@@ -263,7 +263,7 @@ export function CartDrawer() {
                 <span className="font-display font-extrabold text-lg text-primary">{fmt(finalTotal)} FCFA</span>
               </div>
             )}
-            <p className="text-[11px] text-gray-400">
+            <p className="text-2xs text-gray-400">
               Livraison calculée à l'étape suivante
             </p>
 
@@ -271,7 +271,7 @@ export function CartDrawer() {
             <Link
               href="/commande"
               onClick={closeCart}
-              className="flex items-center justify-center gap-2 w-full bg-[#FF6B00] text-white font-bold py-4 rounded-xl text-[15px] hover:bg-[#E66000] active:scale-[0.98] transition-all shadow-md"
+              className="flex items-center justify-center gap-2 w-full bg-primary text-white font-bold py-4 rounded-xl text-base hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md"
             >
               Commander — {fmt(finalTotal)} FCFA <ArrowRight size={16} />
             </Link>
@@ -279,7 +279,7 @@ export function CartDrawer() {
             {/* Bouton Devis PDF */}
             <button
               onClick={() => setIsDevisOpen(true)}
-              className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-indigo-200 text-indigo-600 font-bold py-3 rounded-xl text-[13px] hover:bg-indigo-50 hover:border-indigo-400 active:scale-[0.98] transition-all"
+              className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-indigo-200 text-indigo-600 font-bold py-3 rounded-xl text-sm hover:bg-indigo-50 hover:border-indigo-400 active:scale-[0.98] transition-all"
             >
               <FileText size={15} />
               Générer un Devis PDF
@@ -289,7 +289,7 @@ export function CartDrawer() {
             <Link
               href="/panier"
               onClick={closeCart}
-              className="flex items-center justify-center gap-1 w-full text-gray-500 font-semibold text-[13px] hover:text-gray-800 transition-colors"
+              className="flex items-center justify-center gap-1 w-full text-gray-500 font-semibold text-sm hover:text-gray-800 transition-colors"
             >
               Voir le panier complet <ChevronRight size={14} />
             </Link>
@@ -301,7 +301,7 @@ export function CartDrawer() {
                 { icon: '🔵', label: 'Moov Money' },
                 { icon: '💳', label: 'Carte' },
               ].map(({ icon, label }) => (
-                <span key={label} className="flex items-center gap-1 text-[10px] text-gray-400">
+                <span key={label} className="flex items-center gap-1 text-2xs text-gray-400">
                   <span>{icon}</span> {label}
                 </span>
               ))}

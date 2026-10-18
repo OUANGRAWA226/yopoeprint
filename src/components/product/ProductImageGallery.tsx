@@ -132,9 +132,9 @@ export function ProductImageGallery({
 
   // Ambiance de studio sélectionnée
   const envStyles = {
-    studio: 'from-slate-50 via-slate-100 to-slate-200 border-gray-200 text-gray-900',
-    expo: 'from-[#1A2639] via-[#111A28] to-[#0A101D] border-slate-700 text-white',
-    dark: 'from-[#0F172A] via-[#020617] to-black border-slate-800 text-white'
+    studio: 'from-gray-50 via-gray-100 to-gray-200 border-gray-200 text-gray-900',
+    expo: 'from-[#1A2639] via-[#111A28] to-[#0A101D] border-gray-700 text-white',
+    dark: 'from-[#0F172A] via-[#020617] to-black border-gray-800 text-white'
   }
 
   // Format dimensions extraction pour affichage
@@ -260,31 +260,34 @@ export function ProductImageGallery({
       {/* ── BARRE D'OUTILS INTERACTIVE DU STUDIO ── */}
       <div className="flex items-center justify-between gap-1.5 px-3 py-2 bg-white rounded-xl border border-gray-200 shadow-sm text-xs overflow-x-auto scrollbar-none">
         
-        {/* Sélecteur d'ambiance d'éclairage */}
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg shrink-0">
+        {/* Sélecteur d'ambiance d'éclairage (secondaire : masqué sur petit écran) */}
+        <div className="hidden sm:flex items-center gap-1 bg-gray-100 p-1 rounded-lg shrink-0" role="group" aria-label="Éclairage de l'aperçu">
           <button
             onClick={() => setEnvironment('studio')}
-            className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-all
+            className={`px-2 py-1 rounded-lg text-2xs font-semibold flex items-center gap-1 transition-all
               ${environment === 'studio' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
             title="Éclairage Studio Neutre 5000K"
+            aria-pressed={environment === 'studio'}
           >
             <Sun size={12} className={environment === 'studio' ? 'text-amber-500' : ''} />
             <span className="hidden sm:inline">Studio</span>
           </button>
           <button
             onClick={() => setEnvironment('expo')}
-            className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-all
-              ${environment === 'expo' ? 'bg-slate-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+            className={`px-2 py-1 rounded-lg text-2xs font-semibold flex items-center gap-1 transition-all
+              ${environment === 'expo' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
             title="Ambiance Stand d'exposition"
+            aria-pressed={environment === 'expo'}
           >
             <Sparkles size={12} className={environment === 'expo' ? 'text-amber-400' : ''} />
             <span className="hidden sm:inline">Stand</span>
           </button>
           <button
             onClick={() => setEnvironment('dark')}
-            className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-all
+            className={`px-2 py-1 rounded-lg text-2xs font-semibold flex items-center gap-1 transition-all
               ${environment === 'dark' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
             title="Mode Sombre & Reflets Luxe"
+            aria-pressed={environment === 'dark'}
           >
             <Moon size={12} className={environment === 'dark' ? 'text-indigo-400' : ''} />
             <span className="hidden sm:inline">Nuit</span>
@@ -297,11 +300,13 @@ export function ProductImageGallery({
           {/* Toggle Cotes & Dimensions architecturales */}
           <button
             onClick={() => setShowDimensions(!showDimensions)}
-            className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1.5 transition-all text-[11px]
+            className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1.5 transition-all text-2xs
               ${showDimensions
                 ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
                 : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
             title="Afficher/masquer les cotes architecturales de coupe"
+            aria-label="Afficher les cotes"
+            aria-pressed={showDimensions}
           >
             <Ruler size={13} className={showDimensions ? 'text-primary' : 'text-gray-400'} />
             <span className="hidden md:inline">Cotes</span>
@@ -311,7 +316,7 @@ export function ProductImageGallery({
           {(isLargeFormat || isHandheld) && (
             <button
               onClick={() => setShowHumanScale(!showHumanScale)}
-              className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1.5 transition-all text-[11px]
+              className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1.5 transition-all text-2xs
                 ${showHumanScale
                   ? 'bg-blue-50 border-blue-300 text-blue-800'
                   : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
@@ -330,7 +335,7 @@ export function ProductImageGallery({
           {canFlip && (
             <button
               onClick={handleToggleFlip}
-              className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1.5 transition-all text-[11px]
+              className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1.5 transition-all text-2xs
                 ${activeView === 1
                   ? 'bg-amber-50 border-amber-300 text-amber-900'
                   : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
@@ -345,11 +350,13 @@ export function ProductImageGallery({
           {!customVisualUrl && (
             <button
               onClick={() => setIsDemoActive(!isDemoActive)}
-              className={`p-1.5 rounded-lg border transition-all text-[11px] font-semibold flex items-center gap-1
+              className={`p-1.5 rounded-lg border transition-all text-2xs font-semibold flex items-center gap-1
                 ${isDemoActive
                   ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
                   : 'bg-white border-gray-200 text-gray-500 hover:text-gray-800'}`}
               title="Aperçu avec un design exemple appliqué sur le produit"
+              aria-label="Afficher un design d'exemple"
+              aria-pressed={isDemoActive}
             >
               <Palette size={14} className={isDemoActive ? 'text-indigo-600' : 'text-gray-400'} />
               <span className="hidden lg:inline">Exemple</span>
@@ -361,6 +368,7 @@ export function ProductImageGallery({
             onClick={() => setZoomed(true)}
             className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
             title="Agrandir en haute résolution"
+            aria-label="Agrandir l'aperçu"
           >
             <Maximize2 size={15} />
           </button>
@@ -387,14 +395,14 @@ export function ProductImageGallery({
 
         {/* Indicateur de finition dorure or / vernis sélectif */}
         {isGold && (
-          <div className="absolute top-4 left-4 z-20 px-3 py-1 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 shadow-md flex items-center gap-1 pointer-events-none select-none">
+          <div className="absolute top-4 left-4 z-20 px-3 py-1 rounded-full text-2xs font-bold bg-gradient-to-r from-amber-400 to-amber-600 text-gray-950 shadow-md flex items-center gap-1 pointer-events-none select-none">
             <Sparkles size={11} /> Dorure Or à Chaud
           </div>
         )}
 
         {/* Cotes dynamiques affichées en direct */}
         {showDimensions && (
-          <div className="absolute top-3 right-3 z-20 bg-black/75 backdrop-blur-md text-white px-2.5 py-1 rounded-md text-[10px] font-mono tracking-wide flex items-center gap-1.5 border border-white/10 shadow-sm">
+          <div className="absolute top-3 right-3 z-20 bg-black/75 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-2xs font-mono tracking-wide flex items-center gap-1.5 border border-white/10 shadow-sm">
             <Ruler size={11} className="text-emerald-400" />
             <span>{dims.widthLabel} × {dims.heightLabel}</span>
           </div>
@@ -447,7 +455,7 @@ export function ProductImageGallery({
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold text-gray-800 dark:text-gray-200 shadow-md border border-gray-200/50 dark:border-gray-700/50 whitespace-nowrap z-20 flex items-center gap-1.5">
           <Eye size={12} className="text-primary" />
           <span>{views[activeView]?.label}</span>
-          <span className="text-gray-400 text-[10px]">
+          <span className="text-gray-400 text-2xs">
             · {isGalleryImage(views[activeView]) ? views[activeView].description : (views[activeView] as any)?.desc}
           </span>
         </div>
@@ -476,7 +484,7 @@ export function ProductImageGallery({
                 {renderProductIllustration(i, 64, 48)}
               </div>
             )}
-            <span className="text-[9px] font-bold text-gray-700 truncate w-full text-center px-1 mt-0.5">
+            <span className="text-2xs font-bold text-gray-700 line-clamp-2 leading-tight w-full text-center px-1 mt-0.5">
               {view.label}
             </span>
           </button>
@@ -512,7 +520,7 @@ export function ProductImageGallery({
             </div>
 
             {/* Canvas central agrandi */}
-            <div className="flex items-center justify-center py-6 relative min-h-[380px] w-full bg-slate-50 dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="flex items-center justify-center py-6 relative min-h-[380px] w-full bg-gray-50 dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
               {hasGalleryImages && isGalleryImage(views[activeView]) && views[activeView].url ? (
                 <Image
                   src={views[activeView].url}

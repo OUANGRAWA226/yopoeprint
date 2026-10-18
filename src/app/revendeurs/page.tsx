@@ -107,7 +107,7 @@ export default function RevendeursPage() {
  </div>
  <div>
  <h4 className="font-bold text-foreground text-xs">Ibrahim Kabore</h4>
- <p className="text-[10px] text-gray-400">Directeur d&apos;Agence Créative — Ouagadougou</p>
+ <p className="text-2xs text-gray-400">Directeur d&apos;Agence Créative — Ouagadougou</p>
  </div>
  </div>
  </div>
@@ -134,7 +134,7 @@ export default function RevendeursPage() {
 
  {/* Nom entreprise */}
  <div className="space-y-1">
- <label className="text-[11px] font-bold text-foreground uppercase tracking-wider">Société / Agence *</label>
+ <label className="text-2xs font-bold text-foreground uppercase tracking-wider">Société / Agence *</label>
  <div className="relative">
  <Building className="absolute left-3.5 top-3 text-gray-300" size={16} />
  <input
@@ -150,7 +150,7 @@ export default function RevendeursPage() {
 
  {/* Nom de contact */}
  <div className="space-y-1">
- <label className="text-[11px] font-bold text-foreground uppercase tracking-wider">Nom du contact *</label>
+ <label className="text-2xs font-bold text-foreground uppercase tracking-wider">Nom du contact *</label>
  <input
  type="text"
  required
@@ -163,7 +163,7 @@ export default function RevendeursPage() {
 
  {/* E-mail */}
  <div className="space-y-1">
- <label className="text-[11px] font-bold text-foreground uppercase tracking-wider">E-mail pro *</label>
+ <label className="text-2xs font-bold text-foreground uppercase tracking-wider">E-mail pro *</label>
  <div className="relative">
  <Mail className="absolute left-3.5 top-3 text-gray-300" size={16} />
  <input
@@ -179,7 +179,7 @@ export default function RevendeursPage() {
 
  {/* Téléphone */}
  <div className="space-y-1">
- <label className="text-[11px] font-bold text-foreground uppercase tracking-wider">Numéro de téléphone *</label>
+ <label className="text-2xs font-bold text-foreground uppercase tracking-wider">Numéro de téléphone *</label>
  <div className="relative">
  <Phone className="absolute left-3.5 top-3 text-gray-300" size={16} />
  <input
@@ -195,7 +195,7 @@ export default function RevendeursPage() {
 
  {/* Volume de commande estimé */}
  <div className="space-y-1">
- <label className="text-[11px] font-bold text-foreground uppercase tracking-wider">Volume de commande mensuel</label>
+ <label className="text-2xs font-bold text-foreground uppercase tracking-wider">Volume de commande mensuel</label>
  <select
  value={formData.volume}
  onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
@@ -209,7 +209,7 @@ export default function RevendeursPage() {
 
  {/* Message */}
  <div className="space-y-1">
- <label className="text-[11px] font-bold text-foreground uppercase tracking-wider">Parlez-nous de vos besoins</label>
+ <label className="text-2xs font-bold text-foreground uppercase tracking-wider">Parlez-nous de vos besoins</label>
  <textarea
  rows={3}
  placeholder="Quels sont les types de supports d'impression que vous externalisez le plus fréquemment ?"
