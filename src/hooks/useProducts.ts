@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { computePrice } from '@/lib/data'
 import {
  Product,
  CreateProductDto,
@@ -220,74 +221,27 @@ export function usePopularProducts(limit = 6) {
 // ── Hook pour calculer les prix ────────────────────────────────
 export function usePriceCalculator() {
  const [price, setPrice] = useState<{ unitPrice: number; total: number } | null>(null)
- const [loading, setLoading] = useState(false)
 
-  const calculate = useCallback((config: {
-    productId?: string
-    basePrice?: number
-    quantity?: number
-    formatId?: string
-    paperId?: string
-    finishId?: string
-    rectoverso?: boolean
-    paperExtra?: number
-    finishExtra?: number
-    formatMultiplier?: number
-  }) => {
-    setLoading(true)
-    try {
-      const basePrice = config.basePrice || 0
-      const quantity = config.quantity || 1
-      
-      let unitPrice = basePrice
-      
-      // Ajout des coûts liés aux options
-      if (config.paperExtra) {
-        unitPrice += config.paperExtra
-      }
-      
-      if (config.finishExtra) {
-        unitPrice += config.finishExtra
-      }
-
-      // Multiplicateur de format (optionnel)
-      if (config.formatMultiplier) {
-        unitPrice *= config.formatMultiplier
-      }
-      
-      // Surcoût impression Recto-Verso (ex: +40%)
-      if (config.rectoverso) {
-        unitPrice *= 1.4 
-      }
-      
-      // DÉGRESSIVITÉ SUR LA QUANTITÉ (Tiered Pricing)
-      // Plus la quantité est grande, plus la remise au prix unitaire est forte
-      let discount = 0
-      if (quantity >= 500) {
-        discount = 0.20 // -20%
-      } else if (quantity >= 250) {
-        discount = 0.10 // -10%
-      } else if (quantity >= 100) {
-        discount = 0.05 // -5%
-      }
-
-      // Application de la remise au prix unitaire
-      unitPrice = unitPrice * (1 - discount)
-
-      // Arrondir le prix unitaire
-      unitPrice = Math.round(unitPrice)
-      
-      const total = unitPrice * quantity
-      
-      setPrice({ unitPrice, total })
-      console.log('[usePriceCalculator] Calculated:', { unitPrice, total, discount, config })
- } catch (e: any) {
- console.error('[usePriceCalculator] Error:', e)
- setPrice(null)
- } finally {
- setLoading(false)
- }
+ // Same formula as the API, so the price shown is the price charged
+ const calculate = useCallback((config: {
+ basePrice: number
+ minQuantity: number
+ quantity: number
+ finishExtra?: number
+ rectoverso?: boolean
+ formatMultiplier?: number
+ paperExtra?: number
+ }) => {
+ setPrice(computePrice(
+ config.basePrice,
+ config.minQuantity || 1,
+ config.quantity || 1,
+ config.finishExtra || 0,
+ !!config.rectoverso,
+ config.formatMultiplier || 1,
+ config.paperExtra || 0,
+ ))
  }, [])
 
- return { price, loading, calculate }
+ return { price, loading: false, calculate }
 }

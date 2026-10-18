@@ -307,25 +307,25 @@ export const PAYMENT_OPTIONS: PaymentOption[] = [
 ]
 
 // ─── Price Calculator ──────────────────────────────────────────
-export function calculatePrice(
- product: Product,
+// basePrice is the price of a batch of minQuantity copies.
+// Must match ProductsService.computePrice in yopoeprint-api (the server re-prices every order).
+export function computePrice(
+ basePrice: number,
+ minQuantity: number,
  quantity: number,
  finishModifier: number = 0,
- isRectoverso: boolean = false
+ isRectoverso: boolean = false,
+ formatMultiplier: number = 1,
+ paperExtra: number = 0
 ): { total: number; unitPrice: number } {
- // Base price scale by quantity (degressive pricing)
- const quantityRatio = product.minQuantity / quantity
- const baseTotal = product.basePrice * Math.max(quantityRatio, 0.3)
-
- // Scale proportionally for quantities > minQuantity
- const quantityMultiplier = quantity / product.minQuantity
- let total = product.basePrice * Math.pow(quantityMultiplier, 0.75)
+ // Degressive pricing
+ let total = basePrice * Math.pow(quantity / minQuantity, 0.75) * formatMultiplier
 
  // Recto/verso adds 60% to total
  if (isRectoverso) total *= 1.6
 
- // Add finish cost
- total += finishModifier
+ // Add finish and paper costs
+ total += finishModifier + paperExtra
 
  // Round to nearest 100 FCFA
  total = Math.round(total / 100) * 100
@@ -334,6 +334,15 @@ export function calculatePrice(
  total,
  unitPrice: Math.round((total / quantity) * 10) / 10,
  }
+}
+
+export function calculatePrice(
+ product: Product,
+ quantity: number,
+ finishModifier: number = 0,
+ isRectoverso: boolean = false
+): { total: number; unitPrice: number } {
+ return computePrice(product.basePrice, product.minQuantity, quantity, finishModifier, isRectoverso)
 }
 
 // ─── Format price in FCFA ─────────────────────────────────────

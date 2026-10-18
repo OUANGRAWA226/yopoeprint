@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { usePopularProducts } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
 import Link from 'next/link'
@@ -587,7 +588,7 @@ const VERIFIED_REVIEWS = [
 ]
 
 export default function StorefrontHomePage() {
-  const { addItem, openCart } = useCart()
+  const router = useRouter()
   const { products: apiProducts } = usePopularProducts()
 
   // Calculateur Express state
@@ -641,26 +642,12 @@ export default function StorefrontHomePage() {
     return () => clearInterval(slideTimer)
   }, [isCarouselHovered, banners.length])
 
-  // Ajout direct 1-clic depuis les Ventes Flash style Jumia
+  // Les offres flash ne sont pas des produits commandables tels quels :
+  // on renvoie vers la page où le client configure et dépose son fichier
   const handleQuickAddFlash = (e: React.MouseEvent, item: FlashSaleItem) => {
     e.preventDefault()
     e.stopPropagation()
-    addItem({
-      id: `flash-${item.id}-${Date.now()}`,
-      productId: item.id,
-      productName: `${item.title} (${item.qty} ex.)`,
-      emoji: '⚡',
-      formatId: 'flash',
-      formatLabel: `${item.qty} ex. · Vente Flash Atelier`,
-      paperId: 'standard',
-      paperLabel: 'Papier Pro 350g',
-      quantity: 1,
-      rectoverso: false,
-      finition: 'Standard',
-      price: item.price,
-      unitPrice: Math.round(item.price / (item.qty || 1)),
-    })
-    openCart()
+    router.push(item.href)
   }
 
   // Changement de produit dans le calculateur
@@ -678,24 +665,9 @@ export default function StorefrontHomePage() {
   const calculatedTotal = calcBasePrice + finishExtra
   const unitPrice = Math.round(calculatedTotal / selectedQty)
 
-  // Ajout direct au panier depuis le calculateur
+  // Le calculateur donne une estimation : la commande se finalise sur la fiche produit
   const handleAddCalculatedToCart = () => {
-    addItem({
-      id: `calc-${currentCalc.id}-${selectedQty}-${selectedFinish}-${Date.now()}`,
-      productId: currentCalc.id,
-      productName: `${currentCalc.name} (${selectedQty} ex.)`,
-      emoji: '🖨️',
-      formatId: 'standard',
-      formatLabel: `${selectedQty} exemplaires`,
-      paperId: 'standard',
-      paperLabel: 'Standard Atelier',
-      quantity: 1,
-      rectoverso: false,
-      finition: activeFinishObj?.label || 'Sans finition',
-      price: calculatedTotal,
-      unitPrice: unitPrice,
-    })
-    openCart()
+    router.push(`/produit/${currentCalc.slug}`)
   }
 
   // Copie du code promo
@@ -875,8 +847,8 @@ export default function StorefrontHomePage() {
                   <button
                     onClick={(e) => handleQuickAddFlash(e, item)}
                     className="absolute top-2 right-2 w-7 h-7 bg-slate-900/90 hover:bg-slate-900 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md active:scale-90 transition-transform cursor-pointer"
-                    title="Ajouter au panier"
-                    aria-label={`Ajouter ${item.title}`}
+                    title="Configurer"
+                    aria-label={`Configurer ${item.title}`}
                   >
                     <Plus size={15} strokeWidth={2.5} />
                   </button>
@@ -1382,7 +1354,7 @@ export default function StorefrontHomePage() {
                   className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShoppingCart size={16} />
-                  <span>Ajouter au panier ({new Intl.NumberFormat('fr-FR').format(calculatedTotal)} F)</span>
+                  <span>Configurer et commander</span>
                 </button>
 
                 <p className="text-[10px] text-center text-slate-400 mt-3">

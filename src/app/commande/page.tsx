@@ -6,14 +6,13 @@ import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { api } from '@/lib'
-import { paymentService } from '@/lib/payment.service'
+import { paymentsService } from '@/lib/payments.service'
 import {
   MapPin, CreditCard, CheckCircle,
   ChevronRight, ArrowRight, AlertCircle,
   Smartphone, ShieldCheck, Check, Package,
   Clock, Truck, Tag, X, Loader2, UserCheck, LogIn, Eye, EyeOff
 } from 'lucide-react'
-import PaymentGatewayModal from '@/components/checkout/PaymentGatewayModal'
 import { BatPreviewModal } from '@/components/product/BatPreviewModal'
 import { useToast } from '@/context/ToastContext'
 
@@ -41,6 +40,16 @@ const PAYMENT_METHODS = [
   { id: 'card',         label: 'Carte bancaire', emoji: '💳', color: 'bg-gray-50 border-gray-200', activeColor: 'border-gray-900 bg-gray-50',   desc: 'Visa / Mastercard — Sécurisé CinetPay', badge: null },
   { id: 'bank_transfer',label: 'Virement / Chèque', emoji: '🏦', color: 'bg-gray-50 border-gray-200', activeColor: 'border-gray-900 bg-gray-50',   desc: 'Entreprises B2B (> 100 000 FCFA)', badge: 'B2B' },
 ]
+
+// Storefront payment choice → PaymentMethod enum of the API
+const API_PAYMENT_METHOD: Record<string, string> = {
+  orange_money:  'orange_money',
+  moov_money:    'moov_money',
+  card:          'visa',
+  bank_transfer: 'virement',
+}
+
+type CreatedOrder = { id: string; orderNumber: string; total: number }
 
 // ─── Stepper ─────────────────────────────────────────────────
 function Stepper({ current, onStepClick }: { current: number; onStepClick: (step: number) => void }) {
@@ -100,15 +109,14 @@ const inputCls = "w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-x
 export default function CommandePage() {
   const router = useRouter()
   const toast = useToast()
-  const { items, total, clearCart, appliedPromo, discount, applyPromo, removePromo } = useCart()
+  const { items, total, hydrated, appliedPromo, discount, applyPromo, removePromo } = useCart()
   const { user, login } = useAuthContext()
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
-  const [pendingPaymentId, setPendingPaymentId] = useState<string>('')
-  const [pendingOrderId, setPendingOrderId] = useState<string>('')
+  // Order already created server-side, reused if the customer retries the payment
+  const [pendingOrder, setPendingOrder] = useState<CreatedOrder | null>(null)
 
   // Modal BAT preview
   const [previewBatUrl, setPreviewBatUrl] = useState<string | null>(null)
@@ -137,7 +145,6 @@ export default function CommandePage() {
   })
 
   const [payMethod, setPayMethod] = useState('orange_money')
-  const [mobileNum, setMobileNum] = useState('')
 
   // Remplir automatiquement avec les infos utilisateur dès qu'il est disponible
   useEffect(() => {
@@ -151,22 +158,22 @@ export default function CommandePage() {
     }
   }, [user])
 
-  // Pré-remplir le numéro mobile money dès que le téléphone livraison est renseigné
+  // Any change to the cart or delivery invalidates the order created earlier
   useEffect(() => {
-    if (!mobileNum && address.phone) {
-      setMobileNum(address.phone)
-    }
-  }, [address.phone, mobileNum])
+    setPendingOrder(null)
+  }, [items, zone, appliedPromo, address, payMethod])
 
-  // Redirection si panier vide
+  // Redirection si panier vide (une fois le panier enregistré relu)
   useEffect(() => {
-    if (items.length === 0) {
+    if (hydrated && items.length === 0) {
       router.push('/panier')
     }
-  }, [items, router])
+  }, [hydrated, items, router])
 
   const deliveryCost = total >= 75000 && zone.id !== 'other' ? 0 : zone.price
   const finalTotal = Math.max(0, total - discount + deliveryCost)
+  // The API re-prices every order: once created, its total is the amount due
+  const amountDue = pendingOrder?.total ?? finalTotal
 
   const handleApplyPromoCode = async () => {
     const code = promoInput.trim().toUpperCase()
@@ -221,76 +228,59 @@ export default function CommandePage() {
     setError(''); return true
   }
 
-  const handlePaymentSuccess = () => {
-    setIsPaymentModalOpen(false)
-    clearCart()
-    if (pendingOrderId) {
-      router.push(`/commande/confirmation?orderId=${pendingOrderId}`)
-    }
-  }
-
   const handlePayment = async () => {
-    if ((payMethod === 'orange_money' || payMethod === 'moov_money') && (!mobileNum || mobileNum.replace(/\D/g, '').length < 8)) {
-      setError('Veuillez entrer un numéro Mobile Money valide (8 chiffres minimum).')
+    if (!user) {
+      setError('Connectez-vous ou créez un compte pour finaliser et suivre votre commande.')
+      setShowInlineLogin(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
     setLoading(true); setError('')
     try {
-      // 1. Création de la commande avec transmission du code promo et réduction
-      const orderRes = await api.post('/orders', {
-        items: items.map((i) => ({
-          productId: i.productId,
-          formatId: i.formatId,
-          paperId: i.paperId,
-          quantity: i.quantity,
-          rectoverso: i.rectoverso,
-          finition: i.finition,
-          price: i.price,
-          fileUrl: i.fileUrl,
-          fileName: i.fileName,
-        })),
-        deliveryZone: zone.id,
-        deliveryAddress: zone.id === 'pickup' ? null : address,
-        deliveryCost,
-        paymentMethod: payMethod,
-        promoCode: appliedPromo?.code || undefined,
-        discount: discount || 0,
-        total: finalTotal,
-        customerNotes: address.instructions || undefined,
-        guestEmail: !user ? (address.email || undefined) : undefined,
-      })
+      let order = pendingOrder
+      if (!order) {
+        order = await api.post<CreatedOrder>('/orders', {
+          items: items.map((i) => ({
+            productId:     i.productId,
+            formatId:      i.formatId,
+            paperId:       i.paperId,
+            finishId:      i.finishId,
+            quantity:      i.quantity,
+            rectoverso:    i.rectoverso,
+            designFileUrl: i.fileUrl,
+          })),
+          deliveryZone: zone.id,
+          deliveryAddress: {
+            fullName:     address.fullName,
+            phone:        address.phone,
+            street:       address.street || undefined,
+            neighborhood: address.neighborhood || undefined,
+          },
+          paymentMethod: API_PAYMENT_METHOD[payMethod],
+          promoCode:     appliedPromo?.code || undefined,
+          customerNotes: address.instructions || undefined,
+        })
+        setPendingOrder(order)
 
-      const order = orderRes.data
-      setPendingOrderId(order.id)
+        if (order.total !== finalTotal) {
+          setError(`Le montant a été recalculé par notre atelier : ${fmt(order.total)} FCFA. Vérifiez-le puis cliquez à nouveau sur « Payer ».`)
+          setLoading(false)
+          return
+        }
+      }
 
-      // 2. Initiation du paiement
-      const payRes = await paymentService.initiatePayment({
-        orderId: order.id,
-        amount: finalTotal,
-        paymentMethod: payMethod,
-        phoneNumber: payMethod !== 'card' && payMethod !== 'bank_transfer' ? mobileNum : undefined,
-        returnUrl: `${window.location.origin}/commande/confirmation?orderId=${order.id}`,
-        notifyUrl: `${process.env.NEXT_PUBLIC_API_URL}/payments/webhook`,
-      })
-
-      // 3. Virement direct ou redirection ou popup OTP
       if (payMethod === 'bank_transfer') {
-        clearCart()
         router.push(`/commande/confirmation?orderId=${order.id}&method=virement`)
         return
       }
 
-      if (payRes.paymentUrl) {
-        window.location.href = payRes.paymentUrl
-      } else {
-        // Mode Seamless : affichage de la modal sécurisée OTP
-        setPendingPaymentId(payRes.paymentId || order.id)
-        setIsPaymentModalOpen(true)
-        setLoading(false)
-      }
+      // CinetPay hosted page: the customer confirms there with Orange / Moov / card.
+      // The cart is cleared on the confirmation page, so a cancelled payment keeps it.
+      const { paymentUrl } = await paymentsService.initPayment(order.id)
+      paymentsService.redirectToPayment(paymentUrl)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'initialisation de la commande. Veuillez vérifier vos données.')
+      setError(err.message || "Erreur lors de l'initialisation de la commande. Veuillez vérifier vos données.")
       setLoading(false)
     }
   }
@@ -338,8 +328,11 @@ export default function CommandePage() {
                       ⚡
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 text-xs">Commande rapide sans compte</p>
-                      <p className="text-[11px] text-gray-500">Pas besoin de mot de passe pour commander.</p>
+                      <p className="font-bold text-gray-900 text-xs">Un compte est nécessaire pour payer</p>
+                      <p className="text-[11px] text-gray-500">
+                        Il vous permet de suivre la commande et de valider votre BAT.{' '}
+                        <Link href="/inscription?redirect=/commande" className="font-bold text-primary hover:underline">Créer un compte</Link>
+                      </p>
                     </div>
                   </div>
                   <button
@@ -355,7 +348,7 @@ export default function CommandePage() {
                 {/* Formulaire de connexion inline sans quitter la page */}
                 {showInlineLogin && (
                   <form onSubmit={handleInlineLogin} className="mt-4 pt-4 border-t border-gray-100 space-y-3 animate-in fade-in">
-                    <p className="text-xs text-gray-600 font-medium">Connectez-vous pour pré-remplir vos adresses enregistrées :</p>
+                    <p className="text-xs text-gray-600 font-medium">Connectez-vous pour finaliser la commande :</p>
                     {loginError && <p className="text-xs text-red-500 font-bold">{loginError}</p>}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input
@@ -705,27 +698,12 @@ export default function CommandePage() {
                   })}
                 </div>
 
-                {/* Numéro mobile */}
-                {(payMethod === 'orange_money' || payMethod === 'moov_money') && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
-                    <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wide">
-                      Numéro de débit {payMethod === 'orange_money' ? 'Orange Money' : 'Moov Money'} *
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+226</span>
-                      <input
-                        type="tel"
-                        value={mobileNum}
-                        onChange={(e) => setMobileNum(e.target.value)}
-                        placeholder="70 00 00 00"
-                        className={`${inputCls} pl-16`}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 flex items-center gap-1.5 pt-1">
-                      <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
-                      Une autorisation USSD sécurisée vous sera demandée sur ce mobile.
-                    </p>
-                  </div>
+                {payMethod !== 'bank_transfer' && (
+                  <p className="text-xs text-gray-500 flex items-start gap-1.5 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <ShieldCheck size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                    Vous serez redirigé vers la page de paiement sécurisée CinetPay pour valider le règlement
+                    {payMethod === 'card' ? ' par carte.' : ' avec votre code ' + (payMethod === 'orange_money' ? 'Orange Money.' : 'Moov Money.')}
+                  </p>
                 )}
 
                 {payMethod === 'bank_transfer' && (
@@ -739,7 +717,7 @@ export default function CommandePage() {
                 <div className="bg-gray-900 rounded-2xl p-5 text-center shadow-lg">
                   <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider font-semibold">Montant total net à régler</p>
                   <p className="font-display font-black text-white text-3xl md:text-4xl">
-                    {fmt(finalTotal)} <span className="text-base font-normal text-gray-400">FCFA</span>
+                    {fmt(amountDue)} <span className="text-base font-normal text-gray-400">FCFA</span>
                   </p>
                   <p className="text-xs text-gray-400 mt-1">TVA & frais de livraison inclus</p>
                 </div>
@@ -771,7 +749,7 @@ export default function CommandePage() {
                     ) : (
                       <>
                         <ShieldCheck size={18} />
-                        Payer {fmt(finalTotal)} FCFA
+                        Payer {fmt(amountDue)} FCFA
                       </>
                     )}
                   </button>
@@ -874,7 +852,7 @@ export default function CommandePage() {
                   </div>
                   <div className="border-t border-gray-100 pt-2 flex justify-between font-extrabold text-gray-900 text-[15px]">
                     <span>Total net</span>
-                    <span className="text-primary">{fmt(finalTotal)} FCFA</span>
+                    <span className="text-primary">{fmt(amountDue)} FCFA</span>
                   </div>
                 </div>
 
@@ -895,16 +873,6 @@ export default function CommandePage() {
           </aside>
         </div>
       </div>
-
-      <PaymentGatewayModal 
-        isOpen={isPaymentModalOpen}
-        amount={finalTotal}
-        paymentId={pendingPaymentId}
-        paymentMethod={payMethod}
-        phoneNumber={mobileNum}
-        onSuccess={handlePaymentSuccess}
-        onCancel={() => setIsPaymentModalOpen(false)}
-      />
 
       {previewBatUrl && (
         <BatPreviewModal

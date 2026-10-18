@@ -12,6 +12,7 @@ export interface CartItem {
   formatLabel: string
   paperId: string
   paperLabel: string
+  finishId?: string
   quantity: number
   rectoverso: boolean
   finition: string
@@ -37,6 +38,8 @@ interface CartContextType {
   removePromo: () => void
   // Drawer
   isCartOpen: boolean
+  // false until the saved cart has been read from storage
+  hydrated: boolean
   openCart: () => void
   closeCart: () => void
 }
@@ -73,6 +76,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [appliedPromo, setAppliedPromo] = useState<PromoCodeResult | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
 
   // Restaurer le panier et le code promo au démarrage
   useEffect(() => {
@@ -85,17 +89,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.warn('Erreur lors de la lecture du panier local:', e)
     }
+    setHydrated(true)
   }, [])
 
   // Sauvegarder les articles à chaque modification
+  // (pas avant la restauration, sinon le panier vide initial écrase celui enregistré)
   useEffect(() => {
+    if (!hydrated) return
     try {
       safeSetStorage(STORAGE_KEY, JSON.stringify(items))
     } catch {}
-  }, [items])
+  }, [items, hydrated])
 
   // Sauvegarder le code promo
   useEffect(() => {
+    if (!hydrated) return
     try {
       if (appliedPromo) {
         safeSetStorage(PROMO_STORAGE_KEY, JSON.stringify(appliedPromo))
@@ -103,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         safeRemoveStorage(PROMO_STORAGE_KEY)
       }
     } catch {}
-  }, [appliedPromo])
+  }, [appliedPromo, hydrated])
 
   // Bloquer le scroll body quand le drawer est ouvert
   useEffect(() => {
@@ -190,7 +198,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total, itemCount,
       appliedPromo, discount, finalTotal,
       applyPromo, removePromo,
-      isCartOpen, openCart, closeCart,
+      isCartOpen, hydrated, openCart, closeCart,
     }}>
       {children}
     </CartContext.Provider>

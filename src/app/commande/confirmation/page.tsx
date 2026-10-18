@@ -4,15 +4,36 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib'
+import { useCart } from '@/context/CartContext'
 import { uploadService } from '@/lib/upload.service'
 import { CheckCircle, Clock, Truck, Phone, ArrowRight, FileWarning, UploadCloud, FileCheck, MapPin, Download, FileText, Printer } from 'lucide-react'
 import { DevisPdfGenerator } from '@/components/checkout/DevisPdfGenerator'
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(n) }
 
+// Maps the API order (items: format, paper, finish, totalPrice, designFileUrl…)
+// to the shape this page and DevisPdfGenerator display
+function toViewOrder(order: any) {
+  return {
+    ...order,
+    items: (order.items || []).map((it: any) => ({
+      ...it,
+      emoji: it.productEmoji,
+      formatId: it.format,
+      formatLabel: it.format,
+      paperId: it.paper,
+      paperLabel: it.paper,
+      finition: it.finish,
+      price: it.totalPrice,
+      fileUrl: it.designFileUrl,
+    })),
+  }
+}
+
 function ConfirmationDetails() {
   const params = useSearchParams()
   const orderId = params.get('orderId')
+  const { clearCart } = useCart()
 
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -44,8 +65,8 @@ function ConfirmationDetails() {
       setUploadProgress(100)
 
       // Mise à jour de la commande via l'API
-      await api.patch(`/orders/${orderId}`, {
-        fileUrl: res.url,
+      await api.patch(`/orders/my-orders/${orderId}/design-file`, {
+        designFileUrl: res.url,
       })
 
       setTimeout(() => {
@@ -55,7 +76,7 @@ function ConfirmationDetails() {
           if (!prevOrder) return prevOrder
           return {
             ...prevOrder,
-            items: prevOrder.items?.map((item: any) => ({ ...item, fileUrl: res.url }))
+            items: prevOrder.items?.map((item: any) => ({ ...item, fileUrl: item.fileUrl || res.url }))
           }
         })
       }, 500)
@@ -68,10 +89,15 @@ function ConfirmationDetails() {
 
   useEffect(() => {
     if (!orderId) { setError('Numéro de commande manquant'); setLoading(false); return }
-    api.get(`/orders/${orderId}`)
-      .then((r) => setOrder(r.data))
+    api.get(`/orders/my-orders/${orderId}`)
+      .then((r) => {
+        setOrder(toViewOrder(r))
+        // The order now exists server-side: the cart has been converted
+        clearCart()
+      })
       .catch(() => setError('Impossible de charger la commande'))
       .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId])
 
   if (loading) {

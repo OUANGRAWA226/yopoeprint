@@ -83,15 +83,6 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
 
   useEffect(() => {
     if (!product) return
-    const initialConfig = {
-      formatId: (product as any).formats?.[0]?.id || '',
-      paperId: (product as any).papers?.[0]?.id || '',
-      quantity: (product as any).quantities?.[0] || product.minQuantity || 100,
-      finishId: (product as any).finishes?.[0]?.id || '',
-      rectoverso: false,
-    }
-    calculate({ productId: product.id, basePrice: product.basePrice, ...initialConfig })
-
     productsService.getAll({ category: product.category, limit: 5 })
       .then((res) => {
         const siblings = (res.data || res) as any[]
@@ -99,22 +90,22 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
           setRelatedProducts(siblings.filter((p: any) => p.id !== product.id).slice(0, 4))
       })
       .catch(() => {})
-  }, [product, calculate])
+  }, [product])
 
   useEffect(() => {
-    if (!product || !config.formatId) return
-    
+    if (!product) return
     const sFormat = (product as any).formats?.find((f: any) => f.id === config.formatId)
     const sPaper = (product as any).papers?.find((p: any) => p.id === config.paperId)
     const sFinish = (product as any).finishes?.find((f: any) => f.id === config.finishId)
 
-    calculate({ 
-      productId: product.id, 
-      basePrice: product.basePrice, 
-      ...config,
+    calculate({
+      basePrice: product.basePrice,
+      minQuantity: product.minQuantity,
+      quantity: config.quantity,
+      finishExtra: sFinish?.priceModifier || 0,
+      rectoverso: config.rectoverso,
       formatMultiplier: sFormat?.multiplier || 1,
       paperExtra: sPaper?.priceExtra || 0,
-      finishExtra: sFinish?.priceModifier ?? sFinish?.priceExtra ?? 0
     })
   }, [config, product, calculate])
 
@@ -133,6 +124,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
       formatLabel: selectedFormat?.label || config.formatId,
       paperId: config.paperId,
       paperLabel: selectedPaper?.label || config.paperId,
+      finishId: config.finishId,
       quantity: config.quantity,
       rectoverso: config.rectoverso,
       finition: selectedFinish?.label || 'Sans finition',
@@ -158,6 +150,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
       formatLabel: selectedFormat?.label || config.formatId,
       paperId: config.paperId,
       paperLabel: selectedPaper?.label || config.paperId,
+      finishId: config.finishId,
       quantity: config.quantity,
       rectoverso: config.rectoverso,
       finition: selectedFinish?.label || 'Sans finition',
