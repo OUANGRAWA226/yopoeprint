@@ -8,7 +8,7 @@ import {
   X, Send, ExternalLink, RefreshCw, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { adminOrdersService, Order } from '@/lib/orders.service'
-import { cloudinaryService } from '@/lib/cloudinary.service'
+import { uploadMedia } from '@/lib/media.service'
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending:       { label: 'Paiement en attente', cls: 'bg-yellow-100 text-yellow-700' },
@@ -184,13 +184,13 @@ function CommandesContent() {
 
     setUploadingBat(true)
     try {
-      const url = await cloudinaryService.uploadImage(file)
+      const url = await uploadMedia(file, 'bat')
       if (isVerso) {
         setBatVersoUrlInput(url)
       } else {
         setBatUrlInput(url)
       }
-      setFeedbackMsg({ type: 'success', text: 'Maquette BAT chargée avec succès sur Cloudinary.' })
+      setFeedbackMsg({ type: 'success', text: 'Maquette BAT chargée.' })
     } catch (err: any) {
       setFeedbackMsg({ type: 'error', text: err?.message || 'Erreur lors du chargement du fichier.' })
     } finally {
@@ -522,7 +522,7 @@ function CommandesContent() {
                     <input
                       type="file"
                       onChange={(e) => handleFileUpload(e, false)}
-                      accept="image/*,.pdf"
+                      accept="image/png,image/jpeg,.pdf"
                       className="hidden"
                     />
                   </label>
@@ -549,7 +549,7 @@ function CommandesContent() {
                     <input
                       type="file"
                       onChange={(e) => handleFileUpload(e, true)}
-                      accept="image/*,.pdf"
+                      accept="image/png,image/jpeg,.pdf"
                       className="hidden"
                     />
                   </label>

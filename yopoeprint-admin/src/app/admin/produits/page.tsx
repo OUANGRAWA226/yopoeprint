@@ -7,7 +7,7 @@ import {
   ImagePlus, Package, CheckCircle
 } from 'lucide-react'
 import { api } from '@/lib'
-import { cloudinaryService } from '@/lib/cloudinary.service'
+import { uploadMedia } from '@/lib/media.service'
 
 // ── Types ─────────────────────────────────────────────────────
 interface Product {
@@ -124,9 +124,9 @@ function ProductModal({
       }
       reader.readAsDataURL(file)
 
-      // Upload vers Cloudinary
+      // Envoi signé par l'API (dossier Cloudinary yopoeprint/products)
       setUploadProgress(0)
-      const cloudinaryUrl = await cloudinaryService.uploadImage(file, (progress) => {
+      const cloudinaryUrl = await uploadMedia(file, 'products', (progress) => {
         setUploadProgress(progress)
       })
       
@@ -162,8 +162,8 @@ function ProductModal({
       setGalleryUploading(true)
       setGalleryUploadProgress(0)
       
-      // Upload vers Cloudinary
-      const cloudinaryUrl = await cloudinaryService.uploadImage(file, (progress) => {
+      // Envoi signé par l'API (dossier Cloudinary yopoeprint/products)
+      const cloudinaryUrl = await uploadMedia(file, 'products', (progress) => {
         setGalleryUploadProgress(progress)
       })
       
@@ -792,7 +792,7 @@ function ProductModal({
                   )}
                 </div>
 
-                <input ref={fileRef} type="file" accept="image/*"
+                <input ref={fileRef} type="file" accept="image/png,image/jpeg"
                   className="hidden" onChange={handleImageUpload} />
 
                 {/* Barre de progression */}
@@ -870,7 +870,7 @@ function ProductModal({
                   </div>
                 </div>
 
-                <input ref={galleryFileRef} type="file" accept="image/*"
+                <input ref={galleryFileRef} type="file" accept="image/png,image/jpeg"
                   className="hidden" onChange={handleGalleryImageUpload} disabled={galleryUploading} />
 
                 {/* Barre de progression galerie */}

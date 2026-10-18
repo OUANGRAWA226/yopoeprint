@@ -25,6 +25,15 @@ export default async function BlogPage() {
           </p>
         </div>
 
+        {posts.length === 0 && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
+            <p className="font-bold text-gray-900">Nos premiers articles arrivent bientôt.</p>
+            <p className="text-sm text-gray-600 mt-1">
+              En attendant, consultez notre <Link href="/guide-impression" className="text-primary font-bold hover:underline">guide de préparation des fichiers</Link>.
+            </p>
+          </div>
+        )}
+
         {/* Featured Post (First one) */}
         {posts.length > 0 && (
           <div className="mb-12">

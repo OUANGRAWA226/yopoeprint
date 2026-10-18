@@ -111,9 +111,6 @@ export async function deleteProduct(id: string): Promise<void> {
  * Upload une image produit via l'API.
  * Le backend doit exposer POST /products/:id/image (multipart/form-data)
  * et retourner { imageUrl: string }
- *
- * Si votre backend n'a pas encore cet endpoint,
- * utilisez uploadImageToCloudinaryDirect() ci-dessous.
  */
 export async function uploadProductImage(
  productId: string,
@@ -162,43 +159,3 @@ export const productsService = {
  },
 }
 
-/**
- * Fallback : upload direct vers Cloudinary (sans passer par le backend).
- * Utile si l'endpoint /products/:id/image n'est pas encore implémenté.
- * Remplacez CLOUD_NAME et UPLOAD_PRESET par vos valeurs Cloudinary.
- */
-export async function uploadImageToCloudinaryDirect(
- file: File,
- onProgress?: (pct: number) => void
-): Promise<string> {
- const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'your-cloud-name'
- const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'yopoeprint_products'
-
- return new Promise((resolve, reject) => {
- const formData = new FormData()
- formData.append('file', file)
- formData.append('upload_preset', UPLOAD_PRESET)
- formData.append('folder', 'yopoeprint/products')
-
- const xhr = new XMLHttpRequest()
- xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`)
-
- xhr.upload.onprogress = (e) => {
- if (e.lengthComputable && onProgress) {
- onProgress(Math.round((e.loaded / e.total) * 100))
- }
- }
-
- xhr.onload = () => {
- if (xhr.status === 200) {
- const data = JSON.parse(xhr.responseText)
- resolve(data.secure_url)
- } else {
- reject(new Error('Upload Cloudinary échoué'))
- }
- }
-
- xhr.onerror = () => reject(new Error('Erreur réseau'))
- xhr.send(formData)
- })
-}

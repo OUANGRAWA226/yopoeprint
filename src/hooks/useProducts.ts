@@ -17,7 +17,7 @@ import {
  updateProduct,
  toggleProductActive,
  deleteProduct,
- uploadImageToCloudinaryDirect,
+ uploadProductImage,
 } from '@/lib/products.service'
 
 export function useProducts(options: GetProductsOptions = {}) {
@@ -58,10 +58,11 @@ export function useProducts(options: GetProductsOptions = {}) {
  // 1. Créer le produit en base
  const newProduct = await createProduct(dto)
 
- // 2. Si image fournie → uploader et mettre à jour imageUrl
+ // 2. Si image fournie → envoi par l'API (POST /products/:id/image), qui enregistre l'image
  if (imageFile) {
- const imageUrl = await uploadImageToCloudinaryDirect(imageFile, setUploadPct)
- const updated = await updateProduct(newProduct.id, { imageUrl })
+ await uploadProductImage(newProduct.id, imageFile)
+ setUploadPct(100)
+ const updated = await getProductById(newProduct.id)
  setProducts((ps) => [...ps, updated])
  return updated
  }
@@ -86,10 +87,10 @@ export function useProducts(options: GetProductsOptions = {}) {
  setSaving(true)
  setError(null)
  try {
- // 1. Si nouvelle image → uploader d'abord
+ // 1. Si nouvelle image → envoi par l'API (POST /products/:id/image), qui enregistre l'image
  if (imageFile) {
- const imageUrl = await uploadImageToCloudinaryDirect(imageFile, setUploadPct)
- dto = { ...dto, imageUrl }
+ await uploadProductImage(id, imageFile)
+ setUploadPct(100)
  }
 
  // 2. Mettre à jour le produit

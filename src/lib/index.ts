@@ -14,7 +14,6 @@ export {
  updateProduct,
  toggleProductActive,
  deleteProduct,
- uploadImageToCloudinaryDirect,
  uploadProductImage
 } from './products.service'
 

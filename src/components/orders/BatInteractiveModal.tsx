@@ -8,7 +8,7 @@ import {
   CheckCircle2, FileText, Sparkles, Layers, UploadCloud, Info
 } from 'lucide-react'
 import { ordersService } from '@/lib/orders.service'
-import { cloudinaryService } from '@/lib/cloudinary.service'
+import { uploadService } from '@/lib/upload.service'
 import { useToast } from '@/context/ToastContext'
 
 interface BatInteractiveModalProps {
@@ -105,7 +105,9 @@ export function BatInteractiveModal({
     setUploadProgress(0)
 
     try {
-      const url = await cloudinaryService.uploadFile(file, (p) => setUploadProgress(p))
+      // Envoi par l'API (types et taille contrôlés, envoi Cloudinary signé côté serveur)
+      const { url } = await uploadService.uploadFile(file, 'orders')
+      setUploadProgress(100)
       setCorrectionFileUrl(url)
       toast.success('Fichier chargé', 'Votre maquette corrective est prête à être envoyée.')
     } catch (err: any) {
@@ -609,7 +611,7 @@ export function BatInteractiveModal({
                         <input
                           type="file"
                           onChange={handleFileChange}
-                          accept="image/*,.pdf"
+                          accept=".pdf,.ai,.psd,.jpg,.jpeg,.png,.tif,.tiff"
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                         <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
