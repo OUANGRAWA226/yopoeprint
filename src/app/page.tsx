@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
 import Link from 'next/link'
-import Image from 'next/image'
+import Image, { getImageProps } from 'next/image'
 import {
   ArrowRight, ShieldCheck, Clock, Truck, Building2,
   CheckCircle2, FileCheck, Calculator, Award, Layers,
@@ -307,6 +307,26 @@ const PAPERS_GUIDE = [
   },
 ]
 
+// Visuel d'une bannière : version téléphone (660 × 330) sous 768 px quand elle existe, sinon le visuel
+// 1248 × 357 recadré au centre. <picture> : le navigateur ne télécharge que la version affichée.
+function BannerImage({ banner, priority }: { banner: BannerSlide; priority: boolean }) {
+  const alt = banner.ctaLabel ? '' : (banner.altText || banner.title || 'Bannière YopoePrint')
+  const common = { alt, fill: true, priority, className: 'object-cover object-center' }
+  const { props: { srcSet: desktopSrcSet, ...imgProps } } = getImageProps({
+    ...common, src: banner.imageUrl, sizes: '(max-width: 1248px) 100vw, 1248px',
+  })
+  if (!banner.mobileImageUrl) return <Image {...common} alt={alt} src={banner.imageUrl} sizes="(max-width: 1248px) 100vw, 1248px" />
+  const { props: { srcSet: mobileSrcSet } } = getImageProps({ ...common, src: banner.mobileImageUrl, sizes: '100vw' })
+  return (
+    <picture>
+      <source media="(min-width: 768px)" srcSet={desktopSrcSet} />
+      <source media="(max-width: 767px)" srcSet={mobileSrcSet} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img {...imgProps} alt={alt} />
+    </picture>
+  )
+}
+
 // ── 5. Avis Clients d'Entreprises Vérifiés ───────────────────────────────────
 export default function StorefrontHomePage() {
   const router = useRouter()
@@ -329,6 +349,7 @@ export default function StorefrontHomePage() {
     bannersService.getActiveBanners().then((loadedBanners) => {
       if (isMounted && loadedBanners && loadedBanners.length > 0) {
         setBanners(loadedBanners)
+        setHeroSlide(0)
       }
     })
     return () => { isMounted = false }
@@ -389,23 +410,8 @@ export default function StorefrontHomePage() {
              Bannières visuelles graphiques uploadées depuis le Backoffice
       ═════════════════════════════════════════════════════════════ */}
       <section className="w-full max-w-[1248px] mx-auto px-2 sm:px-4 pt-4 sm:pt-6 pb-3">
-        {/* Proposition de valeur — texte réel (SEO, lecteurs d'écran), pas dans l'image */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 px-1 mb-3 sm:mb-4">
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Imprimerie en ligne au Burkina Faso
-            </h1>
-            <p className="text-sm text-gray-600 mt-1 max-w-2xl">
-              Cartes de visite, flyers, roll-up et bâches imprimés à Ouagadougou. Prix en FCFA, BAT gratuit avant impression, livraison partout au Burkina.
-            </p>
-          </div>
-          <Link
-            href="/catalogue"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline shrink-0"
-          >
-            Voir le catalogue <ArrowRight size={15} />
-          </Link>
-        </div>
+        {/* Titre de la page conservé pour le référencement et les lecteurs d'écran, sans texte visible au-dessus du carrousel */}
+        <h1 className="sr-only">Imprimerie en ligne au Burkina Faso</h1>
 
         <div
           className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-gray-200/60 bg-gray-200 group"
@@ -414,8 +420,8 @@ export default function StorefrontHomePage() {
           onFocusCapture={() => setIsCarouselHovered(true)}
           onBlurCapture={() => setIsCarouselHovered(false)}
         >
-          {/* Conteneur dimension standard e-commerce : 1248 × 357 px (plus haut sur mobile pour le texte) */}
-          <div className="relative w-full h-[240px] sm:h-[280px] md:h-[357px] max-h-[357px] overflow-hidden">
+          {/* Ratios exacts des visuels : 660 × 330 sur téléphone, 1248 × 357 à partir de 768 px (aucun recadrage) */}
+          <div className="relative w-full aspect-[660/330] md:aspect-[1248/357] overflow-hidden">
             {banners.map((banner, idx) => {
               const isActive = heroSlide === idx
               return (
@@ -431,31 +437,25 @@ export default function StorefrontHomePage() {
                     tabIndex={isActive ? 0 : -1}
                     aria-hidden={!isActive}
                   >
-                    <Image
-                      src={banner.imageUrl}
-                      alt={banner.ctaLabel ? '' : (banner.altText || banner.title || 'Bannière YopoePrint')}
-                      fill
-                      priority={idx === 0}
-                      className="object-cover object-center w-full h-full"
-                      sizes="(max-width: 1248px) 100vw, 1248px"
-                    />
+                    <BannerImage banner={banner} priority={idx === 0} />
                     {banner.ctaLabel && (
                       <>
                         <div className="absolute inset-0 bg-gradient-to-r from-gray-950/85 via-gray-950/55 to-gray-950/0" />
-                        <div className="absolute inset-0 flex flex-col justify-center gap-2 sm:gap-3 px-5 sm:px-10 md:px-14 max-w-[36rem]">
+                        {/* Bandeau bas (2:1) sur téléphone : textes resserrés, sous-titre masqué là où il ne tient pas */}
+                        <div className="absolute inset-0 flex flex-col justify-center gap-1.5 sm:gap-3 px-4 sm:px-10 md:px-14 max-w-[36rem]">
                           {banner.badge && (
-                            <span className="self-start text-xs font-bold uppercase tracking-wider text-white bg-primary px-2.5 py-1 rounded-lg">
+                            <span className="self-start text-2xs sm:text-xs font-bold uppercase tracking-wider text-white bg-primary px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg">
                               {banner.badge}
                             </span>
                           )}
-                          <p className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight">
+                          <p className="font-display text-lg sm:text-3xl md:text-2xl lg:text-4xl font-extrabold text-white leading-tight">
                             {banner.title}
                           </p>
                           {banner.subtitle && (
-                            <p className="text-sm sm:text-base text-white/85 leading-snug">{banner.subtitle}</p>
+                            <p className="hidden sm:block md:hidden lg:block text-base text-white/85 leading-snug">{banner.subtitle}</p>
                           )}
-                          <span className="self-start mt-1 inline-flex items-center gap-1.5 bg-primary text-white text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-md group-hover:bg-primary/90 transition-colors">
-                            {banner.ctaLabel} <ArrowRight size={16} />
+                          <span className="self-start sm:mt-1 inline-flex items-center gap-1.5 bg-primary text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl shadow-md group-hover:bg-primary/90 transition-colors">
+                            {banner.ctaLabel} <ArrowRight size={14} />
                           </span>
                         </div>
                       </>

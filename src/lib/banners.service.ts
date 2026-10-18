@@ -1,28 +1,33 @@
 // src/lib/banners.service.ts
-// Service de gestion dynamique des bannières du carrousel d'accueil
-// Connecté au Backoffice / API NestJS avec fallback immédiat
+// Bannières du carrousel d'accueil, gérées depuis l'admin (Carrousels & Bannières)
 
 import { api } from './api'
+
+// Formats imposés par l'API : visuel ordinateur obligatoire, version téléphone facultative
+export const BANNER_FORMATS = {
+  desktop: { width: 1248, height: 357 },
+  mobile:  { width: 660,  height: 330 },
+} as const
 
 export interface BannerSlide {
   id: string
   title: string
   imageUrl: string
-  mobileImageUrl?: string
+  mobileImageUrl?: string | null
   linkUrl: string
-  badge?: string
+  badge?: string | null
   // Texte affiché en HTML par-dessus la photo (accessible, traduisible, net sur mobile).
   // Laisser vide pour une bannière dont l'image porte déjà son propre texte.
-  subtitle?: string
-  ctaLabel?: string
-  altText?: string
+  subtitle?: string | null
+  ctaLabel?: string | null
+  altText?: string | null
   order: number
   active: boolean
-  startDate?: string
-  endDate?: string
+  startDate?: string | null
+  endDate?: string | null
 }
 
-// Bannières initiales configurées au format standardisé 1248 × 357 px
+// Bannières affichées tant qu'aucune n'est publiée depuis l'admin (photos produits recadrées, texte en surimpression)
 export const DEFAULT_BANNERS: BannerSlide[] = [
   {
     id: 'hero-cartes-visite',
@@ -64,51 +69,16 @@ export const DEFAULT_BANNERS: BannerSlide[] = [
 
 export const bannersService = {
   /**
-   * Récupère la liste des bannières actives depuis le backoffice métier (API)
-   * Si l'API n'a pas encore de bannières configurées, renvoie les bannières par défaut.
+   * Bannières en cours de diffusion (l'API filtre l'activation et la période, et les trie).
+   * Sans bannière publiée ou si l'API est injoignable : bannières par défaut.
    */
   async getActiveBanners(): Promise<BannerSlide[]> {
     try {
-      // 1. Tentative d'appel à l'API du backoffice
-      const response = await api.get<BannerSlide[]>('/banners?active=true')
-      if (Array.isArray(response) && response.length > 0) {
-        return response
-          .filter(b => b.active !== false)
-          .sort((a, b) => (a.order || 0) - (b.order || 0))
-      }
-    } catch (err) {
-      // Silencieux : fallback transparent
-    }
-
-    // 2. Vérification du cache / localStorage partagé avec le backoffice
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('yopoeprint_custom_banners')
-        if (cached) {
-          const parsed = JSON.parse(cached)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed
-              .filter((b: BannerSlide) => b.active !== false)
-              .sort((a: BannerSlide, b: BannerSlide) => (a.order || 0) - (b.order || 0))
-          }
-        }
-      } catch {
-        // En cas d'erreur de parse
-      }
-    }
-
-    return DEFAULT_BANNERS
-  },
-
-  /**
-   * Récupère une bannière par son ID
-   */
-  async getBannerById(id: string): Promise<BannerSlide | null> {
-    try {
-      const banner = await api.get<BannerSlide>(`/banners/${id}`)
-      return banner
+      const response = await api.get<BannerSlide[]>('/banners')
+      if (Array.isArray(response) && response.length > 0) return response
     } catch {
-      return DEFAULT_BANNERS.find(b => b.id === id) || null
+      // API injoignable : le carrousel garde les bannières par défaut
     }
+    return DEFAULT_BANNERS
   },
 }

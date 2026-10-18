@@ -20,6 +20,7 @@ import { QuotesModule }   from './modules/quotes/quotes.module'
 import { ResellerModule } from './modules/reseller/reseller.module'
 import { AuditModule }    from './modules/audit/audit.module'
 import { SettingsModule } from './modules/settings/settings.module'
+import { BannersModule }  from './modules/banners/banners.module'
 
 // Entities
 import { User }    from './modules/users/user.entity'
@@ -28,6 +29,7 @@ import { Order }   from './modules/orders/order.entity'
 import { Quote }   from './modules/quotes/quote.entity'
 import { AuditLog } from './modules/audit/audit-log.entity'
 import { PlatformSettingsRow } from './modules/settings/platform-settings.entity'
+import { Banner } from './modules/banners/banner.entity'
 
 @Module({
   imports: [
@@ -60,7 +62,7 @@ import { PlatformSettingsRow } from './modules/settings/platform-settings.entity
         password:    cs.get('database.password'),
         database:    cs.get('database.name'),
         ssl:         cs.get('database.ssl') ? { rejectUnauthorized: false } : false,
-        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow],
+        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow, Banner],
         synchronize: cs.get('app.nodeEnv') === 'development', // Auto-create tables in dev
         logging:     cs.get('app.nodeEnv') === 'development',
       }),
@@ -78,6 +80,7 @@ import { PlatformSettingsRow } from './modules/settings/platform-settings.entity
     ResellerModule,
     AuditModule,
     SettingsModule,
+    BannersModule,
   ],
   providers: [
     // Active le rate limiting global (et les @Throttle par route, ex. login)

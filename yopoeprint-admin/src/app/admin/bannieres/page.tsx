@@ -1,667 +1,320 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import {
-  Plus, Edit2, Trash2, Eye, Upload, CheckCircle,
-  AlertCircle, ArrowUp, ArrowDown, ExternalLink,
-  X, Save, Sparkles, Image as ImageIcon, Loader2
+  Plus, Edit2, Trash2, Upload, ArrowUp, ArrowDown, ExternalLink, X, Save, Loader2,
+  Image as ImageIcon, Smartphone, Monitor,
 } from 'lucide-react'
-import { cloudinaryService } from '@/lib/cloudinary.service'
-import { api } from '@/lib'
+import {
+  bannersService, Banner, BannerInput, BannerVariant, BANNER_FORMATS, readImageSize,
+} from '@/lib/banners.service'
 
-export interface BannerItem {
-  id: string
-  title: string
-  imageUrl: string
-  mobileImageUrl?: string
-  linkUrl: string
-  badge?: string
-  altText?: string
-  order: number
-  active: boolean
+const input = 'w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-mid'
+const label = 'text-xs font-semibold text-gray-700 space-y-1 block'
+
+const EMPTY: BannerInput = {
+  title: '', subtitle: null, badge: null, ctaLabel: null, altText: null,
+  imageUrl: '', mobileImageUrl: null, linkUrl: '/catalogue', active: true, startDate: null, endDate: null,
 }
 
-// Bannières initiales synchronisées avec le storefront
-const INITIAL_BANNERS: BannerItem[] = [
-  {
-    id: 'banner-promo-atelier',
-    title: 'Offre Spéciale Atelier : Impression Offset & Numérique HD',
-    imageUrl: '/images/banners/banner-promo-atelier.jpg',
-    linkUrl: '/catalogue',
-    badge: 'Offre Atelier',
-    altText: 'YopoePrint - Cartes de visite, Roll-up et flyers haute définition',
-    order: 1,
-    active: true,
-  },
-  {
-    id: 'banner-pack-salons',
-    title: 'Pack Salons & Foires : SIAO, SNC et Événements Pro',
-    imageUrl: '/images/banners/banner-pack-salons.jpg',
-    linkUrl: '/catalogue/roll-up',
-    badge: 'Spécial SIAO & SNC',
-    altText: 'Stands d’exposition, roll-ups aluminium et comptoirs événementiels',
-    order: 2,
-    active: true,
-  },
-  {
-    id: 'banner-cartes-luxe',
-    title: 'Cartes de Visite Prestige : Dorure à Chaud & Vernis 3D',
-    imageUrl: '/images/banners/banner-cartes-luxe.jpg',
-    linkUrl: '/catalogue/cartes',
-    badge: 'Finitions Luxe',
-    altText: 'Cartes de visite 350g et 450g avec dorure or et finitions velours',
-    order: 3,
-    active: true,
-  },
-]
+// Les dates de diffusion se saisissent au jour près : début à 0 h, fin incluse (jusqu'au lendemain 0 h)
+const dayToIso = (day: string, end = false) => {
+  if (!day) return null
+  const d = new Date(`${day}T00:00:00`)
+  if (end) d.setDate(d.getDate() + 1)
+  return d.toISOString()
+}
+const isoToDay = (iso: string | null, end = false) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (end) d.setDate(d.getDate() - 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
-const STORAGE_KEY = 'yopoeprint_custom_banners'
+function status(b: Banner): { text: string; cls: string } {
+  const now = Date.now()
+  if (!b.active) return { text: 'Inactive', cls: 'bg-gray-100 text-gray-700' }
+  if (b.startDate && new Date(b.startDate).getTime() > now) return { text: `Programmée le ${new Date(b.startDate).toLocaleDateString('fr-FR')}`, cls: 'bg-blue-50 text-blue-800' }
+  if (b.endDate && new Date(b.endDate).getTime() <= now) return { text: 'Terminée', cls: 'bg-amber-50 text-amber-800' }
+  return { text: 'En ligne', cls: 'bg-emerald-50 text-emerald-800' }
+}
+
+// ── Zone d'envoi d'un visuel au format exact ─────────────────────────────
+function ImageField({ variant, url, onChange, required }: {
+  variant: BannerVariant
+  url: string | null
+  onChange: (url: string | null) => void
+  required?: boolean
+}) {
+  const fmt = BANNER_FORMATS[variant]
+  const ref = useRef<HTMLInputElement>(null)
+  const [progress, setProgress] = useState<number | null>(null)
+  const [error, setError] = useState('')
+
+  const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setError('')
+    try {
+      const size = await readImageSize(file)
+      if (size.width !== fmt.width || size.height !== fmt.height) {
+        setError(`Cette image mesure ${size.width} × ${size.height} px : le visuel ${fmt.label} doit faire exactement ${fmt.width} × ${fmt.height} px.`)
+        return
+      }
+      setProgress(0)
+      onChange(await bannersService.uploadImage(file, variant, setProgress))
+    } catch (err: any) {
+      setError(err?.message || 'Envoi impossible')
+    } finally {
+      setProgress(null)
+    }
+  }
+
+  const Icon = variant === 'desktop' ? Monitor : Smartphone
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+          <Icon size={14} /> Visuel {fmt.label} {required ? '*' : '(facultatif)'}
+          <span className="font-mono text-blue-mid">{fmt.width} × {fmt.height} px</span>
+        </span>
+        {url && !required && (
+          <button type="button" onClick={() => onChange(null)} className="text-xs font-bold text-red-600 hover:underline">Retirer</button>
+        )}
+      </div>
+      <input ref={ref} type="file" accept="image/png,image/jpeg" onChange={pick} className="hidden" />
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        disabled={progress !== null}
+        style={{ aspectRatio: `${fmt.width} / ${fmt.height}` }}
+        className={`relative w-full ${variant === 'mobile' ? 'max-w-[260px]' : ''} rounded-xl overflow-hidden border-2 border-dashed border-gray-200 hover:border-blue-mid bg-gray-50 flex items-center justify-center text-center`}
+      >
+        {url ? (
+          <>
+            <Image src={url} alt="" fill unoptimized className="object-cover" />
+            <span className="absolute bottom-2 right-2 bg-white/90 text-gray-900 text-xs font-bold px-2 py-1 rounded-lg">Remplacer</span>
+          </>
+        ) : progress !== null ? (
+          <span className="text-xs font-bold text-blue-deep flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Envoi… {progress} %</span>
+        ) : (
+          <span className="text-xs text-gray-600 px-3">
+            <Upload size={20} className="mx-auto mb-1 text-blue-mid" />
+            Choisir un JPG ou PNG de <strong>{fmt.width} × {fmt.height} px</strong> exactement
+          </span>
+        )}
+        {url && progress !== null && (
+          <span className="absolute inset-0 bg-white/80 flex items-center justify-center text-xs font-bold text-blue-deep gap-2"><Loader2 size={16} className="animate-spin" /> Envoi… {progress} %</span>
+        )}
+      </button>
+      {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
+    </div>
+  )
+}
 
 export default function AdminBannersPage() {
-  const [banners, setBanners] = useState<BannerItem[]>(INITIAL_BANNERS)
-  const [loading, setLoading] = useState(false)
-  const [editingBanner, setEditingBanner] = useState<Partial<BannerItem> | null>(null)
-  const [previewBanner, setPreviewBanner] = useState<BannerItem | null>(null)
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState<{ id: string | null; data: BannerInput } | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
 
-  // Chargement des bannières au montage
-  useEffect(() => {
-    const loadBanners = async () => {
-      setLoading(true)
-      try {
-        // 1. Tenter l'appel API
-        const remote = await api.get<BannerItem[]>('/banners')
-        if (Array.isArray(remote) && remote.length > 0) {
-          setBanners(remote.sort((a, b) => (a.order || 0) - (b.order || 0)))
-          setLoading(false)
-          return
-        }
-      } catch {
-        // Fallback transparent
-      }
-
-      // 2. Vérifier localStorage
-      if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem(STORAGE_KEY)
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached)
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setBanners(parsed)
-              setLoading(false)
-              return
-            }
-          } catch (e) {
-            console.error('Erreur lecture localStorage bannières', e)
-          }
-        }
-      }
-
-      setBanners(INITIAL_BANNERS)
+  const load = useCallback(async () => {
+    try {
+      setBanners(await bannersService.list())
+      setError('')
+    } catch (e: any) {
+      setError(e?.message || 'Impossible de charger les bannières')
+    } finally {
       setLoading(false)
     }
-
-    loadBanners()
   }, [])
 
-  // Sauvegarde des bannières
-  const saveBannersList = async (updated: BannerItem[]) => {
-    const sorted = [...updated].sort((a, b) => (a.order || 0) - (b.order || 0))
-    setBanners(sorted)
+  useEffect(() => { load() }, [load])
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted))
-    }
-
-    try {
-      await api.post('/banners/sync', { banners: sorted })
-    } catch {
-      // API optionnelle
-    }
-
-    setSuccessMsg('Bannières synchronisées avec succès !')
-    setTimeout(() => setSuccessMsg(null), 3000)
+  const run = async (fn: () => Promise<unknown>) => {
+    setBusy(true); setError('')
+    try { await fn(); await load() } catch (e: any) { setError(e?.message || 'Action impossible') } finally { setBusy(false) }
   }
 
-  // Toggle activation
-  const handleToggleActive = (id: string) => {
-    const updated = banners.map(b => b.id === id ? { ...b, active: !b.active } : b)
-    saveBannersList(updated)
+  const move = (index: number, dir: -1 | 1) => {
+    const ids = banners.map((b) => b.id)
+    const j = index + dir
+    if (j < 0 || j >= ids.length) return
+    ;[ids[index], ids[j]] = [ids[j], ids[index]]
+    run(() => bannersService.reorder(ids))
   }
 
-  // Réordonner
-  const handleMove = (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= banners.length) return
-
-    const newBanners = [...banners]
-    const temp = newBanners[index]
-    newBanners[index] = newBanners[targetIndex]
-    newBanners[targetIndex] = temp
-
-    // Réattribuer les ordres
-    newBanners.forEach((b, i) => {
-      b.order = i + 1
-    })
-
-    saveBannersList(newBanners)
+  const openEdit = (b?: Banner) => {
+    setFormError('')
+    setEditing(b ? { id: b.id, data: { ...b } } : { id: null, data: { ...EMPTY } })
   }
 
-  // Supprimer
-  const handleDelete = (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette bannière ?')) return
-    const updated = banners.filter(b => b.id !== id)
-    saveBannersList(updated)
-  }
+  const set = (patch: Partial<BannerInput>) => setEditing((e) => (e ? { ...e, data: { ...e.data, ...patch } } : e))
 
-  // Upload d'image Cloudinary
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    try {
-      setUploadProgress(0)
-      const uploadedUrl = await cloudinaryService.uploadImage(file, (progress) => {
-        setUploadProgress(progress)
-      })
-      if (editingBanner) {
-        setEditingBanner(prev => ({
-          ...prev,
-          imageUrl: uploadedUrl,
-        }))
-      }
-      setUploadProgress(null)
-    } catch (err: any) {
-      alert(err.message || 'Erreur lors du téléversement de l’image')
-      setUploadProgress(null)
-    }
-  }
-
-  // Sauvegarder la modale
-  const handleSaveModal = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editingBanner?.imageUrl) {
-      alert('Veuillez spécifier une image pour la bannière (upload ou URL)')
-      return
+    if (!editing) return
+    if (!editing.data.imageUrl) { setFormError('Ajoutez le visuel ordinateur (1248 × 357 px).'); return }
+    setSaving(true); setFormError('')
+    const { id, data } = editing
+    const payload: BannerInput = {
+      ...data,
+      subtitle: data.subtitle || null, badge: data.badge || null, ctaLabel: data.ctaLabel || null, altText: data.altText || null,
     }
-
-    const isNew = !editingBanner.id
-    const bannerToSave: BannerItem = {
-      id: editingBanner.id || `banner-${Date.now()}`,
-      title: editingBanner.title || 'Nouvelle campagne promotionnelle',
-      imageUrl: editingBanner.imageUrl,
-      linkUrl: editingBanner.linkUrl || '/catalogue',
-      badge: editingBanner.badge || '',
-      altText: editingBanner.altText || editingBanner.title || '',
-      order: editingBanner.order || banners.length + 1,
-      active: editingBanner.active !== undefined ? editingBanner.active : true,
+    try {
+      if (id) await bannersService.update(id, payload)
+      else await bannersService.create(payload)
+      setEditing(null)
+      await load()
+    } catch (err: any) {
+      setFormError(err?.message || 'Enregistrement impossible')
+    } finally {
+      setSaving(false)
     }
-
-    let updated: BannerItem[]
-    if (isNew) {
-      updated = [...banners, bannerToSave]
-    } else {
-      updated = banners.map(b => b.id === bannerToSave.id ? bannerToSave : b)
-    }
-
-    saveBannersList(updated)
-    setEditingBanner(null)
   }
+
+  const live = banners.filter((b) => status(b).text === 'En ligne').length
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-black text-blue-deep">
-              Carrousels & Bannières d’Accueil
-            </h1>
-            <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-amber-200">
-              Backoffice Métier
-            </span>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Gérez les visuels graphiques <strong>1248 × 357 px</strong> diffusés en tête de la page d’accueil storefront.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setEditingBanner({
-            title: '',
-            imageUrl: '',
-            linkUrl: '/catalogue',
-            badge: 'Offre Spéciale',
-            order: banners.length + 1,
-            active: true,
-          })}
-          className="inline-flex items-center gap-2 bg-blue-deep hover:bg-blue-mid text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-98 cursor-pointer"
-        >
-          <Plus size={18} />
-          <span>Nouvelle Bannière</span>
+    <div className="max-w-6xl space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-sm text-gray-600 max-w-2xl">
+          Carrousel de la page d&apos;accueil. Visuel ordinateur <strong className="font-mono">1248 × 357 px</strong> obligatoire,
+          version téléphone <strong className="font-mono">660 × 330 px</strong> facultative : sans elle, le visuel ordinateur est recadré
+          au centre sur téléphone (à éviter si l&apos;image contient du texte).
+        </p>
+        <button onClick={() => openEdit()}
+          className="inline-flex items-center gap-2 bg-blue-deep text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-mid shrink-0">
+          <Plus size={16} /> Nouvelle bannière
         </button>
       </div>
 
-      {/* Notification Toast */}
-      {successMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-semibold flex items-center gap-2 animate-fade-in shadow-sm">
-          <CheckCircle size={18} className="text-emerald-600 shrink-0" />
-          <span>{successMsg}</span>
-        </div>
-      )}
+      {error && <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>}
 
-      {/* Spécifications & Recommandations Techniques */}
-      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-amber-50 rounded-2xl p-5 border border-blue-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-deep text-white flex items-center justify-center shrink-0 shadow-md">
-            <ImageIcon size={20} />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-blue-deep text-sm">Gabarit d’Image Recommandé :</span>
-              <span className="bg-white font-mono font-black text-blue-mid text-xs px-2.5 py-0.5 rounded-md border border-blue-200 shadow-xs">
-                1248 × 357 px (Ratio 3.5:1)
-              </span>
-            </div>
-            <p className="text-xs text-gray-600 leading-relaxed max-w-2xl">
-              Téléversez des images complètes conçues par vos graphistes avec typographie, visuels produits et offres intégrées (style Jumia/Amazon). Le storefront affiche l’image sans surcouche de texte parasite et l’adapte de manière responsive.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0 text-xs text-gray-500 font-medium">
-          <Sparkles size={14} className="text-amber-500" />
-          <span>Formats acceptés : JPG, PNG, WebP (max 5 MB)</span>
-        </div>
-      </div>
-
-      {/* Liste des Bannières Actives */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-bold text-gray-800 text-sm">
-            Bannières configurées ({banners.length})
-          </h2>
-          <span className="text-xs text-gray-400">
-            {banners.filter(b => b.active).length} active(s) sur le site
-          </span>
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-card overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between text-xs text-gray-600">
+          <span className="font-bold text-gray-900 text-sm">Bannières ({banners.length})</span>
+          <span>{live} en ligne{banners.length === 0 && !loading ? ' · la boutique affiche ses bannières par défaut' : ''}</span>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-gray-400">
-            <Loader2 className="animate-spin mx-auto mb-2 text-blue-mid" size={24} />
-            <p className="text-sm">Chargement des bannières…</p>
-          </div>
+          <div className="p-10 text-center text-gray-500 text-sm"><Loader2 className="animate-spin mx-auto mb-2 text-blue-mid" size={22} />Chargement…</div>
         ) : banners.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">
-            <ImageIcon className="mx-auto mb-2 text-gray-300" size={32} />
-            <p className="text-sm font-semibold">Aucune bannière configurée</p>
-            <p className="text-xs text-gray-400 mt-1">Cliquez sur « Nouvelle Bannière » pour en ajouter une.</p>
+          <div className="p-10 text-center text-gray-500">
+            <ImageIcon className="mx-auto mb-2 text-gray-300" size={30} />
+            <p className="text-sm font-semibold text-gray-700">Aucune bannière</p>
+            <p className="text-xs mt-1">Ajoutez-en une pour remplacer les bannières par défaut de la boutique.</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
-            {banners.map((banner, index) => (
-              <div
-                key={banner.id}
-                className={`p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 transition-colors ${
-                  banner.active ? 'bg-white hover:bg-gray-50/60' : 'bg-gray-50/40 opacity-70'
-                }`}
-              >
-                {/* Visual Preview */}
-                <div className="flex items-center gap-4 w-full lg:w-auto">
-                  {/* Ordre et boutons déplacer */}
-                  <div className="flex flex-col items-center gap-1 shrink-0 text-gray-400">
-                    <button
-                      onClick={() => handleMove(index, 'up')}
-                      disabled={index === 0}
-                      className="p-1 hover:text-blue-mid disabled:opacity-20 cursor-pointer"
-                      title="Monter"
-                    >
-                      <ArrowUp size={14} />
-                    </button>
-                    <span className="font-mono text-xs font-bold text-gray-600">
-                      #{banner.order || index + 1}
-                    </span>
-                    <button
-                      onClick={() => handleMove(index, 'down')}
-                      disabled={index === banners.length - 1}
-                      className="p-1 hover:text-blue-mid disabled:opacity-20 cursor-pointer"
-                      title="Descendre"
-                    >
-                      <ArrowDown size={14} />
-                    </button>
-                  </div>
-
-                  {/* Thumbnail (1248x357 ratio) */}
-                  <div className="relative w-48 sm:w-64 h-14 sm:h-18 rounded-xl overflow-hidden bg-slate-900 border border-gray-200 shrink-0 shadow-xs group">
-                    <Image
-                      src={banner.imageUrl}
-                      alt={banner.title}
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                    <button
-                      onClick={() => setPreviewBanner(banner)}
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
-                      title="Aperçu grand format"
-                    >
-                      <Eye size={18} />
-                    </button>
-                  </div>
-
-                  {/* Infos */}
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-gray-900 text-sm truncate max-w-md">
-                        {banner.title}
-                      </h3>
-                      {banner.badge && (
-                        <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">
-                          {banner.badge}
-                        </span>
-                      )}
+          <ul className="divide-y divide-gray-100">
+            {banners.map((b, i) => {
+              const s = status(b)
+              return (
+                <li key={b.id} className="p-4 flex flex-col lg:flex-row lg:items-center gap-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex flex-col items-center text-gray-400 shrink-0">
+                      <button onClick={() => move(i, -1)} disabled={busy || i === 0} aria-label={`Monter « ${b.title} »`} className="p-1 hover:text-blue-mid disabled:opacity-20"><ArrowUp size={14} /></button>
+                      <span className="font-mono text-xs font-bold text-gray-600">{i + 1}</span>
+                      <button onClick={() => move(i, 1)} disabled={busy || i === banners.length - 1} aria-label={`Descendre « ${b.title} »`} className="p-1 hover:text-blue-mid disabled:opacity-20"><ArrowDown size={14} /></button>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1 font-mono text-blue-mid truncate max-w-xs">
-                        <ExternalLink size={12} />
-                        {banner.linkUrl}
-                      </span>
+                    <div className="relative w-52 aspect-[1248/357] rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                      <Image src={b.imageUrl} alt="" fill unoptimized className="object-cover" />
+                    </div>
+                    <div className="relative w-11 aspect-[660/330] rounded-md overflow-hidden bg-gray-100 border border-gray-200 shrink-0 flex items-center justify-center"
+                      title={b.mobileImageUrl ? 'Version téléphone' : 'Pas de version téléphone'}>
+                      {b.mobileImageUrl ? <Image src={b.mobileImageUrl} alt="" fill unoptimized className="object-cover" /> : <Smartphone size={13} className="text-gray-400" />}
+                    </div>
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-bold text-gray-900 text-sm truncate">{b.title}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className={`px-2 py-0.5 rounded-full font-bold ${s.cls}`}>{s.text}</span>
+                        {b.endDate && s.text === 'En ligne' && <span className="text-gray-600">jusqu&apos;au {new Date(new Date(b.endDate).getTime() - 1).toLocaleDateString('fr-FR')}</span>}
+                        <span className="font-mono text-blue-mid inline-flex items-center gap-1 truncate"><ExternalLink size={11} />{b.linkUrl}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Status Switch & Actions */}
-                <div className="flex items-center gap-4 self-end lg:self-center shrink-0">
-                  {/* Switch Actif / Inactif */}
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <span className="text-xs font-semibold text-gray-600">
-                      {banner.active ? 'Actif' : 'Inactif'}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={banner.active}
-                      onChange={() => handleToggleActive(banner.id)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 relative"></div>
-                  </label>
-
-                  {/* Bouton Modifier */}
-                  <button
-                    onClick={() => setEditingBanner(banner)}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-mid transition-colors cursor-pointer"
-                    title="Modifier"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-
-                  {/* Bouton Supprimer */}
-                  <button
-                    onClick={() => handleDelete(banner.id)}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-500 transition-colors cursor-pointer"
-                    title="Supprimer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-2 self-end lg:self-center shrink-0">
+                    <button onClick={() => run(() => bannersService.update(b.id, { active: !b.active }))} disabled={busy}
+                      className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                      {b.active ? 'Désactiver' : 'Activer'}
+                    </button>
+                    <button onClick={() => openEdit(b)} aria-label={`Modifier « ${b.title} »`} className="p-2 rounded-lg bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-mid"><Edit2 size={15} /></button>
+                    <button onClick={() => { if (window.confirm(`Supprimer la bannière « ${b.title} » ?`)) run(() => bannersService.remove(b.id)) }}
+                      disabled={busy} aria-label={`Supprimer « ${b.title} »`} className="p-2 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600"><Trash2 size={15} /></button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
         )}
       </div>
 
-      {/* ── MODALE APERÇU GRAND FORMAT (1248 × 357 PX) ── */}
-      {previewBanner && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setPreviewBanner(null)}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full overflow-hidden p-6 space-y-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <h3 className="font-bold text-gray-900 text-base">{previewBanner.title}</h3>
-                <p className="text-xs text-gray-500">Rendu exact tel qu’affiché sur le carrousel d’accueil</p>
+      {editing && (
+        // Conteneur défilant + enveloppe min-h-full : un formulaire plus haut que l'écran reste lisible depuis le haut
+        <div className="fixed inset-0 z-50 bg-black/60 overflow-y-auto" onClick={() => !saving && setEditing(null)}>
+          <div className="min-h-full flex items-center justify-center p-4">
+          <form onSubmit={save} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="banner-form-title"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 id="banner-form-title" className="font-display text-lg font-bold text-blue-deep">{editing.id ? 'Modifier la bannière' : 'Nouvelle bannière'}</h2>
+              <button type="button" onClick={() => setEditing(null)} aria-label="Fermer" className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"><X size={16} /></button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <ImageField variant="desktop" required url={editing.data.imageUrl || null} onChange={(url) => set({ imageUrl: url || '' })} />
+              <ImageField variant="mobile" url={editing.data.mobileImageUrl} onChange={(url) => set({ mobileImageUrl: url })} />
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label className={`${label} sm:col-span-2`}><span>Titre *</span>
+                  <input required minLength={2} maxLength={120} className={input} value={editing.data.title} onChange={(e) => set({ title: e.target.value })} /></label>
+                <label className={label}><span>Lien au clic *</span>
+                  <input required maxLength={300} className={`${input} font-mono`} placeholder="/catalogue/roll-up" value={editing.data.linkUrl} onChange={(e) => set({ linkUrl: e.target.value })} /></label>
+                <label className={label}><span>Texte alternatif (lecteurs d&apos;écran)</span>
+                  <input maxLength={200} className={input} value={editing.data.altText || ''} onChange={(e) => set({ altText: e.target.value })} /></label>
               </div>
-              <button
-                onClick={() => setPreviewBanner(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
-              >
-                <X size={16} />
+
+              <fieldset className="border border-gray-100 rounded-xl p-4 space-y-3">
+                <legend className="text-xs font-bold text-gray-700 px-1">Texte posé sur l&apos;image (facultatif)</legend>
+                <p className="text-xs text-gray-600">Renseignez le bouton pour afficher titre, sous-titre et badge par-dessus le visuel. Laissez-le vide si le visuel contient déjà son texte.</p>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <label className={label}><span>Bouton</span>
+                    <input maxLength={40} className={input} placeholder="Voir les offres" value={editing.data.ctaLabel || ''} onChange={(e) => set({ ctaLabel: e.target.value })} /></label>
+                  <label className={label}><span>Badge</span>
+                    <input maxLength={40} className={input} placeholder="Offre flash" value={editing.data.badge || ''} onChange={(e) => set({ badge: e.target.value })} /></label>
+                  <label className={label}><span>Sous-titre</span>
+                    <input maxLength={200} className={input} value={editing.data.subtitle || ''} onChange={(e) => set({ subtitle: e.target.value })} /></label>
+                </div>
+              </fieldset>
+
+              <div className="grid sm:grid-cols-3 gap-3 items-end">
+                <label className={label}><span>Diffusion à partir du</span>
+                  <input type="date" className={input} value={isoToDay(editing.data.startDate)} onChange={(e) => set({ startDate: dayToIso(e.target.value) })} /></label>
+                <label className={label}><span>Jusqu&apos;au (inclus)</span>
+                  <input type="date" className={input} value={isoToDay(editing.data.endDate, true)} onChange={(e) => set({ endDate: dayToIso(e.target.value, true) })} /></label>
+                <label className="flex items-center gap-2 py-2 text-sm font-semibold text-gray-800">
+                  <input type="checkbox" className="w-4 h-4 accent-blue-mid" checked={editing.data.active} onChange={(e) => set({ active: e.target.checked })} />
+                  Bannière active
+                </label>
+              </div>
+
+              {formError && <p role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{formError}</p>}
+            </div>
+
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
+              <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold">Annuler</button>
+              <button type="submit" disabled={saving} className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-deep text-white text-sm font-bold hover:bg-blue-mid disabled:opacity-60">
+                {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Enregistrer
               </button>
             </div>
-
-            {/* Container 1248 x 357 exact ratio */}
-            <div className="relative w-full aspect-[1248/357] rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-slate-950">
-              <Image
-                src={previewBanner.imageUrl}
-                alt={previewBanner.title}
-                fill
-                unoptimized
-                className="object-cover"
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
-              <span>Lien de destination : <strong className="text-blue-mid font-mono">{previewBanner.linkUrl}</strong></span>
-              <span className="font-mono bg-gray-100 px-2.5 py-1 rounded">1248 × 357 px</span>
-            </div>
+          </form>
           </div>
         </div>
       )}
-
-      {/* ── MODALE CRÉATION / ÉDITION ── */}
-      {editingBanner && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
-          onClick={() => setEditingBanner(null)}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <div>
-                <h2 className="font-display text-xl font-bold text-blue-deep">
-                  {editingBanner.id ? 'Modifier la bannière' : 'Ajouter une bannière carrousel'}
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Format recommandé : 1248 × 357 pixels
-                </p>
-              </div>
-              <button
-                onClick={() => setEditingBanner(null)}
-                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <form onSubmit={handleSaveModal} className="p-6 space-y-5">
-
-              {/* Titre / Nom de la campagne */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 block">
-                  Titre / Campagne *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Offre Spéciale Foires & Salons SIAO"
-                  value={editingBanner.title || ''}
-                  onChange={e => setEditingBanner(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm outline-none focus:border-blue-mid focus:bg-white transition-all"
-                />
-              </div>
-
-              {/* Upload Image ou URL */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block">
-                  Visuel Graphique (1248 × 357 px) *
-                </label>
-
-                {/* Zone de Drop / Upload Cloudinary */}
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-200 hover:border-blue-mid rounded-2xl p-4 text-center bg-gray-50/70 hover:bg-blue-50/40 transition-all cursor-pointer relative"
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageFileChange}
-                    className="hidden"
-                  />
-                  {uploadProgress !== null ? (
-                    <div className="py-4 space-y-2">
-                      <Loader2 className="animate-spin mx-auto text-blue-mid" size={24} />
-                      <p className="text-xs font-bold text-blue-deep">
-                        Téléversement Cloudinary en cours… ({uploadProgress}%)
-                      </p>
-                      <div className="w-48 mx-auto bg-gray-200 h-2 rounded-full overflow-hidden">
-                        <div
-                          className="bg-blue-mid h-full transition-all duration-300"
-                          style={{ width: `${uploadProgress}%` }}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="py-2 space-y-1">
-                      <Upload size={22} className="mx-auto text-blue-mid" />
-                      <p className="text-xs font-bold text-gray-700">
-                        Cliquez pour téléverser une image depuis votre ordinateur
-                      </p>
-                      <p className="text-[11px] text-gray-400">
-                        Format conseillé : 1248 × 357 px (PNG, JPG, WebP)
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Ou champ URL directe */}
-                <div className="pt-1">
-                  <span className="text-[11px] text-gray-400 font-semibold block mb-1">
-                    Ou collez directement l’URL d’une image :
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="https://... ou /images/banners/ma-banniere.jpg"
-                    value={editingBanner.imageUrl || ''}
-                    onChange={e => setEditingBanner(prev => ({ ...prev, imageUrl: e.target.value }))}
-                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-blue-mid focus:bg-white"
-                  />
-                </div>
-
-                {/* Prévisualisation dynamique instantanée */}
-                {editingBanner.imageUrl && (
-                  <div className="pt-2">
-                    <span className="text-xs font-bold text-gray-600 block mb-1.5">
-                      Aperçu au ratio 1248 × 357 px :
-                    </span>
-                    <div className="relative w-full aspect-[1248/357] rounded-xl overflow-hidden border border-gray-300 bg-slate-900 shadow-md">
-                      <Image
-                        src={editingBanner.imageUrl}
-                        alt="Aperçu bannière"
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Lien de destination & Badge */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 block">
-                    Lien au Clic (URL) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="/catalogue ou /catalogue/roll-up"
-                    value={editingBanner.linkUrl || ''}
-                    onChange={e => setEditingBanner(prev => ({ ...prev, linkUrl: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm font-mono outline-none focus:border-blue-mid focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 block">
-                    Badge promo (Optionnel)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Offre Flash, Spécial SIAO"
-                    value={editingBanner.badge || ''}
-                    onChange={e => setEditingBanner(prev => ({ ...prev, badge: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm outline-none focus:border-blue-mid focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Ordre & Statut */}
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 block">
-                    Ordre d’affichage
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={editingBanner.order || 1}
-                    onChange={e => setEditingBanner(prev => ({ ...prev, order: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm outline-none focus:border-blue-mid focus:bg-white"
-                  />
-                </div>
-
-                <div className="flex flex-col justify-end">
-                  <label className="flex items-center gap-2 cursor-pointer py-2.5">
-                    <input
-                      type="checkbox"
-                      checked={editingBanner.active !== false}
-                      onChange={e => setEditingBanner(prev => ({ ...prev, active: e.target.checked }))}
-                      className="w-4 h-4 text-blue-mid rounded border-gray-300 focus:ring-blue-mid"
-                    />
-                    <span className="text-sm font-bold text-gray-700">
-                      Bannière activée sur le site
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setEditingBanner(null)}
-                  className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-sm cursor-pointer"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 bg-blue-deep hover:bg-blue-mid text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-98 cursor-pointer"
-                >
-                  <Save size={16} />
-                  <span>Enregistrer la bannière</span>
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
-
     </div>
   )
 }

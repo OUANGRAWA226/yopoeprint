@@ -19,6 +19,10 @@ const ACTION_LABELS: Record<string, string> = {
   'team.role': 'Rôle modifié',
   'team.active': 'Membre activé/désactivé',
   'settings.update': 'Paramètres modifiés',
+  'banner.create': 'Bannière créée',
+  'banner.update': 'Bannière modifiée',
+  'banner.delete': 'Bannière supprimée',
+  'banner.order': 'Carrousel réordonné',
 }
 
 const FILTERS = [
@@ -26,6 +30,7 @@ const FILTERS = [
   { id: 'settings', label: 'Paramètres' },
   { id: 'team', label: 'Équipe' },
   { id: 'product', label: 'Produits' },
+  { id: 'banner', label: 'Bannières' },
   { id: 'order', label: 'Commandes' },
   { id: 'quote', label: 'Devis' },
   { id: 'reseller', label: 'Revendeurs' },
