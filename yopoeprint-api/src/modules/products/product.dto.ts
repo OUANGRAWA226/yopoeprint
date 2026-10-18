@@ -114,6 +114,10 @@ export class ProductQueryDto {
   @ApiPropertyOptional({ example: 'popular' })
   @IsOptional()
   sortBy?: string
+
+  @ApiPropertyOptional({ description: '[ADMIN] Inclure les produits désactivés (ignoré sans token admin)' })
+  @IsOptional()
+  includeInactive?: string
 }
 
 // ─── Price Calculator DTO ─────────────────────────────────────
@@ -142,4 +146,17 @@ export class CalculatePriceDto {
   @ApiProperty({ example: true })
   @IsBoolean()
   rectoverso: boolean
+}
+
+// PATCH /products/:id : mise à jour partielle + activation (le front admin envoie `active`)
+export class PatchProductDto extends UpdateProductDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean
+
+  @ApiPropertyOptional({ description: 'Alias de isActive' })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean
 }

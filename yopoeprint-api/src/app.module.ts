@@ -15,11 +15,14 @@ import { ProductsModule } from './modules/products/products.module'
 import { OrdersModule }   from './modules/orders/orders.module'
 import { PaymentsModule } from './modules/payments/payments.module'
 import { MailModule }     from './modules/mail/mail.module'
+import { UploadModule }   from './modules/upload/upload.module'
+import { QuotesModule }   from './modules/quotes/quotes.module'
 
 // Entities
 import { User }    from './modules/users/user.entity'
 import { Product } from './modules/products/product.entity'
 import { Order }   from './modules/orders/order.entity'
+import { Quote }   from './modules/quotes/quote.entity'
 
 @Module({
   imports: [
@@ -52,7 +55,7 @@ import { Order }   from './modules/orders/order.entity'
         password:    cs.get('database.password'),
         database:    cs.get('database.name'),
         ssl:         cs.get('database.ssl') ? { rejectUnauthorized: false } : false,
-        entities:    [User, Product, Order],
+        entities:    [User, Product, Order, Quote],
         synchronize: cs.get('app.nodeEnv') === 'development', // Auto-create tables in dev
         logging:     cs.get('app.nodeEnv') === 'development',
       }),
@@ -65,6 +68,8 @@ import { Order }   from './modules/orders/order.entity'
     OrdersModule,
     PaymentsModule,
     MailModule,
+    UploadModule,
+    QuotesModule,
   ],
   providers: [
     // Active le rate limiting global (et les @Throttle par route, ex. login)

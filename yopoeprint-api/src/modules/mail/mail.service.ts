@@ -157,7 +157,60 @@ export class MailService {
     `;
     return this.sendMail(email, subject, html);
   }
+  async sendQuoteReceived(email: string, fullName: string, reference: string, product: string) {
+    const subject = `Demande de devis ${reference} bien reçue - YopoePrint`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
+        <h1 style="color: #111827; font-size: 20px; margin-bottom: 12px;">Merci ${escapeHtml(fullName)} !</h1>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Votre demande de devis <strong>${escapeHtml(reference)}</strong> (${escapeHtml(product)}) a bien été transmise à notre atelier.
+        </p>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Vous recevrez une proposition chiffrée sous 24h ouvrées.
+        </p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
 
+  async sendQuoteProposal(email: string, fullName: string, reference: string, price: number) {
+    const subject = `Votre devis ${reference} est prêt - YopoePrint`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111827; color: white; padding: 40px; border-radius: 12px;">
+        <h1 style="color: #ffffff; font-size: 22px; margin-bottom: 8px;">Bonjour ${escapeHtml(fullName)},</h1>
+        <p style="color: #9ca3af; font-size: 15px; line-height: 1.6;">
+          Notre atelier a chiffré votre demande <strong>${escapeHtml(reference)}</strong>.
+        </p>
+        <div style="background-color: #1f2937; padding: 20px; border-radius: 8px; margin: 30px 0;">
+          <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #d1d5db;">Montant proposé</h2>
+          <p style="margin: 0; font-size: 24px; font-weight: bold; color: #ffffff;">${new Intl.NumberFormat('fr-FR').format(price)} FCFA</p>
+        </div>
+        <p style="color: #9ca3af; font-size: 14px;">
+          Retrouvez le détail dans votre espace client, rubrique « Mes devis », ou répondez à cet email pour en discuter.
+        </p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
+
+  async sendPasswordReset(email: string, firstName: string, resetUrl: string) {
+    const subject = 'Réinitialisation de votre mot de passe - YopoePrint';
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
+        <h1 style="color: #111827; font-size: 20px; margin-bottom: 12px;">Bonjour ${escapeHtml(firstName)},</h1>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Vous avez demandé à réinitialiser le mot de passe de votre compte YopoePrint. Ce lien est valable <strong>1 heure</strong> et ne peut servir qu'une fois.
+        </p>
+        <a href="${escapeHtml(resetUrl)}" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: bold; font-size: 15px; margin: 24px 0;">
+          Choisir un nouveau mot de passe
+        </a>
+        <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
+          Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe actuel reste inchangé.
+        </p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
 
   private async sendMail(to: string, subject: string, html: string) {
     if (!this.isConfigured) {
@@ -184,4 +237,14 @@ export class MailService {
       return null;
     }
   }
+}
+
+// Les champs saisis par les clients (nom, produit…) sont injectés dans du HTML
+function escapeHtml(value: string): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

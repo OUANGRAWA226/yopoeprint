@@ -49,6 +49,13 @@ export class User {
   @Column({ name: 'refresh_token', nullable: true })
   refreshToken: string
 
+  // Mot de passe oublié : empreinte SHA-256 du jeton envoyé par email (usage unique, 1 h)
+  @Column({ name: 'password_reset_token_hash', type: 'varchar', nullable: true })
+  passwordResetTokenHash: string | null
+
+  @Column({ name: 'password_reset_expires_at', type: 'timestamptz', nullable: true })
+  passwordResetExpiresAt: Date | null
+
   // Addresses stored as JSONB (flexible)
   @Column({ type: 'jsonb', default: [] })
   addresses: Address[]
@@ -70,7 +77,8 @@ export class User {
 
 export interface Address {
   id: string
-  label: string
+  label?: string
+  labelType?: 'home' | 'work' | 'other'
   fullName: string
   phone: string
   street: string

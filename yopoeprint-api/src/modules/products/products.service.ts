@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Like, FindManyOptions } from 'typeorm'
 import { Product } from './product.entity'
 import {
-  CreateProductDto, UpdateProductDto,
+  CreateProductDto, UpdateProductDto, PatchProductDto,
   ProductQueryDto, CalculatePriceDto,
 } from './product.dto'
 
@@ -17,12 +17,12 @@ export class ProductsService {
   ) {}
 
   // ─── Get all products (public) ────────────────────────────
-  async findAll(query: ProductQueryDto) {
+  async findAll(query: ProductQueryDto, includeInactive = false) {
     const page  = parseInt(query.page  || '1', 10)
     const limit = parseInt(query.limit || '12', 10)
     const skip  = (page - 1) * limit
 
-    const where: any = { isActive: true }
+    const where: any = includeInactive ? {} : { isActive: true }
 
     if (query.category) where.category = query.category
 
@@ -89,6 +89,39 @@ export class ProductsService {
     await this.findById(id) // ensure exists
     await this.productRepo.update(id, dto)
     return this.findById(id)
+  }
+
+  // ─── Partial update + activation (admin, PATCH) ───────────
+  async patch(id: string, dto: PatchProductDto) {
+    const { active, isActive, ...fields } = dto
+    const product = await this.findById(id)
+
+    if (fields.slug && fields.slug !== product.slug) {
+      const existing = await this.productRepo.findOne({ where: { slug: fields.slug } })
+      if (existing) throw new ConflictException('Un produit avec ce slug existe déjà')
+    }
+
+    const changes: Partial<Product> = { ...fields } as Partial<Product>
+    const nextActive = isActive ?? active
+    if (nextActive !== undefined) changes.isActive = nextActive
+
+    if (Object.keys(changes).length) await this.productRepo.update(id, changes)
+    return this.findById(id)
+  }
+
+  // ─── Soft delete (admin) ──────────────────────────────────
+  // Les commandes gardent un instantané des articles : on désactive au lieu de supprimer.
+  async softDelete(id: string) {
+    await this.findById(id)
+    await this.productRepo.update(id, { isActive: false })
+    return { message: 'Produit désactivé (retiré du catalogue)' }
+  }
+
+  // ─── Image principale (admin) ─────────────────────────────
+  async setImage(id: string, imageUrl: string) {
+    await this.findById(id)
+    await this.productRepo.update(id, { imageUrl })
+    return { imageUrl }
   }
 
   // ─── Toggle active status ─────────────────────────────────

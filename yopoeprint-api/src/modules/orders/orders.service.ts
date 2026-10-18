@@ -2,7 +2,7 @@ import {
   Injectable, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Not, Repository, QueryFailedError } from 'typeorm'
+import { Not, Repository, QueryFailedError, Brackets } from 'typeorm'
 import { randomInt } from 'crypto'
 import { Order, OrderStatus, PaymentStatus, OrderItem } from './order.entity'
 import { User, UserRole } from '../users/user.entity'
@@ -13,6 +13,9 @@ import {
 import { ProductsService } from '../products/products.service'
 import { DELIVERY_ZONES, computeDeliveryCost } from './delivery'
 import { MailService } from '../mail/mail.service'
+import { Quote, QuoteStatus } from '../quotes/quote.entity'
+
+const DAY_MS = 24 * 60 * 60 * 1000
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +24,8 @@ export class OrdersService {
     private orderRepo: Repository<Order>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    @InjectRepository(Quote)
+    private quoteRepo: Repository<Quote>,
     private productsService: ProductsService,
     private mailService: MailService,
   ) {}
@@ -141,22 +146,140 @@ export class OrdersService {
 
   // ─── Get all orders (admin) ───────────────────────────────
   async findAll(query: OrderQueryDto) {
-    const page  = parseInt(query.page  || '1', 10)
-    const limit = parseInt(query.limit || '20', 10)
+    const page  = Math.max(parseInt(query.page  || '1', 10) || 1, 1)
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10) || 20, 1), 200)
     const skip  = (page - 1) * limit
 
-    const where: any = {}
-    if (query.status) where.status = query.status
+    const qb = this.orderRepo.createQueryBuilder('o')
+      .leftJoinAndSelect('o.user', 'user')
+      .orderBy('o.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
 
-    const [data, total] = await this.orderRepo.findAndCount({
-      where,
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-      relations: ['user'],
-    })
+    if (query.status) qb.andWhere('o.status = :status', { status: query.status })
+    if (query.batStatus) qb.andWhere('o.bat_status = :batStatus', { batStatus: query.batStatus })
+
+    const search = query.search?.trim().replace(/[%_\\]/g, (c) => `\\${c}`)
+    if (search) {
+      qb.andWhere(new Brackets((w) => {
+        w.where('o.order_number ILIKE :q', { q: `%${search}%` })
+          .orWhere(`(user.first_name || ' ' || user.last_name) ILIKE :q`)
+          .orWhere('user.email ILIKE :q')
+          .orWhere('user.phone ILIKE :q')
+          .orWhere(`o.delivery_address->>'fullName' ILIKE :q`)
+      }))
+    }
+
+    const [orders, total] = await qb.getManyAndCount()
+    const data = orders.map((o) => this.withSafeUser(o))
 
     return { data, total, page, limit, hasMore: skip + data.length < total }
+  }
+
+  // ─── Tableau de bord admin ────────────────────────────────
+  async getAdminStats(daysParam?: string) {
+    const days = [7, 30, 90].includes(Number(daysParam)) ? Number(daysParam) : 30
+    const now = new Date()
+    const from = new Date(now.getTime() - days * DAY_MS)
+    const prevFrom = new Date(from.getTime() - days * DAY_MS)
+    const paid = PaymentStatus.PAID
+
+    // Totaux de la période et de la période précédente (même durée) pour les évolutions
+    const periodTotals = async (start: Date, end: Date) => {
+      const r = await this.orderRepo.createQueryBuilder('o')
+        .select('COUNT(*)', 'orders')
+        .addSelect(`COUNT(*) FILTER (WHERE o.payment_status = :paid)`, 'paidOrders')
+        .addSelect(`COALESCE(SUM(o.total) FILTER (WHERE o.payment_status = :paid), 0)`, 'revenue')
+        .where('o.created_at >= :start AND o.created_at < :end', { start, end })
+        .setParameter('paid', paid)
+        .getRawOne()
+      const newClients = await this.userRepo.createQueryBuilder('u')
+        .where('u.role = :role AND u.created_at >= :start AND u.created_at < :end', { role: UserRole.CLIENT, start, end })
+        .getCount()
+      return {
+        orders:     Number(r.orders) || 0,
+        paidOrders: Number(r.paidOrders) || 0,
+        revenue:    Number(r.revenue) || 0,
+        newClients,
+      }
+    }
+
+    const [current, previous] = await Promise.all([periodTotals(from, now), periodTotals(prevFrom, from)])
+
+    // Chiffre d'affaires encaissé par jour (par semaine sur 90 jours)
+    const bucket = days === 90 ? 'week' : 'day'
+    const seriesRows = await this.orderRepo.createQueryBuilder('o')
+      .select(`to_char(date_trunc('${bucket}', o.created_at), 'YYYY-MM-DD')`, 'bucket')
+      .addSelect('COALESCE(SUM(o.total), 0)', 'revenue')
+      .addSelect('COUNT(*)', 'orders')
+      .where('o.created_at >= :from AND o.payment_status = :paid', { from, paid })
+      .groupBy('bucket')
+      .orderBy('bucket', 'ASC')
+      .getRawMany()
+    const byBucket = new Map(seriesRows.map((r) => [r.bucket as string, r]))
+    const revenueSeries: { date: string; revenue: number; orders: number }[] = []
+    const cursor = new Date(from)
+    cursor.setUTCHours(0, 0, 0, 0)
+    if (bucket === 'week') cursor.setUTCDate(cursor.getUTCDate() - ((cursor.getUTCDay() + 6) % 7)) // lundi
+    while (cursor <= now) {
+      const key = cursor.toISOString().slice(0, 10)
+      const row = byBucket.get(key)
+      revenueSeries.push({ date: key, revenue: Number(row?.revenue) || 0, orders: Number(row?.orders) || 0 })
+      cursor.setUTCDate(cursor.getUTCDate() + (bucket === 'week' ? 7 : 1))
+    }
+
+    // Répartition des encaissements par moyen de paiement
+    const paymentRows = await this.orderRepo.createQueryBuilder('o')
+      .select('o.payment_method', 'method')
+      .addSelect('COUNT(*)', 'orders')
+      .addSelect('COALESCE(SUM(o.total), 0)', 'amount')
+      .where('o.created_at >= :from AND o.payment_status = :paid', { from, paid })
+      .groupBy('o.payment_method')
+      .getRawMany()
+    const paymentBreakdown = paymentRows
+      .map((r) => ({ method: r.method || 'inconnu', orders: Number(r.orders) || 0, amount: Number(r.amount) || 0 }))
+      .sort((a, b) => b.amount - a.amount)
+
+    // Commandes en cours, tous âges confondus (charge de l'atelier)
+    const statusRows = await this.orderRepo.createQueryBuilder('o')
+      .select('o.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('o.status')
+      .getRawMany()
+    const statusCounts = Object.fromEntries(Object.values(OrderStatus).map((s) => [s, 0])) as Record<OrderStatus, number>
+    for (const r of statusRows) statusCounts[r.status as OrderStatus] = Number(r.count) || 0
+
+    // À traiter maintenant
+    const [batPending, batRejected, quotesNew] = await Promise.all([
+      this.orderRepo.count({ where: { status: OrderStatus.BAT_PENDING, batStatus: 'pending' } }),
+      this.orderRepo.count({ where: { status: OrderStatus.BAT_PENDING, batStatus: 'rejected' } }),
+      this.quoteRepo.count({ where: { status: QuoteStatus.NEW } }),
+    ])
+
+    const recent = await this.orderRepo.find({
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      take: 8,
+    })
+
+    return {
+      days,
+      from,
+      to: now,
+      current: { ...current, averageOrder: current.paidOrders ? Math.round(current.revenue / current.paidOrders) : 0 },
+      previous,
+      revenueSeries,
+      bucket,
+      paymentBreakdown,
+      statusCounts,
+      todo: {
+        toConfirm:   statusCounts[OrderStatus.CONFIRMED],   // payées, BAT à préparer
+        batPending,                                         // en attente du client
+        batRejected,                                        // corrections demandées
+        quotesNew,
+      },
+      recentOrders: recent.map((o) => this.withSafeUser(o)),
+    }
   }
 
   // ─── Get user's orders ────────────────────────────────────
@@ -185,6 +308,22 @@ export class OrdersService {
       relations: ['user'],
     })
     if (!order) throw new NotFoundException('Commande introuvable')
+    return this.withSafeUser(order)
+  }
+
+  // La relation `user` chargée par TypeORM contient passwordHash, refreshToken, jeton de
+  // réinitialisation… Toute commande renvoyée par l'API ne doit exposer que ces champs-là.
+  private withSafeUser(order: Order): Order {
+    if (!order?.user) return order
+    const u = order.user
+    order.user = {
+      id:        u.id,
+      firstName: u.firstName,
+      lastName:  u.lastName,
+      fullName:  `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
+      email:     u.email,
+      phone:     u.phone,
+    } as unknown as User
     return order
   }
 
@@ -379,14 +518,17 @@ export class OrdersService {
   }
 
   // ─── BAT via numéro de commande (Suivi public) ────────────
+  // Lien public : pas de coordonnées client dans la réponse
   async approveBatByOrderNumber(orderNumber: string, dto: ApproveBatDto) {
     const order = await this.findOrderForPublicBat(orderNumber)
-    return this.approveBat(order.id, { id: order.userId, role: 'customer' }, dto)
+    const { user: _user, ...updated } = await this.approveBat(order.id, { id: order.userId, role: 'customer' }, dto)
+    return updated
   }
 
   async rejectBatByOrderNumber(orderNumber: string, dto: RejectBatDto) {
     const order = await this.findOrderForPublicBat(orderNumber)
-    return this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto)
+    const { user: _user, ...updated } = await this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto)
+    return updated
   }
 
   // Legacy sequential numbers (YP-2025-000123) are guessable: their BAT can only

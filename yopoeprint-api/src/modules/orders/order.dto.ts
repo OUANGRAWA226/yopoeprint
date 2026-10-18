@@ -1,6 +1,6 @@
 import {
   IsString, IsArray, IsInt, IsEnum, IsIn, ArrayMinSize,
-  IsOptional, IsBoolean, ValidateNested, Min,
+  IsOptional, IsBoolean, ValidateNested, Min, MaxLength,
 } from 'class-validator'
 import { Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
@@ -121,6 +121,24 @@ export class OrderQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   limit?: string
+
+  @ApiPropertyOptional({ enum: ['pending', 'approved', 'rejected'], description: '[ADMIN] État du BAT' })
+  @IsOptional()
+  @IsIn(['pending', 'approved', 'rejected'])
+  batStatus?: 'pending' | 'approved' | 'rejected'
+
+  @ApiPropertyOptional({ description: '[ADMIN] N° de commande, nom, email ou téléphone du client' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  search?: string
+}
+
+export class AdminStatsQueryDto {
+  @ApiPropertyOptional({ enum: ['7', '30', '90'], description: 'Période en jours (défaut 30)' })
+  @IsOptional()
+  @IsIn(['7', '30', '90'])
+  days?: '7' | '30' | '90'
 }
 
 export class AttachDesignFileDto {

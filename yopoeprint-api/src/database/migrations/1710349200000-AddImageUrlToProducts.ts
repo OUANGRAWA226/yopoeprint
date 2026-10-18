@@ -2,6 +2,8 @@ import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm'
 
 export class AddImageUrlToProducts1710349200000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Idempotente : la colonne existe déjà sur les bases créées par synchronize
+    if (await queryRunner.hasColumn('products', 'image_url')) return
     await queryRunner.addColumn(
       'products',
       new TableColumn({

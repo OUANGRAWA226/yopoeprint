@@ -1,13 +1,16 @@
 import {
-  Controller, Post, Get, Patch, Delete,
-  Body, Param, UseGuards, HttpCode, HttpStatus,
+  Controller, Post, Get, Patch,
+  Body, Param, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe,
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User, UserRole } from './user.entity'
+import { UsersService } from './users.service'
+import { AdminUsersQueryDto, AdminUpdateUserDto } from './user.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { AdminGuard } from '../../common/guards/admin.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import * as bcrypt from 'bcryptjs'
 
 @ApiTags('Administration - Utilisateurs')
@@ -16,6 +19,7 @@ export class AdminUsersController {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private usersService: UsersService,
   ) {}
 
   /**
@@ -80,12 +84,29 @@ export class AdminUsersController {
   @Get()
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: '[ADMIN] Lister tous les utilisateurs' })
-  async findAll() {
-    const users = await this.userRepo.find({
-      select: ['id', 'firstName', 'lastName', 'email', 'phone', 'role', 'isActive', 'createdAt'],
-    })
-    return users
+  @ApiOperation({ summary: '[ADMIN] Lister les utilisateurs (clients par défaut) avec leurs statistiques' })
+  findAll(@Query() query: AdminUsersQueryDto) {
+    return this.usersService.findAllForAdmin(query)
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Détail d\'un utilisateur, ses adresses et ses commandes' })
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.findOneForAdmin(id)
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Activer / désactiver un utilisateur' })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AdminUpdateUserDto,
+    @CurrentUser() currentUser,
+  ) {
+    return this.usersService.updateForAdmin(id, dto, currentUser.id)
   }
 
   /**

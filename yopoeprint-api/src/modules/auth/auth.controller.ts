@@ -4,7 +4,9 @@ import {
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
-import { RegisterDto, LoginDto, RefreshTokenDto } from './auth.dto'
+import {
+  RegisterDto, LoginDto, RefreshTokenDto, ForgotPasswordDto, ResetPasswordDto,
+} from './auth.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { AdminGuard } from '../../common/guards/admin.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
@@ -45,6 +47,22 @@ export class AuthController {
   async refresh(@Body() dto: RefreshTokenDto) {
     // userId is read from the refresh token itself, verified with the refresh secret
     return this.authService.refreshTokens(dto.refreshToken)
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 15 * 60_000 } }) // 3 demandes / 15 min / IP
+  @ApiOperation({ summary: 'Recevoir un lien de réinitialisation du mot de passe' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto)
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
+  @ApiOperation({ summary: 'Définir un nouveau mot de passe avec le jeton reçu par email' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto)
   }
 
   @Post('logout')

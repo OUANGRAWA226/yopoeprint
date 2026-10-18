@@ -6,7 +6,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import { OrdersService } from './orders.service'
 import {
-  CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto, AttachDesignFileDto,
+  CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto, AttachDesignFileDto, AdminStatsQueryDto,
   UploadBatDto, ApproveBatDto, RejectBatDto,
 } from './order.dto'
 import { JwtAuthGuard }  from '../../common/guards/jwt-auth.guard'
@@ -105,6 +105,14 @@ export class OrdersController {
   }
 
   // ── Admin routes ───────────────────────────────────────────
+
+  @Get('admin/stats')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Indicateurs du tableau de bord (CA, commandes, paiements, atelier)' })
+  adminStats(@Query() query: AdminStatsQueryDto) {
+    return this.ordersService.getAdminStats(query.days)
+  }
 
   @Get()
   @UseGuards(JwtAuthGuard, AdminGuard)

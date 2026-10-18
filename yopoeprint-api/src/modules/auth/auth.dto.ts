@@ -68,3 +68,23 @@ export class AuthResponseDto {
     loyaltyPoints: number
   }
 }
+
+// ─── Mot de passe oublié ──────────────────────────────────────
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'salimata@example.com' })
+  @IsEmail()
+  email: string
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ description: 'Jeton reçu par email' })
+  @IsString()
+  @Matches(/^[a-f0-9]{64}$/, { message: 'Lien de réinitialisation invalide' })
+  token: string
+
+  @ApiProperty({ example: 'NouveauMotDePasse123!' })
+  @IsString()
+  @MinLength(8, { message: 'Mot de passe trop court (8 caractères minimum)' })
+  @MaxLength(100)
+  newPassword: string
+}

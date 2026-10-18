@@ -1,23 +1,29 @@
 import {
-  Injectable, UnauthorizedException,
-  ConflictException, NotFoundException,
+  Injectable, UnauthorizedException, BadRequestException,
+  ConflictException, NotFoundException, Logger,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, MoreThan } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
+import { randomBytes, createHash } from 'crypto'
 import { User, UserRole } from '../users/user.entity'
-import { RegisterDto, LoginDto } from './auth.dto'
+import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
+import { MailService } from '../mail/mail.service'
 import { v4 as uuidv4 } from 'uuid'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+  private static readonly RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 h
+
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mailService: MailService,
   ) {}
 
   // ─── Register ─────────────────────────────────────────────
@@ -181,7 +187,57 @@ export class AuthService {
     return this.sanitizeUser(user)
   }
 
+  // ─── Forgot password ──────────────────────────────────────
+  // Réponse identique que le compte existe ou non (pas d'énumération des emails)
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const message = 'Si un compte est associé à cette adresse, un email de réinitialisation vient d\'être envoyé.'
+    const user = await this.userRepo.findOne({ where: { email: dto.email.trim() } })
+    if (!user || !user.isActive) return { message }
+
+    const token = randomBytes(32).toString('hex')
+    await this.userRepo.update(user.id, {
+      passwordResetTokenHash: this.hashResetToken(token),
+      passwordResetExpiresAt: new Date(Date.now() + AuthService.RESET_TOKEN_TTL_MS),
+    })
+
+    const frontendUrl = (this.configService.get<string>('app.frontendUrl') || 'http://localhost:3000').replace(/\/+$/, '')
+    const resetUrl = `${frontendUrl}/reinitialiser-mot-de-passe?token=${token}`
+    try {
+      await this.mailService.sendPasswordReset(user.email, user.firstName, resetUrl)
+    } catch (err: any) {
+      this.logger.error(`Email de réinitialisation non envoyé : ${err?.message || err}`)
+    }
+
+    return { message }
+  }
+
+  // ─── Reset password (jeton à usage unique) ────────────────
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.userRepo.findOne({
+      where: {
+        passwordResetTokenHash: this.hashResetToken(dto.token),
+        passwordResetExpiresAt: MoreThan(new Date()),
+      },
+    })
+    if (!user || !user.isActive) {
+      throw new BadRequestException('Lien de réinitialisation invalide ou expiré. Faites une nouvelle demande.')
+    }
+
+    await this.userRepo.update(user.id, {
+      passwordHash:           await bcrypt.hash(dto.newPassword, 12),
+      passwordResetTokenHash: null,
+      passwordResetExpiresAt: null,
+      refreshToken:           null, // déconnecte les autres sessions
+    })
+
+    return { message: 'Mot de passe réinitialisé. Vous pouvez vous connecter.' }
+  }
+
   // ─── Helpers ──────────────────────────────────────────────
+  private hashResetToken(token: string) {
+    return createHash('sha256').update(token).digest('hex')
+  }
+
   private async generateTokens(user: User) {
     const payload = { sub: user.id, email: user.email, role: user.role }
 
