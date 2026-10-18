@@ -932,7 +932,7 @@ export default function AdminProduitsPage() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await api.get('/products')
+        const data = await api.get('/products?limit=200&includeInactive=true')
         // Gérer à la fois les réponses directes et les réponses enveloppées
         const productList = Array.isArray(data) ? data : data?.data || data?.products || []
         // Transformer les données reçues au format Product
@@ -946,7 +946,7 @@ export default function AdminProduitsPage() {
           basePrice: p.basePrice || 0,
           minQuantity: p.minQuantity || 100,
           badge: p.badge || '',
-          active: p.active !== false,
+          active: (p.isActive ?? p.active) !== false,
           imageUrl: p.imageUrl || '',
           emoji: p.emoji || '📄'
         }))
@@ -979,7 +979,7 @@ export default function AdminProduitsPage() {
 
   const loadProducts = async () => {
     try {
-      const data = await api.get('/products')
+      const data = await api.get('/products?limit=200&includeInactive=true')
       const productList = Array.isArray(data) ? data : data?.data || data?.products || []
       const transformed = productList.map((p: any) => ({
         id: p.id?.toString() || '',
@@ -991,7 +991,7 @@ export default function AdminProduitsPage() {
         basePrice: p.basePrice || 0,
         minQuantity: p.minQuantity || 100,
         badge: p.badge || '',
-        active: p.active !== false,
+        active: (p.isActive ?? p.active) !== false,
         imageUrl: p.imageUrl || '',
         emoji: p.emoji || '📄'
       }))
@@ -1008,21 +1008,20 @@ export default function AdminProduitsPage() {
       // L'endpoint pour toggle est PATCH /products/:id/toggle
       await api.patch(`/products/${id}/toggle`, {})
       setProducts((ps) => ps.map((p) => p.id === id ? { ...p, active: !p.active } : p))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors du changement de statut:', error)
-      // Basculer quand même si API indisponible
-      setProducts((ps) => ps.map((p) => p.id === id ? { ...p, active: !p.active } : p))
+      window.alert(`Statut non modifié : ${error?.message || 'API indisponible'}`)
     }
   }
 
+  // DELETE = désactivation douce côté API : le produit reste listé ici, marqué inactif
   const handleDelete = async (id: string) => {
     try {
       await api.delete(`/products/${id}`)
-      setProducts((ps) => ps.filter((p) => p.id !== id))
-    } catch (error) {
+      setProducts((ps) => ps.map((p) => p.id === id ? { ...p, active: false } : p))
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error)
-      // Supprimer quand même si API indisponible
-      setProducts((ps) => ps.filter((p) => p.id !== id))
+      window.alert(`Produit non retiré : ${error?.message || 'API indisponible'}`)
     }
     setDeleteId(null)
   }
@@ -1177,10 +1176,10 @@ export default function AdminProduitsPage() {
               <AlertCircle size={24} className="text-red-500" />
             </div>
             <h3 className="font-bold text-blue-deep text-center mb-2">
-              Supprimer ce produit ?
+              Retirer ce produit du catalogue ?
             </h3>
             <p className="text-sm text-gray-400 text-center mb-5">
-              Cette action est irréversible. Le produit sera définitivement supprimé.
+              Il ne sera plus visible ni commandable. Les commandes passées sont conservées et vous pourrez le réactiver.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteId(null)}
@@ -1191,7 +1190,7 @@ export default function AdminProduitsPage() {
               <button onClick={() => handleDelete(deleteId)}
                 className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm
                            font-bold hover:bg-red-600 transition-all">
-                Supprimer
+                Retirer
               </button>
             </div>
           </div>

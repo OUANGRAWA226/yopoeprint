@@ -1,55 +1,119 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Search, Eye, ChevronDown, Download, Filter,
+  Search, Download,
   ShieldCheck, CheckCircle2, AlertTriangle, UploadCloud,
-  X, Send, ExternalLink, RefreshCw, FileText
+  X, Send, ExternalLink, RefreshCw, ChevronLeft, ChevronRight,
 } from 'lucide-react'
-import Link from 'next/link'
 import { adminOrdersService, Order } from '@/lib/orders.service'
 import { cloudinaryService } from '@/lib/cloudinary.service'
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  pending:       { label: 'En attente',    cls: 'bg-yellow-100 text-yellow-700' },
-  confirmed:     { label: 'Confirmée',     cls: 'bg-blue-100 text-blue-700' },
+  pending:       { label: 'Paiement en attente', cls: 'bg-yellow-100 text-yellow-700' },
+  confirmed:     { label: 'Payée',         cls: 'bg-blue-100 text-blue-700' },
   bat_pending:   { label: 'BAT à valider', cls: 'bg-amber-100 text-amber-800' },
   in_production: { label: 'En production', cls: 'bg-purple-100 text-purple-700' },
   ready:         { label: 'Prête',         cls: 'bg-emerald-100 text-emerald-700' },
   shipped:       { label: 'Expédiée',      cls: 'bg-indigo-100 text-indigo-700' },
   delivered:     { label: 'Livrée',        cls: 'bg-green-100 text-green-700' },
   cancelled:     { label: 'Annulée',       cls: 'bg-red-100 text-red-600' },
+  refunded:      { label: 'Remboursée',    cls: 'bg-gray-100 text-gray-600' },
 }
 
-const INITIAL_DEMO_ORDERS = Array.from({ length: 15 }, (_, i) => {
-  const statuses = Object.keys(STATUS_MAP)
-  const status = i === 1 ? 'bat_pending' : statuses[i % statuses.length]
-  return {
-    id:          `YP-2025-00${1421 - i}`,
-    orderNumber: `YP-2025-00${1421 - i}`,
-    client:      ['Salimata Kaboré', 'Oumar Traoré', 'Fatimata Diallo', 'Ibrahim Sawadogo', 'Aminata Zongo'][i % 5],
-    phone:       '+226 7' + (Math.floor(Math.random() * 9) + 1) + ' ' + Math.floor(Math.random() * 90 + 10) + ' ' + Math.floor(Math.random() * 90 + 10) + ' ' + Math.floor(Math.random() * 90 + 10),
-    product:     ['Flyer A5 × 1000', 'Carte de visite × 500', 'Roll-up × 2', 'T-shirt × 50', 'Brochure × 200'][i % 5],
-    total:       [17000, 12400, 56000, 225000, 92500][i % 5],
-    status,
-    payment:     ['orange_money', 'moov_money', 'card'][i % 3],
-    date:        `${12 - (i % 10)} mars 2025`,
-    zone:        ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou'][i % 3],
-    batUrl:      i === 1 ? 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=800&q=80' : undefined,
-    batStatus:   i === 1 ? ('pending' as const) : null,
-    batNotes:    i === 1 ? 'Bords perdus de 3mm ajustés par notre studio pré-presse.' : undefined,
-  }
+const PAYMENT_LABELS: Record<string, string> = {
+  orange_money: 'Orange Money', moov_money: 'Moov Money', visa: 'Visa', mastercard: 'Mastercard', virement: 'Virement',
+}
+
+const PAGE_SIZE = 50
+
+// Ligne affichée dans le tableau et dans la modale BAT
+interface Row {
+  id: string
+  orderNumber: string
+  client: string
+  phone: string
+  product: string
+  total: number
+  status: string
+  payment?: string
+  paymentStatus?: string
+  date: string
+  zone: string
+  batUrl?: string
+  batVersoUrl?: string
+  batStatus?: 'pending' | 'approved' | 'rejected' | null
+  batNotes?: string
+  batApprovedAt?: string
+  batRejectedReason?: string
+  batCorrectionFileUrl?: string
+}
+
+const toRow = (o: Order): Row => ({
+  id:          o.id,
+  orderNumber: o.orderNumber,
+  client:      o.user?.fullName || o.deliveryAddress?.fullName || '—',
+  phone:       o.deliveryAddress?.phone || o.user?.phone || '—',
+  product:     (o.items || []).map((it) => `${new Intl.NumberFormat('fr-FR').format(it.quantity)} × ${it.productName}`).join(', '),
+  total:       o.total || 0,
+  status:      o.status,
+  payment:     o.paymentMethod,
+  paymentStatus: o.paymentStatus,
+  date:        new Date(o.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+  zone:        o.deliveryAddress?.city || '—',
+  batUrl:      o.batUrl,
+  batVersoUrl: o.batVersoUrl,
+  batStatus:   o.batStatus,
+  batNotes:    o.batNotes,
+  batApprovedAt: o.batApprovedAt,
+  batRejectedReason: o.batRejectedReason,
+  batCorrectionFileUrl: o.batCorrectionFileUrl,
 })
 
+// Export CSV (séparateur ; pour Excel en français)
+function downloadCsv(rows: Row[]) {
+  const header = ['N° commande', 'Client', 'Téléphone', 'Ville', 'Articles', 'Total FCFA', 'Statut', 'Paiement', 'Date']
+  const esc = (v: string | number) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const lines = rows.map((r) => [
+    r.orderNumber, r.client, r.phone, r.zone, r.product, r.total,
+    STATUS_MAP[r.status]?.label || r.status, PAYMENT_LABELS[r.payment || ''] || r.payment || '', r.date,
+  ].map(esc).join(';'))
+  const blob = new Blob(['﻿' + [header.map(esc).join(';'), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `commandes-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function AdminCommandesPage() {
-  const [orders,    setOrders]    = useState<any[]>(INITIAL_DEMO_ORDERS)
-  const [loading,   setLoading]   = useState(false)
+  return (
+    <Suspense fallback={<div className="h-64 rounded-2xl bg-white border border-gray-100 animate-pulse" />}>
+      <CommandesContent />
+    </Suspense>
+  )
+}
+
+function CommandesContent() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const status = params.get('status') || 'all'
+  const bat = params.get('bat') || ''
+
+  const [orders,    setOrders]    = useState<Row[]>([])
+  const [total,     setTotal]     = useState(0)
+  const [page,      setPage]      = useState(1)
+  const [counts,    setCounts]    = useState<Record<string, number> | null>(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState('')
   const [search,    setSearch]    = useState('')
-  const [status,    setStatus]    = useState('all')
   const [selected,  setSelected]  = useState<string[]>([])
+  const [bulkSaving, setBulkSaving] = useState(false)
 
   // Modal BAT
-  const [batModalOrder, setBatModalOrder] = useState<any | null>(null)
+  const [batModalOrder, setBatModalOrder] = useState<Row | null>(null)
   const [batUrlInput, setBatUrlInput] = useState('')
   const [batVersoUrlInput, setBatVersoUrlInput] = useState('')
   const [batNotesInput, setBatNotesInput] = useState('')
@@ -57,49 +121,54 @@ export default function AdminCommandesPage() {
   const [savingBat, setSavingBat] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Charger les commandes depuis l'API si disponible
-  useEffect(() => {
-    loadOrders()
-  }, [])
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setLoading(true)
+    setError('')
     try {
-      const res = await adminOrdersService.getAll()
-      if (res && (Array.isArray(res) || res.data)) {
-        const list = Array.isArray(res) ? res : res.data
-        if (list.length > 0) {
-          const formatted = list.map((o: any) => ({
-            id:          o.id,
-            orderNumber: o.orderNumber || o.id,
-            client:      o.user?.fullName || o.deliveryAddress?.fullName || 'Client',
-            phone:       o.user?.phone || o.deliveryAddress?.phone || '—',
-            product:     o.items?.map((it: any) => it.productName).join(', ') || 'Articles',
-            total:       o.total || 0,
-            status:      o.status || 'pending',
-            payment:     o.paymentMethod || 'orange_money',
-            date:        new Date(o.createdAt || Date.now()).toLocaleDateString('fr-FR'),
-            zone:        o.deliveryAddress?.city || 'Ouagadougou',
-            batUrl:      o.batUrl,
-            batVersoUrl: o.batVersoUrl,
-            batStatus:   o.batStatus,
-            batNotes:    o.batNotes,
-            batApprovedAt: o.batApprovedAt,
-            batRejectedReason: o.batRejectedReason,
-            batCorrectionFileUrl: o.batCorrectionFileUrl,
-          }))
-          setOrders(formatted)
-        }
-      }
-    } catch (err) {
-      // Fallback gracieux aux données démo
-      console.warn('Backend API non joignable, affichage du mode démo:', err)
+      const [res, stats] = await Promise.all([
+        adminOrdersService.getAll({
+          status, batStatus: bat || undefined, page, limit: PAGE_SIZE, search: search.trim() || undefined,
+        }),
+        adminOrdersService.getStats(30),
+      ])
+      setOrders(res.data.map(toRow))
+      setTotal(res.total)
+      setCounts(stats.statusCounts)
+      setSelected([])
+    } catch (err: any) {
+      setError(err?.message || 'Impossible de charger les commandes')
     } finally {
       setLoading(false)
     }
+  }, [status, bat, page, search])
+
+  // Recherche côté API, avec un léger délai pendant la frappe
+  useEffect(() => {
+    const t = setTimeout(loadOrders, search ? 300 : 0)
+    return () => clearTimeout(t)
+  }, [loadOrders, search])
+
+  const setFilter = (next: { status?: string; bat?: string }) => {
+    const q = new URLSearchParams()
+    if (next.status && next.status !== 'all') q.set('status', next.status)
+    if (next.bat) q.set('bat', next.bat)
+    const qs = q.toString()
+    setPage(1)
+    router.replace(`/admin/commandes${qs ? `?${qs}` : ''}`)
   }
 
-  const openBatModal = (order: any) => {
+  const applyBulkStatus = async (newStatus: string) => {
+    if (!newStatus || !selected.length) return
+    if (!window.confirm(`Passer ${selected.length} commande(s) au statut « ${STATUS_MAP[newStatus]?.label} » ? Les clients concernés sont prévenus par email.`)) return
+    setBulkSaving(true)
+    const results = await Promise.allSettled(selected.map((id) => adminOrdersService.updateStatus(id, newStatus)))
+    setBulkSaving(false)
+    const failed = results.filter((r) => r.status === 'rejected').length
+    if (failed) window.alert(`${failed} commande(s) n'ont pas pu être mises à jour.`)
+    loadOrders()
+  }
+
+  const openBatModal = (order: Row) => {
     setBatModalOrder(order)
     setBatUrlInput(order.batUrl || '')
     setBatVersoUrlInput(order.batVersoUrl || '')
@@ -128,6 +197,7 @@ export default function AdminCommandesPage() {
   }
 
   const handleSaveBat = async () => {
+    if (!batModalOrder) return
     if (!batUrlInput.trim()) {
       setFeedbackMsg({ type: 'error', text: 'Veuillez saisir ou uploader une URL de maquette BAT.' })
       return
@@ -136,36 +206,14 @@ export default function AdminCommandesPage() {
     setSavingBat(true)
     setFeedbackMsg(null)
     try {
-      // Tenter d'appeler l'API NestJS
-      try {
-        await adminOrdersService.uploadBat(batModalOrder.id, {
-          batUrl: batUrlInput.trim(),
-          batVersoUrl: batVersoUrlInput.trim() || undefined,
-          batNotes: batNotesInput.trim() || undefined,
-        })
-      } catch (apiErr) {
-        console.warn('API NestJS locale hors ligne, mise à jour de l\'état local:', apiErr)
-      }
-
-      // Mettre à jour localement
-      setOrders((prev) => prev.map((o) => {
-        if (o.id === batModalOrder.id) {
-          return {
-            ...o,
-            status: 'bat_pending',
-            batUrl: batUrlInput.trim(),
-            batVersoUrl: batVersoUrlInput.trim() || undefined,
-            batNotes: batNotesInput.trim() || undefined,
-            batStatus: 'pending',
-          }
-        }
-        return o
-      }))
-
+      const updated: Order = await adminOrdersService.uploadBat(batModalOrder.id, {
+        batUrl: batUrlInput.trim(),
+        batVersoUrl: batVersoUrlInput.trim() || undefined,
+        batNotes: batNotesInput.trim() || undefined,
+      })
+      setOrders((prev) => prev.map((o) => (o.id === batModalOrder.id ? toRow(updated) : o)))
       setFeedbackMsg({ type: 'success', text: 'BAT envoyé au client ! Statut passé à "BAT à valider".' })
-      setTimeout(() => {
-        setBatModalOrder(null)
-      }, 1200)
+      setTimeout(() => setBatModalOrder(null), 1200)
     } catch (err: any) {
       setFeedbackMsg({ type: 'error', text: err?.message || 'Impossible d\'enregistrer le BAT.' })
     } finally {
@@ -173,53 +221,55 @@ export default function AdminCommandesPage() {
     }
   }
 
-  const filtered = orders.filter((o) =>
-    (status === 'all' || o.status === status) &&
-    (!search || (o.id || '').includes(search) || (o.client || '').toLowerCase().includes(search.toLowerCase()))
-  )
-
   const toggleSelect = (id: string) =>
     setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id])
 
   const toggleAll = () =>
-    setSelected(selected.length === filtered.length ? [] : filtered.map((o) => o.id))
+    setSelected(selected.length === orders.length ? [] : orders.map((o) => o.id))
+
+  const pages = Math.max(Math.ceil(total / PAGE_SIZE), 1)
+  const filterLabel = bat === 'rejected' ? 'BAT à corriger' : bat === 'pending' ? 'BAT en attente du client' : STATUS_MAP[status]?.label
 
   return (
     <div className="space-y-5">
 
-      {/* ── Stats statuts ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5">
-        {Object.entries(STATUS_MAP).map(([key, { label, cls }]) => {
-          const count = orders.filter((o) => o.status === key).length
-          return (
-            <button key={key}
-              onClick={() => setStatus(status === key ? 'all' : key)}
-              className={`p-3 rounded-xl border-2 text-center transition-all ${
-                status === key ? 'border-blue-mid bg-blue-pale' : 'bg-white border-gray-100 hover:border-blue-mid/40'
-              }`}
-            >
-              <p className="font-display font-bold text-blue-deep text-lg">{count}</p>
-              <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-block mt-1 ${cls}`}>
-                {label}
-              </p>
-            </button>
-          )
-        })}
+      {/* ── Compteurs par statut (toutes commandes) ───────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+        {Object.entries(STATUS_MAP).filter(([k]) => k !== 'refunded').map(([key, { label, cls }]) => (
+          <button key={key}
+            onClick={() => setFilter({ status: status === key ? 'all' : key })}
+            aria-pressed={status === key}
+            className={`p-3 rounded-xl border-2 text-center transition-all ${
+              status === key ? 'border-blue-mid bg-blue-pale' : 'bg-white border-gray-100 hover:border-blue-mid/40'
+            }`}
+          >
+            <p className="font-display font-bold text-blue-deep text-lg tabular-nums">{counts ? counts[key] ?? 0 : '…'}</p>
+            <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-block mt-1 ${cls}`}>
+              {label}
+            </p>
+          </button>
+        ))}
       </div>
 
       {/* ── Toolbar ───────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input placeholder="N° commande ou nom client…"
-            value={search} onChange={(e) => setSearch(e.target.value)}
+          <input placeholder="N° commande, nom, email ou téléphone…" aria-label="Rechercher une commande"
+            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-mid transition-all" />
         </div>
+
+        {(status !== 'all' || bat) && (
+          <button onClick={() => setFilter({})} aria-label="Retirer le filtre"
+            className="flex items-center gap-1.5 px-3 py-2.5 bg-blue-pale text-blue-mid rounded-xl text-xs font-bold">
+            {filterLabel} <X size={13} />
+          </button>
+        )}
 
         <button
           onClick={loadOrders}
           className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:border-blue-mid transition-all"
-          title="Rafraîchir"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Actualiser
@@ -228,8 +278,10 @@ export default function AdminCommandesPage() {
         {selected.length > 0 && (
           <div className="flex items-center gap-2 bg-blue-pale px-4 py-2.5 rounded-xl">
             <span className="text-xs font-bold text-blue-mid">{selected.length} sélectionnée(s)</span>
-            <select className="text-xs bg-transparent font-bold text-blue-mid outline-none cursor-pointer">
-              <option>Changer statut…</option>
+            <select value="" disabled={bulkSaving} onChange={(e) => applyBulkStatus(e.target.value)}
+              aria-label="Changer le statut des commandes sélectionnées"
+              className="text-xs bg-transparent font-bold text-blue-mid outline-none cursor-pointer">
+              <option value="">{bulkSaving ? 'Mise à jour…' : 'Changer statut…'}</option>
               {Object.entries(STATUS_MAP).map(([k, { label }]) => (
                 <option key={k} value={k}>{label}</option>
               ))}
@@ -237,10 +289,18 @@ export default function AdminCommandesPage() {
           </div>
         )}
 
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:border-blue-mid transition-all">
+        <button onClick={() => downloadCsv(orders)} disabled={!orders.length}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:border-blue-mid transition-all disabled:opacity-50">
           <Download size={15} /> Exporter CSV
         </button>
       </div>
+
+      {error && (
+        <div role="alert" className="p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700 flex items-center justify-between gap-3">
+          <span>{error}</span>
+          <button onClick={loadOrders} className="font-bold underline shrink-0">Réessayer</button>
+        </div>
+      )}
 
       {/* ── Table commandes ───────────────────────────────── */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-card overflow-hidden">
@@ -249,44 +309,53 @@ export default function AdminCommandesPage() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="px-4 py-3 w-10">
-                  <input type="checkbox"
-                    checked={selected.length === filtered.length && filtered.length > 0}
+                  <input type="checkbox" aria-label="Tout sélectionner"
+                    checked={selected.length === orders.length && orders.length > 0}
                     onChange={toggleAll}
                     className="accent-blue-mid cursor-pointer" />
                 </th>
-                {['Commande', 'Client', 'Produit', 'Paiement', 'Total', 'Statut', 'BAT', 'Date', 'Actions'].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                {['Commande', 'Client', 'Articles', 'Paiement', 'Total', 'Statut', 'BAT', 'Date', 'Actions'].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map((o) => (
+              {loading && !orders.length ? (
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-gray-400">Chargement des commandes…</td></tr>
+              ) : !orders.length ? (
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-gray-500">
+                  {search || status !== 'all' || bat ? 'Aucune commande ne correspond à ces critères.' : 'Aucune commande pour le moment.'}
+                </td></tr>
+              ) : orders.map((o) => (
                 <tr key={o.id}
                   className={`hover:bg-gray-50 transition-colors ${
                     selected.includes(o.id) ? 'bg-blue-pale/50' : ''
                   }`}
                 >
                   <td className="px-4 py-3">
-                    <input type="checkbox" checked={selected.includes(o.id)}
+                    <input type="checkbox" checked={selected.includes(o.id)} aria-label={`Sélectionner ${o.orderNumber}`}
                       onChange={() => toggleSelect(o.id)}
                       className="accent-blue-mid cursor-pointer" />
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-blue-mid font-bold whitespace-nowrap">
-                    {o.orderNumber || o.id}
+                    {o.orderNumber}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <p className="font-medium text-blue-deep">{o.client}</p>
-                    <p className="text-[10px] text-gray-400">{o.phone}</p>
+                    <p className="text-[11px] text-gray-500">{o.phone} · {o.zone}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs max-w-[200px] truncate">{o.product}</td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium capitalize">
-                      {o.payment?.replace('_', ' ') || 'OM'}
+                  <td className="px-4 py-3 text-gray-600 text-xs max-w-[220px] truncate" title={o.product}>{o.product}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                      {PAYMENT_LABELS[o.payment || ''] || '—'}
                     </span>
+                    {o.paymentStatus && o.paymentStatus !== 'paid' && (
+                      <p className="text-[10px] text-gray-500 mt-0.5">{o.paymentStatus === 'failed' ? 'Échec du paiement' : 'Non payée'}</p>
+                    )}
                   </td>
-                  <td className="px-4 py-3 font-bold text-blue-mid whitespace-nowrap">
+                  <td className="px-4 py-3 font-bold text-blue-mid whitespace-nowrap tabular-nums">
                     {new Intl.NumberFormat('fr-FR').format(o.total)} FCFA
                   </td>
                   <td className="px-4 py-3">
@@ -304,17 +373,17 @@ export default function AdminCommandesPage() {
                       </span>
                     ) : o.batStatus === 'rejected' ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                        <AlertTriangle size={12} /> Rejeté
+                        <AlertTriangle size={12} /> À corriger
                       </span>
                     ) : o.batUrl || o.status === 'bat_pending' ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                         <ShieldCheck size={12} /> En attente
                       </span>
                     ) : (
-                      <span className="text-[11px] text-gray-400 font-medium">Non assigné</span>
+                      <span className="text-[11px] text-gray-500 font-medium">Non déposé</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{o.date}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{o.date}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <button
@@ -324,7 +393,6 @@ export default function AdminCommandesPage() {
                             ? 'bg-blue-pale text-blue-mid hover:bg-blue-mid hover:text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-blue-mid hover:text-white'
                         }`}
-                        title="Gérer et déposer le Bon À Tirer"
                       >
                         <ShieldCheck size={13} />
                         {o.batUrl ? 'Gérer BAT' : 'Déposer BAT'}
@@ -338,19 +406,20 @@ export default function AdminCommandesPage() {
         </div>
 
         {/* Pagination */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-400">
-          <span>{filtered.length} commande(s)</span>
-          <div className="flex gap-1">
-            {[1, 2, 3].map((p) => (
-              <button key={p}
-                className={`w-7 h-7 rounded-lg font-bold transition-all ${
-                  p === 1 ? 'bg-blue-mid text-white' : 'hover:bg-gray-200 text-gray-500'
-                }`}
-              >
-                {p}
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-500">
+          <span>{total} commande(s){pages > 1 ? ` · page ${page} / ${pages}` : ''}</span>
+          {pages > 1 && (
+            <div className="flex gap-1">
+              <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page <= 1 || loading}
+                aria-label="Page précédente" className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-200 disabled:opacity-40">
+                <ChevronLeft size={15} />
               </button>
-            ))}
-          </div>
+              <button onClick={() => setPage((p) => Math.min(p + 1, pages))} disabled={page >= pages || loading}
+                aria-label="Page suivante" className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-200 disabled:opacity-40">
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

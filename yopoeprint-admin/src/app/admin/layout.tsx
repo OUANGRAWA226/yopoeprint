@@ -158,7 +158,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-auto">
-          {children}
+          {/* Pas de rendu (ni d'appels API) avant la vérification de la session */}
+          {isAuthenticated ? children : (
+            <div className="h-64 flex items-center justify-center text-sm text-slate-400">Vérification de la session…</div>
+          )}
         </main>
       </div>
     </div>

@@ -29,9 +29,11 @@ export interface Order {
   userId: string
   user?: {
     id: string
+    firstName: string
+    lastName: string
     fullName: string
     email: string
-    phone: string
+    phone?: string | null
   }
   status: string
   items: OrderItem[]
@@ -73,20 +75,56 @@ export interface UploadBatPayload {
   batNotes?: string
 }
 
+export interface OrdersPage {
+  data: Order[]
+  total: number
+  page: number
+  limit: number
+  hasMore: boolean
+}
+
+export interface PeriodTotals {
+  orders: number
+  paidOrders: number
+  revenue: number      // FCFA encaissés (commandes payées)
+  newClients: number
+}
+
+export interface AdminStats {
+  days: number
+  from: string
+  to: string
+  current: PeriodTotals & { averageOrder: number }
+  previous: PeriodTotals
+  bucket: 'day' | 'week'
+  revenueSeries: { date: string; revenue: number; orders: number }[]
+  paymentBreakdown: { method: string; orders: number; amount: number }[]
+  statusCounts: Record<string, number>
+  todo: { toConfirm: number; batPending: number; batRejected: number; quotesNew: number }
+  recentOrders: Order[]
+}
+
 export const adminOrdersService = {
   // Liste paginée de toutes les commandes
-  async getAll(query?: { status?: string; page?: number; limit?: number }) {
+  async getAll(query?: { status?: string; batStatus?: string; page?: number; limit?: number; search?: string }): Promise<OrdersPage> {
     const params = new URLSearchParams()
     if (query?.status && query.status !== 'all') params.append('status', query.status)
     if (query?.page) params.append('page', String(query.page))
     if (query?.limit) params.append('limit', String(query.limit))
+    if (query?.search) params.append('search', query.search)
+    if (query?.batStatus) params.append('batStatus', query.batStatus)
     const qs = params.toString()
     return await api.get(`/orders${qs ? `?${qs}` : ''}`)
   },
 
-  // Détail d'une commande
+  // Indicateurs du tableau de bord
+  async getStats(days: 7 | 30 | 90 = 30): Promise<AdminStats> {
+    return await api.get(`/orders/admin/stats?days=${days}`)
+  },
+
+  // Détail d'une commande (route partagée client / staff)
   async getById(id: string): Promise<Order> {
-    return await api.get(`/orders/${id}`)
+    return await api.get(`/orders/my-orders/${id}`)
   },
 
   // Mise à jour du statut
