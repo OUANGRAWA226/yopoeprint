@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   ChevronRight, ShieldCheck, Truck, Clock, Upload,
   ShoppingCart, HelpCircle, FileCheck, FileWarning,
-  AlertTriangle, Check, ChevronDown, Star, Zap, RotateCcw,
+  AlertTriangle, Check, ChevronDown, Zap, RotateCcw,
   ArrowRight
 } from 'lucide-react'
 import { usePriceCalculator } from '@/hooks/useProducts'
@@ -285,13 +285,6 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
 
               {/* Rating + Description — desktop only */}
               <div className="hidden md:block bg-white rounded-xl border border-gray-200 p-5">
-                <a href="#avis-clients" className="flex items-center gap-2 mb-3 hover:bg-gray-50 px-1 py-1 -ml-1 rounded-lg transition-colors group">
-                  <div className="flex text-[#FFB800]">
-                    {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" stroke="none" />)}
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700 group-hover:text-primary transition-colors">4.9/5</span>
-                  <span className="text-xs text-gray-400">— 127 avis vérifiés</span>
-                </a>
                 <p className="text-sm text-gray-600 leading-relaxed">{product.shortDesc}</p>
                 {product.description && (
                   <p className="text-xs text-gray-400 leading-relaxed mt-2 line-clamp-3">{product.description}</p>
@@ -320,13 +313,6 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
                 {product.name}
               </h1>
               <p className="text-gray-500 text-sm md:text-base">{product.shortDesc}</p>
-              {/* Mobile: rating */}
-              <a href="#avis-clients" className="flex items-center gap-2 mt-3 md:hidden">
-                <div className="flex text-[#FFB800]">
-                  {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" stroke="none" />)}
-                </div>
-                <span className="text-xs font-semibold text-gray-600 underline">4.9/5 · 127 avis</span>
-              </a>
             </div>
 
             {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -708,8 +694,8 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
               </div>
             </div>
 
-            {/* Desktop: inline price + cart block */}
-            <div className="hidden md:block bg-white rounded-xl border border-gray-200 px-6 py-5">
+            {/* Desktop: price + cart block, pinned to the bottom of the screen while configuring */}
+            <div className="hidden md:block md:sticky md:bottom-4 z-20 bg-white rounded-xl border border-gray-200 px-6 py-5 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)]">
               <div className="flex items-center justify-between gap-6">
                 <div>
                   <p className="text-xs text-gray-400 font-medium mb-1">
@@ -788,12 +774,7 @@ export function ProductPageClient({ product }: ProductPageClientProps) {
             REVIEWS
         ═══════════════════════════════════════════════════════════ */}
         <div id="avis-clients" className="mt-12 md:mt-16">
-          <ProductReviews
-            productName={product.name}
-            category={product.category}
-            rating={4.9}
-            totalReviews={127}
-          />
+          <ProductReviews productName={product.name} />
         </div>
       </div>
 

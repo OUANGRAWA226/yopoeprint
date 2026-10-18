@@ -7,7 +7,7 @@ import { useCart } from '@/context/CartContext'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  ArrowRight, ShieldCheck, Clock, Star, Truck, Building2,
+  ArrowRight, ShieldCheck, Clock, Truck, Building2,
   CheckCircle2, FileCheck, Calculator, Award, Layers,
   Check, ShoppingCart, Search, Zap, Copy, CheckCheck,
   Flame, Phone, Mail, HelpCircle, Tag, Gift, Printer,
@@ -26,12 +26,6 @@ interface FlashSaleItem {
   spec: string
   qty: number
   price: number
-  oldPrice: number
-  discount: string
-  rating: number
-  reviewsCount: number
-  stockCount: number
-  stockPercent: number
   image: string
   href: string
 }
@@ -43,12 +37,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: '500 cartes · 85×55mm · Soft Touch',
     qty: 500,
     price: 10500,
-    oldPrice: 14000,
-    discount: '-25%',
-    rating: 4.9,
-    reviewsCount: 128,
-    stockCount: 14,
-    stockPercent: 78,
     image: '/images/products/cartes-visite.jpg',
     href: '/catalogue/cartes',
   },
@@ -58,12 +46,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: 'Structure alu renforcée + Housse + Bâche HD',
     qty: 1,
     price: 28000,
-    oldPrice: 35000,
-    discount: '-20%',
-    rating: 4.8,
-    reviewsCount: 64,
-    stockCount: 8,
-    stockPercent: 84,
     image: '/images/products/rollup-salons.jpg',
     href: '/catalogue/roll-up',
   },
@@ -73,12 +55,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: 'Papier couché 135g · Impression HD offset',
     qty: 1000,
     price: 19500,
-    oldPrice: 26000,
-    discount: '-25%',
-    rating: 4.9,
-    reviewsCount: 95,
-    stockCount: 22,
-    stockPercent: 62,
     image: '/images/products/flyers-depliants.jpg',
     href: '/catalogue/flyers',
   },
@@ -88,12 +64,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: 'Kraft brun résistant · Poignées torsadées',
     qty: 100,
     price: 36000,
-    oldPrice: 45000,
-    discount: '-20%',
-    rating: 4.7,
-    reviewsCount: 42,
-    stockCount: 9,
-    stockPercent: 81,
     image: '/images/products/packaging-kraft.jpg',
     href: '/catalogue/sacs',
   },
@@ -103,12 +73,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: 'Oeillets métalliques tous les 50cm · Anti-UV',
     qty: 1,
     price: 22500,
-    oldPrice: 30000,
-    discount: '-25%',
-    rating: 4.8,
-    reviewsCount: 51,
-    stockCount: 12,
-    stockPercent: 70,
     image: '/images/products/affiches-baches.jpg',
     href: '/catalogue/baches',
   },
@@ -118,12 +82,6 @@ const FLASH_SALE_ITEMS: FlashSaleItem[] = [
     spec: 'Coton 190g premium · Marquage poitrine',
     qty: 20,
     price: 48000,
-    oldPrice: 60000,
-    discount: '-20%',
-    rating: 4.9,
-    reviewsCount: 38,
-    stockCount: 6,
-    stockPercent: 90,
     image: '/images/products/textile-pro.jpg',
     href: '/catalogue/textile',
   },
@@ -135,8 +93,6 @@ interface RailProduct {
   name: string
   category: string
   leadTime: string
-  rating: number
-  reviewsCount: number
   startingPrice: number
   unitDesc: string
   badge?: string
@@ -151,8 +107,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Cartes de Visite 350g Couché Mat',
     category: 'Carterie Pro',
     leadTime: 'Livrable en 24h',
-    rating: 4.9,
-    reviewsCount: 184,
     startingPrice: 8500,
     unitDesc: 'les 250 cartes',
     badge: 'N°1 Ventes',
@@ -165,8 +119,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Flyers A5 Quadri Recto/Verso',
     category: 'Publicité Papier',
     leadTime: 'Livrable en 48h',
-    rating: 4.8,
-    reviewsCount: 142,
     startingPrice: 14000,
     unitDesc: 'les 500 flyers',
     badge: 'Populaire',
@@ -179,8 +131,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Roll-Up Stand Aluminium 85×200cm',
     category: 'Salons & Foires',
     leadTime: 'Prêt en 24h',
-    rating: 4.9,
-    reviewsCount: 96,
     startingPrice: 28000,
     unitDesc: 'structure + housse',
     badge: 'Événementiel',
@@ -193,8 +143,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Bâche Publicitaire HD Oeillets 510g',
     category: 'Grand Format',
     leadTime: 'Livrable en 48h',
-    rating: 4.8,
-    reviewsCount: 68,
     startingPrice: 18500,
     unitDesc: 'dès 2×1 mètres',
     badge: 'Résistant UV',
@@ -207,8 +155,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Sacs Shopping Kraft avec Poignées',
     category: 'Packaging Boutique',
     leadTime: 'Sous 4 jours',
-    rating: 4.7,
-    reviewsCount: 54,
     startingPrice: 22000,
     unitDesc: 'le lot de 50 sacs',
     badge: 'Écologique',
@@ -221,8 +167,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'T-Shirts & Polos Personnalisés Coton',
     category: 'Textile Entreprise',
     leadTime: 'Sous 3 à 5 jours',
-    rating: 4.9,
-    reviewsCount: 77,
     startingPrice: 24000,
     unitDesc: 'le pack de 10 pièces',
     badge: 'Marquage HD',
@@ -235,8 +179,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Dépliants 3 Volets A4 Plié Format DL',
     category: 'Plaquettes Pro',
     leadTime: 'Livrable en 48h',
-    rating: 4.8,
-    reviewsCount: 45,
     startingPrice: 25000,
     unitDesc: 'les 250 plaquettes',
     badge: 'Finition Mat',
@@ -249,8 +191,6 @@ const TOP_BESTSELLERS_RAIL: RailProduct[] = [
     name: 'Mugs Céramique & Gourdes Isothermes',
     category: 'Goodies Cadeaux',
     leadTime: 'Sous 72h',
-    rating: 4.9,
-    reviewsCount: 62,
     startingPrice: 17500,
     unitDesc: 'lot de 10 unités',
     badge: 'Cadeau VIP',
@@ -557,36 +497,6 @@ const PAPERS_GUIDE = [
 ]
 
 // ── 5. Avis Clients d'Entreprises Vérifiés ───────────────────────────────────
-const VERIFIED_REVIEWS = [
-  {
-    name: 'Salimata Kaboré',
-    role: 'Responsable Communication, Agence Sahel Media',
-    city: 'Ouagadougou',
-    rating: 5,
-    date: 'Commande du 04 Octobre',
-    order: '2 500 Dépliants 3 volets + 2 Roll-ups Deluxe',
-    text: 'Commande envoyée avec nos fichiers PDF. Le studio PAO de YopoePrint a corrigé nos fonds perdus et validé le BAT en 45 minutes. Livraison reçue le surlendemain à notre agence de Ouaga 2000. Rendu des couleurs parfait.',
-  },
-  {
-    name: 'Ibrahim Ouedraogo',
-    role: 'Directeur Général, Faso BTP & Industrie',
-    city: 'Bobo-Dioulasso',
-    rating: 5,
-    date: 'Commande du 28 Septembre',
-    order: '1 000 Cartes de visite Soft Touch + 5 Bâches 3×1m',
-    text: 'La finition velours des cartes est tout simplement remarquable. Les factures normalisées avec mentions IFU et TVA ont été reçues immédiatement par email pour notre service comptabilité.',
-  },
-  {
-    name: 'Fatimata Diallo',
-    role: 'Coordinatrice Événementielle ONG',
-    city: 'Ouagadougou',
-    rating: 5,
-    date: 'Commande du 22 Septembre',
-    order: '50 T-shirts sérigraphiés + 100 Badges tours de cou',
-    text: 'Paiement simple via Orange Money sans frais cachés. Les délais de fabrication ont été scrupuleusement respectés pour notre séminaire régional. C’est désormais notre imprimeur de référence.',
-  },
-]
-
 export default function StorefrontHomePage() {
   const router = useRouter()
   const { products: apiProducts } = usePopularProducts()
@@ -603,7 +513,6 @@ export default function StorefrontHomePage() {
   const [banners, setBanners] = useState<BannerSlide[]>(DEFAULT_BANNERS)
   const [heroSlide, setHeroSlide] = useState(0)
   const [isCarouselHovered, setIsCarouselHovered] = useState(false)
-  const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 13, seconds: 17 })
 
   // Chargement asynchrone des bannières publiées par le backoffice métier
   useEffect(() => {
@@ -614,23 +523,6 @@ export default function StorefrontHomePage() {
       }
     })
     return () => { isMounted = false }
-  }, [])
-
-  // Compte à rebours temps réel (décrément chaque seconde)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        }
-        return { hours: 8, minutes: 13, seconds: 17 }
-      })
-    }, 1000)
-    return () => clearInterval(timer)
   }, [])
 
   // Rotation automatique du carrousel (5.5 secondes, pause quand la souris survole)
@@ -700,7 +592,25 @@ export default function StorefrontHomePage() {
              Bannières visuelles graphiques uploadées depuis le Backoffice
       ═════════════════════════════════════════════════════════════ */}
       <section className="w-full max-w-[1248px] mx-auto px-2 sm:px-4 pt-4 sm:pt-6 pb-3">
-        <div 
+        {/* Proposition de valeur — texte réel (SEO, lecteurs d'écran), pas dans l'image */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 px-1 mb-3 sm:mb-4">
+          <div>
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Imprimerie en ligne au Burkina Faso
+            </h1>
+            <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+              Cartes de visite, flyers, roll-up et bâches imprimés à Ouagadougou. Prix en FCFA, BAT gratuit avant impression, livraison partout au Burkina.
+            </p>
+          </div>
+          <Link
+            href="/catalogue"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline shrink-0"
+          >
+            Voir le catalogue <ArrowRight size={15} />
+          </Link>
+        </div>
+
+        <div
           className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-slate-200/60 bg-slate-950 group"
           onMouseEnter={() => setIsCarouselHovered(true)}
           onMouseLeave={() => setIsCarouselHovered(false)}
@@ -726,7 +636,6 @@ export default function StorefrontHomePage() {
                       alt={banner.altText || banner.title || 'Bannière YopoePrint'}
                       fill
                       priority={idx === 0}
-                      unoptimized
                       className="object-cover object-center w-full h-full"
                       sizes="(max-width: 1248px) 100vw, 1248px"
                     />
@@ -796,24 +705,17 @@ export default function StorefrontHomePage() {
           <div className="flex items-center justify-between mb-2.5">
             <div>
               <h2 className="font-display text-base sm:text-xl font-black text-white tracking-tight flex items-center gap-1.5">
-                <span>Ventes Flash</span>
-                <span className="font-normal opacity-90 text-white/90">| Chaque jour</span>
+                <span>Offres de l'atelier</span>
               </h2>
+              <p className="text-[11px] text-white/80 mt-0.5">Prix de départ indicatifs, calculés au plus juste sur la fiche produit</p>
 
-              {/* Compte à Rebours Pill Blanc Jumia */}
-              <div className="inline-flex items-center gap-1.5 bg-white text-slate-900 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold shadow-xs mt-1">
-                <Clock size={12} className="text-red-600" />
-                <span>
-                  {String(timeLeft.hours).padStart(2, '0')}h : {String(timeLeft.minutes).padStart(2, '0')}m : {String(timeLeft.seconds).padStart(2, '0')}s
-                </span>
-              </div>
             </div>
 
             {/* Bouton Pill Blanc Flèche Suivante */}
             <Link
               href="/catalogue"
               className="w-10 sm:w-11 h-6 sm:h-6.5 bg-white text-red-700 hover:bg-slate-100 rounded-full flex items-center justify-center font-black text-sm shadow-sm transition-transform active:scale-95"
-              aria-label="Voir toutes les ventes flash"
+              aria-label="Voir tout le catalogue"
             >
               <ArrowRight size={14} />
             </Link>
@@ -854,19 +756,6 @@ export default function StorefrontHomePage() {
                   </button>
                 </div>
 
-                {/* Jauge / Barre de Stock Jumia (Texte + Barre de progression) */}
-                <div className="bg-[#fffbeb] px-2 py-1 border-t border-amber-100/70">
-                  <div className="text-[10px] font-bold text-amber-800 leading-none">
-                    {item.stockCount} articles en stock
-                  </div>
-                  <div className="w-full h-1 bg-amber-200/80 rounded-full overflow-hidden mt-1">
-                    <div
-                      className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                      style={{ width: `${item.stockPercent}%` }}
-                    />
-                  </div>
-                </div>
-
                 {/* Corps de Carte Produit */}
                 <div className="p-2 sm:p-2.5 flex flex-col justify-between flex-1 gap-1">
                   {/* Titre Produit (2 lignes max) */}
@@ -876,24 +765,11 @@ export default function StorefrontHomePage() {
                     </h3>
                   </Link>
 
-                  {/* Avis Étoiles */}
-                  <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold">
-                    <span>★ {item.rating}</span>
-                    <span className="text-slate-400 font-normal">({item.reviewsCount})</span>
-                  </div>
-
                   {/* Prix en FCFA & Réduction */}
                   <div className="pt-0.5">
+                    <span className="text-[10px] text-slate-400 font-medium block leading-none">Dès</span>
                     <div className="font-mono font-black text-xs sm:text-sm text-slate-950">
                       {item.price.toLocaleString('fr-FR')} FCFA
-                    </div>
-                    <div className="flex items-center justify-between gap-1 text-[10px] pt-0.5">
-                      <span className="text-slate-400 line-through font-mono text-[10px]">
-                        {item.oldPrice.toLocaleString('fr-FR')} FCFA
-                      </span>
-                      <span className="bg-[#059669] text-white text-[9px] font-black px-1.5 py-0.5 rounded font-mono">
-                        {item.discount}
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -1046,12 +922,6 @@ export default function StorefrontHomePage() {
                         {prod.name}
                       </h3>
                     </Link>
-                  </div>
-
-                  {/* Avis & Étoiles */}
-                  <div className="flex items-center gap-1 text-[11px] text-amber-500 font-bold">
-                    <span>★ {prod.rating}</span>
-                    <span className="text-slate-400 font-normal">({prod.reviewsCount})</span>
                   </div>
 
                   {/* Prix en FCFA */}
@@ -1570,71 +1440,6 @@ export default function StorefrontHomePage() {
             >
               Commander le nuancier d'échantillons gratuit →
             </Link>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ═════════════════════════════════════════════════════════════
-          8. AVIS CLIENTS VÉRIFIÉS (Standard Trustpilot / Avis Faso)
-      ═════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="flex text-amber-400 text-sm leading-none">
-                  {'★★★★★'.split('').map((s, i) => (
-                    <span key={i}>★</span>
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-slate-900">4.8 / 5 sur 840 avis vérifiés</span>
-              </div>
-              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
-                Ce que nos clients entreprises disent de nous
-              </h2>
-            </div>
-            <span className="text-xs text-slate-500">
-              Avis certifiés après validation de commande et livraison d'atelier.
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {VERIFIED_REVIEWS.map((rev) => (
-              <div
-                key={rev.name}
-                className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex text-amber-500 text-xs">
-                      {'★'.repeat(rev.rating)}
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-400">{rev.date}</span>
-                  </div>
-
-                  <p className="text-xs text-slate-700 leading-relaxed mb-4 italic">
-                    "{rev.text}"
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-slate-200/80">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-xs text-slate-900">{rev.name}</p>
-                      <p className="text-[11px] text-slate-500">{rev.role}</p>
-                    </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                      {rev.city}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1 font-mono">
-                    Commande : {rev.order}
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
 
         </div>

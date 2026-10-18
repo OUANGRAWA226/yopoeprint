@@ -314,13 +314,6 @@ export default async function Page({ params }: Props) {
         name: 'YopoePrint Burkina Faso',
       },
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '127',
-      bestRating: '5',
-      worstRating: '1',
-    },
   }
 
   const breadcrumbJsonLd = {

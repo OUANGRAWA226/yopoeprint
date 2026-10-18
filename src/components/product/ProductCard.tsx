@@ -42,8 +42,9 @@ export function ProductCard(props: ProductCardProps) {
   const minQuantity = props.product?.minQuantity ?? props.minQuantity ?? 0
   const badge       = (props.product?.badge ?? props.badge) as string | undefined
   const imageUrl    = props.product?.imageUrl    ?? props.imageUrl
-  const rating      = props.product?.rating      ?? 4.9
-  const reviewsCount = props.product?.reviewsCount ?? 64
+  // Only real ratings are shown; products without reviews show none
+  const rating       = props.product?.rating
+  const reviewsCount = props.product?.reviewsCount
 
   const badgeCfg = badge ? BADGE_CFG[badge] : undefined
 
@@ -84,6 +85,7 @@ export function ProductCard(props: ProductCardProps) {
       <div className="flex flex-col flex-1 p-4">
         
         {/* Rating stars */}
+        {rating && reviewsCount ? (
         <div className="flex items-center gap-1 mb-1.5">
           <div className="flex text-amber-500 text-xs leading-none">
             {'★'.repeat(5)}
@@ -92,6 +94,7 @@ export function ProductCard(props: ProductCardProps) {
             {rating} ({reviewsCount})
           </span>
         </div>
+        ) : null}
 
         {/* Nom du produit */}
         <h3 className="font-bold text-slate-900 text-sm leading-snug mb-1 group-hover:text-emerald-700 transition-colors line-clamp-2">
