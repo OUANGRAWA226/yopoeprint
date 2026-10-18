@@ -95,6 +95,11 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   customerNotes?: string
+
+  @ApiPropertyOptional({ description: '[REVENDEUR] Colis neutre et bordereau au nom du revendeur' })
+  @IsOptional()
+  @IsBoolean()
+  whiteLabel?: boolean
 }
 
 export class UpdateOrderStatusDto {

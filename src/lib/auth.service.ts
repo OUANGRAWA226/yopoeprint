@@ -23,6 +23,8 @@ export interface AuthUser {
  role: string
  loyaltyPoints: number
  addresses: any[]
+ companyName?: string | null
+ resellerStatus?: 'pending' | 'approved' | 'rejected' | 'suspended' | null
 }
 
 export interface AuthResponse {

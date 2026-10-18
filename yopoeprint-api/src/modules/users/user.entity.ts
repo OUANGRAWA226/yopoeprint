@@ -8,6 +8,25 @@ export enum UserRole {
   CLIENT = 'client',
   ADMIN  = 'admin',
   STAFF  = 'staff',
+  RESELLER = 'reseller', // agence / revendeur validé : remise automatique
+}
+
+export type ResellerStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+
+// Dossier revendeur et identité d'expédition en marque blanche
+export interface ResellerProfile {
+  contactName?: string
+  phone?: string
+  volume?: 'low' | 'medium' | 'high'
+  message?: string
+  sender?: {
+    companyName: string
+    phone: string
+    address: string
+    email?: string
+    logoUrl?: string
+    includeInvoice?: boolean // glisser la facture du revendeur dans le colis
+  }
 }
 
 @Entity('users')
@@ -55,6 +74,19 @@ export class User {
 
   @Column({ name: 'password_reset_expires_at', type: 'timestamptz', nullable: true })
   passwordResetExpiresAt: Date | null
+
+  // ── Programme revendeur ──
+  @Column({ name: 'company_name', type: 'varchar', nullable: true })
+  companyName: string | null
+
+  @Column({ name: 'reseller_status', type: 'varchar', length: 20, nullable: true })
+  resellerStatus: ResellerStatus | null
+
+  @Column({ name: 'reseller_applied_at', type: 'timestamptz', nullable: true })
+  resellerAppliedAt: Date | null
+
+  @Column({ name: 'reseller_profile', type: 'jsonb', nullable: true })
+  resellerProfile: ResellerProfile | null
 
   // Addresses stored as JSONB (flexible)
   @Column({ type: 'jsonb', default: [] })

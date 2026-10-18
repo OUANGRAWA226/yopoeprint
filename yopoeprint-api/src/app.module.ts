@@ -17,6 +17,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
 import { MailModule }     from './modules/mail/mail.module'
 import { UploadModule }   from './modules/upload/upload.module'
 import { QuotesModule }   from './modules/quotes/quotes.module'
+import { ResellerModule } from './modules/reseller/reseller.module'
 
 // Entities
 import { User }    from './modules/users/user.entity'
@@ -70,6 +71,7 @@ import { Quote }   from './modules/quotes/quote.entity'
     MailModule,
     UploadModule,
     QuotesModule,
+    ResellerModule,
   ],
   providers: [
     // Active le rate limiting global (et les @Throttle par route, ex. login)

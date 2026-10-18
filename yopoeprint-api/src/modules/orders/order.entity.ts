@@ -111,6 +111,13 @@ export class Order {
   @Column({ name: 'customer_notes', type: 'text', nullable: true })
   customerNotes: string
 
+  // ── Marque blanche (revendeurs) : colis neutre, bordereau au nom du revendeur ──
+  @Column({ name: 'white_label', default: false })
+  whiteLabel: boolean
+
+  @Column({ name: 'white_label_sender', type: 'jsonb', nullable: true })
+  whiteLabelSender: { companyName: string; phone: string; address: string; email?: string; logoUrl?: string; includeInvoice?: boolean } | null
+
   // ── Bon À Tirer (BAT) interactif ─────────────────────────
   @Column({ name: 'bat_url', nullable: true })
   batUrl: string

@@ -1,155 +1,156 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthContext } from '@/context/AuthContext'
-import { 
-  LayoutDashboard, 
-  ShoppingBag, 
-  FileText, 
-  PackageSearch,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Briefcase,
-  Star
+import { resellerService, ResellerMe } from '@/lib/reseller.service'
+import {
+  LayoutDashboard, ShoppingBag, PackageSearch, Settings, LogOut, Menu, X, Briefcase, Star, Clock, Store,
 } from 'lucide-react'
 
 const MENU_ITEMS = [
-  { href: '/revendeur', icon: LayoutDashboard, label: 'Mon Espace Pro' },
-  { href: '/revendeur/commandes', icon: ShoppingBag, label: 'Mes Commandes' },
-  { href: '/revendeur/devis', icon: FileText, label: 'Générer un Devis' },
-  { href: '/revendeur/marque-blanche', icon: PackageSearch, label: 'Marque Blanche' },
+  { href: '/revendeur', icon: LayoutDashboard, label: 'Mon espace' },
+  { href: '/revendeur/marque-blanche', icon: PackageSearch, label: 'Marque blanche' },
+  { href: '/mon-compte/commandes', icon: ShoppingBag, label: 'Mes commandes' },
+  { href: '/catalogue', icon: Store, label: 'Commander' },
 ]
+
+// Écran affiché tant que le compte n'est pas un revendeur validé
+function StatusScreen({ me }: { me: ResellerMe }) {
+  const content = {
+    pending: {
+      title: 'Demande en cours d\'examen',
+      text: `Votre demande pour ${me.companyName || 'votre agence'} a bien été reçue. Nous vous répondons par email sous 24 h ouvrées ; la remise s'appliquera dès la validation.`,
+    },
+    rejected: {
+      title: 'Demande non retenue',
+      text: 'Votre demande de compte revendeur n\'a pas été retenue. Contactez-nous pour en discuter.',
+    },
+    suspended: {
+      title: 'Compte revendeur suspendu',
+      text: 'Votre accès revendeur est suspendu. Contactez-nous pour le réactiver.',
+    },
+  }[me.status as 'pending' | 'rejected' | 'suspended']
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-8 max-w-md w-full text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-gray-100 text-gray-700 flex items-center justify-center mx-auto">
+          {me.status === 'pending' ? <Clock size={26} /> : <Briefcase size={26} />}
+        </div>
+        <h1 className="font-display text-2xl font-bold text-gray-900">{content?.title || 'Espace réservé aux revendeurs'}</h1>
+        <p className="text-sm text-gray-600 leading-relaxed">
+          {content?.text || 'Agences et graphistes : profitez de −15 % sur tout le catalogue et de la livraison en marque blanche.'}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+          {!me.status && <Link href="/revendeurs" className="btn-primary">Devenir revendeur</Link>}
+          {(me.status === 'rejected' || me.status === 'suspended') && <Link href="/contact" className="btn-primary">Nous contacter</Link>}
+          <Link href="/" className="btn-outline">Retour à la boutique</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function RevendeurLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, isLoggedIn, loading, logout } = useAuthContext()
+  const { isLoggedIn, loading, logout } = useAuthContext()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [me, setMe] = useState<ResellerMe | null>(null)
+  const [error, setError] = useState('')
 
-  // Route protection
   useEffect(() => {
-    if (!loading) {
-      if (!isLoggedIn) {
-        router.push('/connexion?redirect=/revendeur')
-      }
+    if (loading) return
+    if (!isLoggedIn) {
+      router.push('/connexion?redirect=/revendeur')
+      return
     }
+    resellerService.getMe().then(setMe).catch((e) => setError(e?.message || 'Espace revendeur indisponible'))
   }, [loading, isLoggedIn, router])
 
-  if (loading || !isLoggedIn) {
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center p-6 text-sm text-red-700" role="alert">{error}</div>
+  }
+  if (loading || !isLoggedIn || !me) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" aria-busy="true">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin" />
       </div>
     )
   }
+  if (!me.isReseller) return <StatusScreen me={me} />
 
   const handleLogout = async () => {
     await logout()
     router.push('/')
   }
-
   const closeSidebar = () => setIsSidebarOpen(false)
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-      
-      {/* ── SIDEBAR MOBILE BACKDROP ── */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-          onClick={closeSidebar}
-        />
+        <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={closeSidebar} />
       )}
 
-      {/* ── SIDEBAR ── */}
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50
-        w-64 bg-indigo-950 text-white
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white
         transform transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        flex flex-col
-      `}>
-        {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-6 bg-indigo-950 border-b border-indigo-900/50">
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} flex flex-col`}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-white/10">
           <Link href="/" className="font-display text-xl font-bold text-white flex items-center gap-2">
-            <Briefcase size={20} className="text-blue-400" /> Espace B2B
+            <Briefcase size={20} className="text-emerald-400" /> Espace revendeur
           </Link>
-          <button onClick={closeSidebar} className="lg:hidden text-indigo-300 hover:text-white transition-colors">
+          <button onClick={closeSidebar} aria-label="Fermer le menu" className="lg:hidden text-gray-300 hover:text-white">
             <X size={20} />
           </button>
         </div>
 
-        {/* User Info & Tier */}
-        <div className="p-6 border-b border-indigo-900/50">
-          <p className="font-bold text-sm">{user?.firstName} {user?.lastName}</p>
-          <p className="text-xs text-indigo-300 mt-1 mb-3">Agence de Communication</p>
-          <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 px-3 py-1.5 rounded-lg">
-            <Star size={14} className="text-yellow-400 fill-yellow-400" />
-            <span className="text-xs font-bold text-yellow-400">Palier Gold (-15%)</span>
-          </div>
+        <div className="p-6 border-b border-white/10">
+          <p className="font-bold text-sm">{me.companyName}</p>
+          {me.tier && (
+            <div className="mt-3 inline-flex items-center gap-2 bg-white/10 border border-white/15 px-3 py-1.5 rounded-lg">
+              <Star size={14} className="text-amber-300" />
+              <span className="text-xs font-bold text-white">Palier {me.tier.label} (−{me.tier.rate} %)</span>
+            </div>
+          )}
         </div>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-          <p className="px-4 text-2xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Menu Principal</p>
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1" aria-label="Espace revendeur">
           {MENU_ITEMS.map((item) => {
             const isActive = pathname === item.href
             return (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                onClick={closeSidebar}
-                className={`
-                  flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${isActive 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                    : 'text-indigo-200 hover:bg-indigo-900/50 hover:text-white'}
-                `}
-              >
-                <item.icon size={18} className={isActive ? 'text-blue-200' : 'text-indigo-400'} />
+              <Link key={item.href} href={item.href} onClick={closeSidebar}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors
+                  ${isActive ? 'bg-white/15 text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>
+                <item.icon size={18} className={isActive ? 'text-emerald-400' : 'text-gray-400'} />
                 {item.label}
               </Link>
             )
           })}
-        </div>
+        </nav>
 
-        {/* Footer Sidebar */}
-        <div className="p-4 border-t border-indigo-900/50 space-y-1">
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-indigo-300 hover:bg-indigo-900/50 hover:text-white transition-colors">
-            <Settings size={18} /> Paramètres
-          </button>
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
+        <div className="p-4 border-t border-white/10 space-y-1">
+          <Link href="/mon-compte/profil" className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white">
+            <Settings size={18} /> Mon profil
+          </Link>
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500/10">
             <LogOut size={18} /> Déconnexion
           </button>
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        {/* Topbar Mobile */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:hidden shrink-0">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Menu size={20} />
-            </button>
-            <span className="font-display font-bold text-gray-900">Espace B2B</span>
-          </div>
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 lg:hidden shrink-0">
+          <button onClick={() => setIsSidebarOpen(true)} aria-label="Ouvrir le menu"
+            className="p-2 -ml-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+            <Menu size={20} />
+          </button>
+          <span className="ml-2 font-display font-bold text-gray-900">Espace revendeur</span>
         </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          {children}
-        </main>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</div>
       </div>
-
     </div>
   )
 }

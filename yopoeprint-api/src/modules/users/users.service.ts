@@ -161,6 +161,8 @@ export class UsersService {
       role:          user.role,
       loyaltyPoints: user.loyaltyPoints,
       addresses:     user.addresses,
+      companyName:   user.companyName,
+      resellerStatus: user.resellerStatus,
       createdAt:     user.createdAt,
     }
   }

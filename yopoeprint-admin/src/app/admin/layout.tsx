@@ -7,7 +7,7 @@ import { adminAuthService } from '@/lib/auth-admin.service'
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
   Tag, FileText, Settings, LogOut, Menu, X,
-  ChevronRight, Bell, Search, ClipboardList, Image as ImageIcon
+  ChevronRight, Bell, Search, ClipboardList, Image as ImageIcon, Briefcase
 } from 'lucide-react'
 
 const NAV = [
@@ -17,6 +17,7 @@ const NAV = [
   { href: '/admin/commandes',  icon: <ShoppingCart size={18} />,    label: 'Commandes' },
   { href: '/admin/devis',      icon: <ClipboardList size={18} />,    label: 'Devis' },
   { href: '/admin/clients',    icon: <Users size={18} />,           label: 'Clients' },
+  { href: '/admin/revendeurs', icon: <Briefcase size={18} />,       label: 'Revendeurs' },
   { href: '/admin/promotions', icon: <Tag size={18} />,             label: 'Promotions' },
   { href: '/admin/blog',       icon: <FileText size={18} />,        label: 'Blog' },
   { href: '/admin/parametres', icon: <Settings size={18} />,        label: 'Paramètres' },

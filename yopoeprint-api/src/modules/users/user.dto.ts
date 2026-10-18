@@ -130,9 +130,9 @@ export class AdminUsersQueryDto {
   @IsIn(['VIP', 'Actif', 'Nouveau', 'Inactif', 'all'])
   segment?: string
 
-  @ApiPropertyOptional({ enum: ['client', 'admin', 'staff', 'all'], description: 'Défaut : client' })
+  @ApiPropertyOptional({ enum: ['client', 'reseller', 'admin', 'staff', 'all'], description: 'Défaut : client' })
   @IsOptional()
-  @IsIn(['client', 'admin', 'staff', 'all'])
+  @IsIn(['client', 'reseller', 'admin', 'staff', 'all'])
   role?: string
 
   @ApiPropertyOptional()

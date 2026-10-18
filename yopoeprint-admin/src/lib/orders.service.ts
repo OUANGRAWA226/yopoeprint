@@ -46,6 +46,9 @@ export interface Order {
   paymentStatus?: string
   paymentTransactionId?: string
   promoCode?: string
+  // Marque blanche (revendeurs) : colis neutre, bordereau au nom de l'expéditeur
+  whiteLabel?: boolean
+  whiteLabelSender?: { companyName: string; phone: string; address: string; email?: string; logoUrl?: string; includeInvoice?: boolean } | null
   internalNotes?: string
   customerNotes?: string
   estimatedDelivery?: string

@@ -48,6 +48,7 @@ interface Row {
   batApprovedAt?: string
   batRejectedReason?: string
   batCorrectionFileUrl?: string
+  whiteLabelSender?: Order['whiteLabelSender']
 }
 
 const toRow = (o: Order): Row => ({
@@ -69,6 +70,7 @@ const toRow = (o: Order): Row => ({
   batApprovedAt: o.batApprovedAt,
   batRejectedReason: o.batRejectedReason,
   batCorrectionFileUrl: o.batCorrectionFileUrl,
+  whiteLabelSender: o.whiteLabel ? o.whiteLabelSender : null,
 })
 
 // Export CSV (séparateur ; pour Excel en français)
@@ -345,6 +347,12 @@ function CommandesContent() {
                   <td className="px-4 py-3 whitespace-nowrap">
                     <p className="font-medium text-blue-deep">{o.client}</p>
                     <p className="text-[11px] text-gray-500">{o.phone} · {o.zone}</p>
+                    {o.whiteLabelSender && (
+                      <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-gray-800 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full"
+                        title={`Colis neutre — expéditeur : ${o.whiteLabelSender.companyName}, ${o.whiteLabelSender.address}, ${o.whiteLabelSender.phone}${o.whiteLabelSender.includeInvoice ? ' — facture du revendeur à joindre' : ''}`}>
+                        Marque blanche · {o.whiteLabelSender.companyName}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-xs max-w-[220px] truncate" title={o.product}>{o.product}</td>
                   <td className="px-4 py-3 whitespace-nowrap">

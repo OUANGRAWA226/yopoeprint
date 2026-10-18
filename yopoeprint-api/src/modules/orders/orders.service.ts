@@ -14,6 +14,7 @@ import { ProductsService } from '../products/products.service'
 import { DELIVERY_ZONES, computeDeliveryCost } from './delivery'
 import { MailService } from '../mail/mail.service'
 import { Quote, QuoteStatus } from '../quotes/quote.entity'
+import { ResellerService } from '../reseller/reseller.service'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -28,6 +29,7 @@ export class OrdersService {
     private quoteRepo: Repository<Quote>,
     private productsService: ProductsService,
     private mailService: MailService,
+    private resellerService: ResellerService,
   ) {}
 
   // ─── Create order ─────────────────────────────────────────
@@ -86,11 +88,23 @@ export class OrdersService {
       zone:         dto.deliveryZone,
     }
 
-    // Apply promo code (placeholder — à enrichir)
+    // Remise : code promo OU remise revendeur, la plus avantageuse (pas de cumul)
     let discount = 0
     if (dto.promoCode) {
       discount = await this.applyPromoCode(dto.promoCode, subtotal)
     }
+    const reseller = await this.resellerService.discountFor(userId)
+    if (reseller) discount = Math.max(discount, Math.round((subtotal * reseller.rate) / 100))
+
+    // Marque blanche : réservée aux revendeurs ayant configuré leur identité d'expéditeur
+    if (dto.whiteLabel && !reseller) {
+      throw new BadRequestException('La livraison en marque blanche est réservée aux revendeurs')
+    }
+    if (dto.whiteLabel && !reseller.sender) {
+      throw new BadRequestException("Configurez d'abord votre identité marque blanche dans votre espace revendeur")
+    }
+    const whiteLabel = !!dto.whiteLabel
+    const whiteLabelSender = whiteLabel ? reseller.sender : null
 
     const total = subtotal + deliveryCost - discount
 
@@ -114,6 +128,8 @@ export class OrdersService {
       paymentMethod:   dto.paymentMethod,
       paymentStatus:   PaymentStatus.PENDING,
       promoCode:       dto.promoCode,
+      whiteLabel,
+      whiteLabelSender,
       customerNotes:   dto.customerNotes,
       estimatedDelivery,
     }

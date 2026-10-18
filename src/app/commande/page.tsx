@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { api } from '@/lib'
 import { paymentsService } from '@/lib/payments.service'
+import { resellerService, ResellerMe } from '@/lib/reseller.service'
 import {
   MapPin, CreditCard, CheckCircle,
   ChevronRight, ArrowRight, AlertCircle,
@@ -112,6 +113,14 @@ export default function CommandePage() {
   const { items, total, hydrated, appliedPromo, discount, applyPromo, removePromo } = useCart()
   const { user, login } = useAuthContext()
 
+  // Revendeur : remise de palier (la plus avantageuse entre elle et le code promo, comme l'API)
+  const [reseller, setReseller] = useState<ResellerMe | null>(null)
+  const [whiteLabel, setWhiteLabel] = useState(false)
+  useEffect(() => {
+    if (user?.role !== 'reseller') { setReseller(null); return }
+    resellerService.getMe().then(setReseller).catch(() => setReseller(null))
+  }, [user?.role])
+
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -171,7 +180,14 @@ export default function CommandePage() {
   }, [hydrated, items, router])
 
   const deliveryCost = total >= 75000 && zone.id !== 'other' ? 0 : zone.price
-  const finalTotal = Math.max(0, total - discount + deliveryCost)
+  const resellerRate = reseller?.isReseller ? reseller.tier?.rate || 0 : 0
+  const resellerDiscount = Math.round((total * resellerRate) / 100)
+  const useResellerDiscount = resellerDiscount > discount
+  const effectiveDiscount = Math.max(discount, resellerDiscount)
+  const discountLabel = useResellerDiscount
+    ? `Remise revendeur ${reseller?.tier?.label} (−${resellerRate} %)`
+    : `Remise code promo (${appliedPromo?.code})`
+  const finalTotal = Math.max(0, total - effectiveDiscount + deliveryCost)
   // The API re-prices every order: once created, its total is the amount due
   const amountDue = pendingOrder?.total ?? finalTotal
 
@@ -260,6 +276,7 @@ export default function CommandePage() {
           paymentMethod: API_PAYMENT_METHOD[payMethod],
           promoCode:     appliedPromo?.code || undefined,
           customerNotes: address.instructions || undefined,
+          whiteLabel:    reseller?.isReseller && whiteLabel ? true : undefined,
         })
         setPendingOrder(order)
 
@@ -608,16 +625,45 @@ export default function CommandePage() {
                   )}
                 </div>
 
+                {/* Marque blanche (revendeurs) */}
+                {reseller?.isReseller && (
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                    {reseller.whiteLabel ? (
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={whiteLabel}
+                          onChange={(e) => { setWhiteLabel(e.target.checked); setPendingOrder(null) }}
+                          className="mt-0.5 w-4 h-4 accent-primary"
+                        />
+                        <span>
+                          <span className="block text-sm font-bold text-gray-900">Expédier en marque blanche</span>
+                          <span className="block text-xs text-gray-600 mt-0.5">
+                            Colis neutre, bordereau au nom de {reseller.whiteLabel.companyName}, sans mention de YopoePrint.
+                          </span>
+                        </span>
+                      </label>
+                    ) : (
+                      <p className="text-xs text-gray-600">
+                        Livraison en marque blanche disponible :{' '}
+                        <Link href="/revendeur/marque-blanche" className="font-bold text-primary hover:underline">
+                          configurez votre identité d&apos;expéditeur
+                        </Link>.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Totaux & Remise */}
                 <div className="space-y-2.5 text-sm pt-2 border-t border-gray-100">
                   <div className="flex justify-between text-gray-600">
                     <span>Sous-total produits</span>
                     <span>{fmt(total)} FCFA</span>
                   </div>
-                  {discount > 0 && (
+                  {effectiveDiscount > 0 && (
                     <div className="flex justify-between text-green-600 font-bold">
-                      <span>Remise code promo ({appliedPromo?.code})</span>
-                      <span>−{fmt(discount)} FCFA</span>
+                      <span>{discountLabel}</span>
+                      <span>−{fmt(effectiveDiscount)} FCFA</span>
                     </div>
                   )}
                   <div className="flex justify-between">
@@ -840,10 +886,10 @@ export default function CommandePage() {
                     <span>Sous-total</span>
                     <span>{fmt(total)} FCFA</span>
                   </div>
-                  {discount > 0 && (
+                  {effectiveDiscount > 0 && (
                     <div className="flex justify-between text-green-600 font-bold">
-                      <span>Remise</span>
-                      <span>−{fmt(discount)} FCFA</span>
+                      <span>{useResellerDiscount ? `Remise revendeur (−${resellerRate} %)` : 'Remise'}</span>
+                      <span>−{fmt(effectiveDiscount)} FCFA</span>
                     </div>
                   )}
                   <div className="flex justify-between text-gray-500">

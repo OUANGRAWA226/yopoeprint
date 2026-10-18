@@ -13,7 +13,7 @@ export function ConditionalUI({ children }: { children: React.ReactNode }) {
                    pathname?.startsWith('/connexion') || 
                    pathname?.startsWith('/inscription') || 
                    pathname?.startsWith('/mot-de-passe-oublie') ||
-                   pathname?.startsWith('/revendeur')
+                   pathname === '/revendeur' || !!pathname?.startsWith('/revendeur/')
 
   return (
     <>

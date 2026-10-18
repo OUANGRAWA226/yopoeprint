@@ -193,6 +193,36 @@ export class MailService {
     return this.sendMail(email, subject, html);
   }
 
+  async sendResellerApplicationReceived(email: string, firstName: string, companyName: string) {
+    const subject = 'Votre demande de compte revendeur - YopoePrint';
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
+        <h1 style="color: #111827; font-size: 20px; margin-bottom: 12px;">Bonjour ${escapeHtml(firstName)},</h1>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Nous avons bien reçu la demande de compte revendeur pour <strong>${escapeHtml(companyName)}</strong>.
+          Notre équipe l'examine et vous répond sous 24 h ouvrées.
+        </p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
+
+  async sendResellerApproved(email: string, firstName: string, companyName: string, rate: number) {
+    const subject = 'Votre compte revendeur est activé - YopoePrint';
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111827; color: white; padding: 40px; border-radius: 12px;">
+        <h1 style="color: #ffffff; font-size: 22px; margin-bottom: 8px;">Bienvenue dans le programme revendeur, ${escapeHtml(firstName)} !</h1>
+        <p style="color: #d1d5db; font-size: 15px; line-height: 1.6;">
+          Le compte de <strong>${escapeHtml(companyName)}</strong> est actif : une remise de <strong>${rate} %</strong>
+          s'applique désormais automatiquement à toutes vos commandes, et la livraison en marque blanche est disponible
+          dès que vous avez renseigné votre identité d'expéditeur.
+        </p>
+        <p style="color: #d1d5db; font-size: 14px;">Retrouvez vos économies et votre palier dans votre espace revendeur.</p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html);
+  }
+
   async sendPasswordReset(email: string, firstName: string, resetUrl: string) {
     const subject = 'Réinitialisation de votre mot de passe - YopoePrint';
     const html = `
