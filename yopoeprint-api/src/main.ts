@@ -55,6 +55,8 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    // L'admin (autre origine) lit le nom de fichier des exports CSV
+    exposedHeaders: ['Content-Disposition'],
   })
 
   // ── Global Validation ─────────────────────────────────────

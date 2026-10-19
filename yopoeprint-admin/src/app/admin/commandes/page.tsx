@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { adminOrdersService, Order } from '@/lib/orders.service'
 import { uploadMedia } from '@/lib/media.service'
+import { ExportButton } from '@/components/admin/ExportButton'
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending:       { label: 'Paiement en attente', cls: 'bg-yellow-100 text-yellow-700' },
@@ -74,22 +75,6 @@ const toRow = (o: Order): Row => ({
 })
 
 // Export CSV (séparateur ; pour Excel en français)
-function downloadCsv(rows: Row[]) {
-  const header = ['N° commande', 'Client', 'Téléphone', 'Ville', 'Articles', 'Total FCFA', 'Statut', 'Paiement', 'Date']
-  const esc = (v: string | number) => `"${String(v ?? '').replace(/"/g, '""')}"`
-  const lines = rows.map((r) => [
-    r.orderNumber, r.client, r.phone, r.zone, r.product, r.total,
-    STATUS_MAP[r.status]?.label || r.status, PAYMENT_LABELS[r.payment || ''] || r.payment || '', r.date,
-  ].map(esc).join(';'))
-  const blob = new Blob(['﻿' + [header.map(esc).join(';'), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `commandes-${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 export default function AdminCommandesPage() {
   return (
     <Suspense fallback={<div className="h-64 rounded-2xl bg-white border border-gray-100 animate-pulse" />}>
@@ -291,10 +276,7 @@ function CommandesContent() {
           </div>
         )}
 
-        <button onClick={() => downloadCsv(orders)} disabled={!orders.length}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:border-blue-mid transition-all disabled:opacity-50">
-          <Download size={15} /> Exporter CSV
-        </button>
+        <ExportButton kind="orders" />
       </div>
 
       {error && (

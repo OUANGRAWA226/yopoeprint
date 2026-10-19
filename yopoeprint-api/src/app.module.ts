@@ -23,6 +23,7 @@ import { SettingsModule } from './modules/settings/settings.module'
 import { BannersModule }  from './modules/banners/banners.module'
 import { PromosModule }   from './modules/promos/promos.module'
 import { PostsModule }    from './modules/posts/posts.module'
+import { SupervisionModule } from './modules/supervision/supervision.module'
 
 // Entities
 import { User }    from './modules/users/user.entity'
@@ -34,6 +35,8 @@ import { PlatformSettingsRow } from './modules/settings/platform-settings.entity
 import { Banner } from './modules/banners/banner.entity'
 import { PromoCode } from './modules/promos/promo-code.entity'
 import { Post } from './modules/posts/post.entity'
+import { PaymentEvent } from './modules/payments/payment-event.entity'
+import { EmailLog } from './modules/mail/email-log.entity'
 
 @Module({
   imports: [
@@ -66,7 +69,7 @@ import { Post } from './modules/posts/post.entity'
         password:    cs.get('database.password'),
         database:    cs.get('database.name'),
         ssl:         cs.get('database.ssl') ? { rejectUnauthorized: false } : false,
-        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow, Banner, PromoCode, Post],
+        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow, Banner, PromoCode, Post, PaymentEvent, EmailLog],
         synchronize: cs.get('app.nodeEnv') === 'development', // Auto-create tables in dev
         logging:     cs.get('app.nodeEnv') === 'development',
       }),
@@ -87,6 +90,7 @@ import { Post } from './modules/posts/post.entity'
     BannersModule,
     PromosModule,
     PostsModule,
+    SupervisionModule,
   ],
   providers: [
     // Active le rate limiting global (et les @Throttle par route, ex. login)

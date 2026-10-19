@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Search, Mail, Phone, Eye, X, Loader2 } from 'lucide-react'
 import { clientsService, Client, ClientDetail } from '@/lib/clients.service'
+import { ExportButton } from '@/components/admin/ExportButton'
 
 const SEG_CLS: Record<string, string> = {
   VIP:      'bg-gold text-blue-deep',
@@ -103,6 +104,7 @@ export default function AdminClientsPage() {
           <option value="all">Tous les segments</option>
           {['VIP', 'Actif', 'Nouveau', 'Inactif'].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+        <div className="sm:ml-auto"><ExportButton kind="clients" /></div>
       </div>
 
       {error && (

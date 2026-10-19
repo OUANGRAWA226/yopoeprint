@@ -1,20 +1,29 @@
 import {
-  Controller, Get, Post, Body, Param, Headers,
-  UseGuards, HttpCode, HttpStatus,
+  Controller, Post, Get, Param, Body, Query, UseGuards, HttpCode, HttpStatus, Headers, ParseUUIDPipe,
 } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiProperty } from '@nestjs/swagger'
+import { IsString, MinLength, MaxLength } from 'class-validator'
+import { Transform } from 'class-transformer'
 import { PaymentsService } from './payments.service'
-import { JwtAuthGuard }  from '../../common/guards/jwt-auth.guard'
-import { CurrentUser }   from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { AdminGuard, ManagerGuard } from '../../common/guards/admin.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { Audit } from '../audit/audit.decorator'
+
+export class MarkPaidDto {
+  @ApiProperty({ example: 'Virement BOA du 18/10, réf. 4521' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString() @MinLength(3, { message: 'Indiquez une référence d\'encaissement (3 caractères min.)' }) @MaxLength(120)
+  reference: string
+}
 
 @ApiTags('Paiements')
-@Controller('payments')
+@Controller()
 export class PaymentsController {
   constructor(private paymentsService: PaymentsService) {}
 
-  // ── Init payment (authenticated) ──────────────────────────
-  @Post(':orderId/init')
+  @Post('payments/:orderId/init')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Initialiser un paiement CinetPay pour une commande' })
@@ -22,8 +31,7 @@ export class PaymentsController {
     return this.paymentsService.initPayment(orderId, user.id)
   }
 
-  // ── Get payment status ────────────────────────────────────
-  @Get(':orderId/status')
+  @Get('payments/:orderId/status')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Statut du paiement d\'une commande' })
@@ -31,9 +39,8 @@ export class PaymentsController {
     return this.paymentsService.getPaymentStatus(orderId, user)
   }
 
-  // ── CinetPay Webhook (called by CinetPay server) ──────────
-  // Not throttled: CinetPay calls from a few shared IPs and retries on failure
-  @Post('webhook')
+  // CinetPay webhook — no auth guard (CinetPay calls this directly)
+  @Post('payments/webhook')
   @SkipThrottle()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Webhook CinetPay — ne pas appeler manuellement' })
@@ -41,20 +48,65 @@ export class PaymentsController {
     return this.paymentsService.handleWebhook(payload, xToken)
   }
 
-  // CinetPay pings notify_url with GET to check it is reachable
-  @Get('webhook')
+  // CinetPay pings the notify_url with GET to check availability
+  @Get('payments/webhook')
   @SkipThrottle()
   @ApiOperation({ summary: 'Ping de disponibilité du webhook CinetPay' })
   webhookPing() {
     return { status: 'ok' }
   }
 
-  // ── Manual verify ─────────────────────────────────────────
-  @Get('verify/:transactionId')
-  @UseGuards(JwtAuthGuard)
+  // Réservé au back-office : un client n'a pas à interroger CinetPay sur une transaction quelconque
+  @Get('payments/verify/:transactionId')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Vérifier manuellement un paiement' })
+  @ApiOperation({ summary: '[BACK-OFFICE] Vérifier un paiement auprès de CinetPay' })
   verify(@Param('transactionId') transactionId: string) {
     return this.paymentsService.verifyPayment(transactionId)
+  }
+
+  // ─── Admin : rapprochement ───────────────────────────────
+  @Get('admin/payments/overview')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[BACK-OFFICE] Synthèse des paiements (7 jours) et points à traiter' })
+  overview() {
+    return this.paymentsService.overview()
+  }
+
+  @Get('admin/payments/issues')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[BACK-OFFICE] Paiements en attente prolongée, échoués, virements à encaisser' })
+  issues() {
+    return this.paymentsService.issues()
+  }
+
+  @Get('admin/payments/events')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[BACK-OFFICE] Journal des paiements' })
+  events(@Query('type') type?: string, @Query('orderId') orderId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.paymentsService.listEvents({ type, orderId, page: Number(page), limit: Number(limit) })
+  }
+
+  @Post('admin/payments/:orderId/recheck')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Audit('payment.recheck', 'order')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[BACK-OFFICE] Revérifier le paiement CinetPay d\'une commande' })
+  recheck(@Param('orderId', ParseUUIDPipe) orderId: string, @CurrentUser() user) {
+    return this.paymentsService.recheck(orderId, user)
+  }
+
+  @Post('admin/payments/:orderId/mark-paid')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, ManagerGuard)
+  @Audit('payment.manual', 'order')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Enregistrer un encaissement hors CinetPay (virement, espèces)' })
+  markPaid(@Param('orderId', ParseUUIDPipe) orderId: string, @Body() dto: MarkPaidDto, @CurrentUser() user) {
+    return this.paymentsService.markPaid(orderId, dto.reference, user)
   }
 }

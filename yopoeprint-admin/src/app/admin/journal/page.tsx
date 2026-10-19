@@ -29,6 +29,10 @@ const ACTION_LABELS: Record<string, string> = {
   'post.create': 'Article créé',
   'post.update': 'Article modifié',
   'post.delete': 'Article supprimé',
+  'payment.recheck': 'Paiement revérifié',
+  'payment.manual': 'Encaissement manuel',
+  'export.orders': 'Export des commandes',
+  'export.clients': 'Export des clients',
 }
 
 const FILTERS = [
@@ -39,6 +43,8 @@ const FILTERS = [
   { id: 'banner', label: 'Bannières' },
   { id: 'promo', label: 'Codes promo' },
   { id: 'post', label: 'Blog' },
+  { id: 'payment', label: 'Paiements' },
+  { id: 'export', label: 'Exports' },
   { id: 'order', label: 'Commandes' },
   { id: 'quote', label: 'Devis' },
   { id: 'reseller', label: 'Revendeurs' },

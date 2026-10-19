@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
   Tag, FileText, Settings, LogOut, Menu, X,
-  ChevronRight, ClipboardList, Image as ImageIcon, Briefcase, ShieldCheck, History, Lock,
+  ChevronRight, ClipboardList, Image as ImageIcon, Briefcase, ShieldCheck, History, Lock, CreditCard, Mail,
 } from 'lucide-react'
 import { adminAuthService } from '@/lib/auth-admin.service'
 import { Role, ROLE_LABELS } from '@/lib/platform.service'
@@ -20,12 +20,14 @@ const NAV: { href: string; icon: React.ReactNode; label: string; roles: Role[] }
   { href: '/admin',            icon: <LayoutDashboard size={18} />, label: 'Dashboard',              roles: ALL },
   { href: '/admin/commandes',  icon: <ShoppingCart size={18} />,    label: 'Commandes',              roles: ALL },
   { href: '/admin/devis',      icon: <ClipboardList size={18} />,   label: 'Devis',                  roles: ALL },
+  { href: '/admin/paiements',  icon: <CreditCard size={18} />,      label: 'Paiements',              roles: ALL },
   { href: '/admin/clients',    icon: <Users size={18} />,           label: 'Clients',                roles: ALL },
   { href: '/admin/revendeurs', icon: <Briefcase size={18} />,       label: 'Revendeurs',             roles: ALL },
   { href: '/admin/produits',   icon: <Package size={18} />,         label: 'Produits',               roles: MANAGERS },
   { href: '/admin/bannieres',  icon: <ImageIcon size={18} />,       label: 'Carrousels & Bannières', roles: MANAGERS },
   { href: '/admin/promotions', icon: <Tag size={18} />,             label: 'Promotions',             roles: MANAGERS },
   { href: '/admin/blog',       icon: <FileText size={18} />,        label: 'Blog',                   roles: MANAGERS },
+  { href: '/admin/emails',     icon: <Mail size={18} />,            label: 'Emails envoyés',         roles: MANAGERS },
   { href: '/admin/equipe',     icon: <ShieldCheck size={18} />,     label: 'Équipe',                 roles: SUPER },
   { href: '/admin/journal',    icon: <History size={18} />,         label: 'Journal des actions',    roles: SUPER },
   { href: '/admin/parametres', icon: <Settings size={18} />,        label: 'Paramètres',             roles: ALL },

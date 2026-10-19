@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Resend } from 'resend';
+import { EmailLog } from './email-log.entity';
 
 @Injectable()
 export class MailService {
@@ -7,7 +10,7 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private isConfigured = false;
 
-  constructor() {
+  constructor(@InjectRepository(EmailLog) private logs: Repository<EmailLog>) {
     // En développement local sans clé, on log juste les emails
     const apiKey = process.env.RESEND_API_KEY;
     if (apiKey) {
@@ -40,7 +43,7 @@ export class MailService {
       </div>
     `;
 
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'orderConfirmation');
   }
 
   async sendOrderStatusUpdate(email: string, orderNumber: string, status: string) {
@@ -89,7 +92,7 @@ export class MailService {
       </div>
     `;
 
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'orderStatusUpdate');
   }
 
   async sendBatReadyEmail(email: string, orderNumber: string, batNotes?: string) {
@@ -117,7 +120,7 @@ export class MailService {
         </a>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'batReady');
   }
 
   async sendBatApprovedEmail(email: string, orderNumber: string) {
@@ -136,7 +139,7 @@ export class MailService {
         </a>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'batApproved');
   }
 
   async sendBatRejectedEmail(email: string, orderNumber: string, reason: string) {
@@ -155,7 +158,7 @@ export class MailService {
         </p>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'batRejected');
   }
   async sendQuoteReceived(email: string, fullName: string, reference: string, product: string) {
     const subject = `Demande de devis ${reference} bien reçue - YopoePrint`;
@@ -170,7 +173,7 @@ export class MailService {
         </p>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'quoteReceived');
   }
 
   async sendQuoteProposal(email: string, fullName: string, reference: string, price: number) {
@@ -190,7 +193,7 @@ export class MailService {
         </p>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'quoteProposal');
   }
 
   async sendResellerApplicationReceived(email: string, firstName: string, companyName: string) {
@@ -204,7 +207,7 @@ export class MailService {
         </p>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'resellerApplicationReceived');
   }
 
   async sendResellerApproved(email: string, firstName: string, companyName: string, rate: number) {
@@ -220,7 +223,7 @@ export class MailService {
         <p style="color: #d1d5db; font-size: 14px;">Retrouvez vos économies et votre palier dans votre espace revendeur.</p>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'resellerApproved');
   }
 
   async sendPasswordReset(email: string, firstName: string, resetUrl: string) {
@@ -239,12 +242,13 @@ export class MailService {
         </p>
       </div>
     `;
-    return this.sendMail(email, subject, html);
+    return this.sendMail(email, subject, html, 'passwordReset');
   }
 
-  private async sendMail(to: string, subject: string, html: string) {
+  private async sendMail(to: string, subject: string, html: string, template = 'autre') {
     if (!this.isConfigured) {
       this.logger.log(`[Simulation Email] À: ${to} | Sujet: ${subject}`);
+      await this.record(to, subject, template, 'simulated');
       return { id: 'simulated-email-id' };
     }
 
@@ -257,14 +261,26 @@ export class MailService {
       });
       if (error) {
         this.logger.error(`Erreur lors de l'envoi de l'email: ${error.message}`);
+        await this.record(to, subject, template, 'failed', null, error.message);
         return null;
       }
       this.logger.log(`Email envoyé avec succès: ${data?.id}`);
+      await this.record(to, subject, template, 'sent', data?.id ?? null);
       return data;
     } catch (error: any) {
       this.logger.error(`Erreur lors de l'envoi de l'email: ${error?.message || error}`);
+      await this.record(to, subject, template, 'failed', null, String(error?.message || error));
       // On ne throw pas l'erreur pour ne pas bloquer le flux principal
       return null;
+    }
+  }
+
+  // Journal des envois (admin › Emails) ; une erreur d'écriture ne doit jamais bloquer l'envoi
+  private async record(to: string, subject: string, template: string, status: 'sent' | 'failed' | 'simulated', providerId: string | null = null, error: string | null = null) {
+    try {
+      await this.logs.insert({ toEmail: to, subject: subject.slice(0, 200), template, status, providerId, error: error ? error.slice(0, 300) : null });
+    } catch (e: any) {
+      this.logger.error(`Journal des emails : ${e?.message || e}`);
     }
   }
 }

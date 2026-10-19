@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { ApexOptions } from 'apexcharts'
 import { adminOrdersService, AdminStats } from '@/lib/orders.service'
+import { AlertsPanel } from '@/components/admin/AlertsPanel'
 
 // Import dynamique d'ApexCharts pour éviter les erreurs SSR (window is not defined)
 const Chart = dynamic(() => import('react-apexcharts'), {
@@ -186,6 +187,9 @@ export default function AdminDashboard() {
           <button onClick={() => load(period)} className="font-bold underline shrink-0">Réessayer</button>
         </div>
       )}
+
+      {/* ── Alertes (retards, anomalies de paiement, emails en échec) ── */}
+      <AlertsPanel />
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
