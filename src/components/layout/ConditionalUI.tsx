@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { usePublicSettings } from '@/lib/settings.service'
+import { rememberPage } from '@/lib/return-to'
 
 // Bandeau affiché sur toute la boutique quand le superadmin suspend les commandes (admin › Paramètres)
 function MaintenanceBanner() {
@@ -20,7 +22,10 @@ function MaintenanceBanner() {
 
 export function ConditionalUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  
+
+  // Dernière page visitée : on y revient après la connexion ou l'inscription
+  useEffect(() => { rememberPage(window.location.pathname + window.location.search) }, [pathname])
+
   // On cache le header public sur l'administration et les pages d'auth (qui ont leur propre layout)
   const isHidden = pathname?.startsWith('/admin') || 
                    pathname?.startsWith('/connexion') || 

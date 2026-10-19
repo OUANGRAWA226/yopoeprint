@@ -7,12 +7,13 @@ import { useAuthContext } from '@/context/AuthContext'
 import { Eye, EyeOff, Loader2, ArrowRight, ShieldCheck, ShoppingBag } from 'lucide-react'
 import { Logo } from '@/components/shared/Logo'
 import { Alert } from '@/components/ui/Alert'
+import { returnPath } from '@/lib/return-to'
 
 function ConnexionForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/mon-compte'
-  const isCheckoutRedirect = redirect.includes('/commande')
+  const redirectParam = searchParams.get('redirect')
+  const isCheckoutRedirect = !!redirectParam?.includes('/commande')
 
   const { login } = useAuthContext()
   const [loading, setLoading] = useState(false)
@@ -30,7 +31,7 @@ function ConnexionForm() {
     setError('')
     try {
       await login(form.email.trim().toLowerCase(), form.password)
-      router.push(redirect)
+      router.push(returnPath(redirectParam, '/mon-compte'))
     } catch (err: any) {
       setError(err.response?.data?.message || 'Email ou mot de passe incorrect')
     } finally {
@@ -131,7 +132,7 @@ function ConnexionForm() {
       <p className="text-center text-sm text-gray-500 mt-8">
         Nouveau sur YopoePrint ?{' '}
         <Link
-          href={`/inscription${redirect !== '/mon-compte' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
+          href={`/inscription${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`}
           className="text-gray-900 font-bold hover:text-primary transition-colors underline underline-offset-4"
         >
           Créer un compte

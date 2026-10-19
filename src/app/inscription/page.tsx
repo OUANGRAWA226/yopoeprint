@@ -8,6 +8,7 @@ import { Logo } from '@/components/shared/Logo'
 import { Alert } from '@/components/ui/Alert'
 import { GoogleButton, googleSignInAvailable } from '@/components/auth/GoogleButton'
 import { useAuthContext } from '@/context/AuthContext'
+import { returnPath } from '@/lib/return-to'
 import { authService } from '@/lib/auth.service'
 
 // Parcours inspiré de Jumia : 1. email (ou Google) → 2. mot de passe → 3. profil → compte créé (5 s) → accueil.
@@ -72,7 +73,10 @@ function Submit({ loading, children }: { loading: boolean; children: React.React
 
 function Onboarding() {
   const router = useRouter()
-  const redirect = useSearchParams().get('redirect') || '/'
+  const redirectParam = useSearchParams().get('redirect')
+  // Retour à la page où était le client (ou au paiement), sinon l'accueil
+  const [redirect, setRedirect] = useState('/')
+  useEffect(() => { setRedirect(returnPath(redirectParam, '/')) }, [redirectParam])
   const { login, register, setSessionUser } = useAuthContext()
 
   const [step, setStep] = useState<Step>('email')
@@ -197,7 +201,7 @@ function Onboarding() {
             <h1 className="font-display text-2xl font-extrabold text-gray-900">Compte créé</h1>
             <p className="text-gray-600 mt-2">Bienvenue {form.firstName.trim()} ! Votre compte YopoePrint est prêt.</p>
             <p className="text-sm text-gray-500 mt-6">
-              Redirection vers l&apos;accueil dans <strong className="text-gray-900 tabular-nums">{seconds}</strong> seconde{seconds > 1 ? 's' : ''}…
+              {redirect === '/' ? <>Redirection vers l&apos;accueil</> : <>Retour à la page précédente</>} dans<strong className="text-gray-900 tabular-nums">{seconds}</strong> seconde{seconds > 1 ? 's' : ''}…
             </p>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3" aria-hidden="true">
               <div className="h-full bg-primary transition-all duration-1000 ease-linear" style={{ width: `${((REDIRECT_SECONDS - seconds) / REDIRECT_SECONDS) * 100}%` }} />

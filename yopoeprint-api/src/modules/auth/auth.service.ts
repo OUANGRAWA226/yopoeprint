@@ -2,7 +2,7 @@ import {
   Injectable, UnauthorizedException, BadRequestException,
   ConflictException, NotFoundException, Logger, ServiceUnavailableException,
 } from '@nestjs/common'
-import axios from 'axios'
+import { OAuth2Client } from 'google-auth-library'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, MoreThan } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
@@ -120,20 +120,26 @@ export class AuthService {
    * Vérifie le jeton Google auprès de Google (tokeninfo) : destinataire = notre client OAuth,
    * émetteur Google, email vérifié, jeton non expiré. Le contenu envoyé par le navigateur n'est jamais cru tel quel.
    */
+  private googleClient: OAuth2Client | null = null
+
+  // Vérification du jeton « Se connecter avec Google » par la librairie officielle de Google :
+  // signature (clés publiques de Google), destinataire (notre identifiant client), émetteur et expiration.
   private async verifyGoogleCredential(credential: string) {
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID')
     if (!clientId) throw new ServiceUnavailableException('La connexion avec Google n\'est pas encore disponible')
-    const url = this.configService.get<string>('GOOGLE_TOKENINFO_URL') || 'https://oauth2.googleapis.com/tokeninfo'
-    let info: any
+    if (!this.googleClient) {
+      // GOOGLE_CERTS_URL : uniquement pour les tests (clés d'un faux Google)
+      const certsUrl = this.configService.get<string>('GOOGLE_CERTS_URL')
+      this.googleClient = new OAuth2Client({ clientId, ...(certsUrl ? { endpoints: { oauth2FederatedSignonPemCertsUrl: certsUrl } } : {}) })
+    }
+    let info: Record<string, any> | undefined
     try {
-      info = (await axios.get(url, { params: { id_token: credential }, timeout: 8000 })).data
+      const ticket = await this.googleClient.verifyIdToken({ idToken: credential, audience: clientId })
+      info = ticket.getPayload()
     } catch {
       throw new UnauthorizedException('Connexion Google refusée, réessayez')
     }
-    const verified = info?.email_verified === true || info?.email_verified === 'true'
-    const validIssuer = ['accounts.google.com', 'https://accounts.google.com'].includes(info?.iss)
-    const notExpired = Number(info?.exp) * 1000 > Date.now()
-    if (info?.aud !== clientId || !validIssuer || !notExpired || !verified || !info?.email) {
+    if (!info?.email || info.email_verified !== true) {
       throw new UnauthorizedException('Connexion Google refusée, réessayez')
     }
     return {
