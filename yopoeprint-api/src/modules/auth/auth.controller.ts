@@ -6,6 +6,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
 import {
   RegisterDto, SetupAdminDto, LoginDto, RefreshTokenDto, ForgotPasswordDto, ResetPasswordDto,
+  CheckEmailDto, GoogleAuthDto, GoogleCompleteDto,
 } from './auth.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { AdminGuard } from '../../common/guards/admin.guard'
@@ -22,6 +23,30 @@ export class AuthController {
   @ApiOperation({ summary: 'Créer un nouveau compte client' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto)
+  }
+
+  // Étape 1 de l'inscription (connexion ou création). Limité pour freiner l'énumération des adresses.
+  @Post('check-email')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Indique si une adresse a déjà un compte (étape 1 de l\'inscription)' })
+  checkEmail(@Body() dto: CheckEmailDto) {
+    return this.authService.checkEmail(dto.email)
+  }
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Continuer avec Google : connexion si le compte existe, sinon profil à compléter' })
+  google(@Body() dto: GoogleAuthDto) {
+    return this.authService.googleAuth(dto.credential)
+  }
+
+  @Post('google/complete')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Créer le compte d\'un nouvel utilisateur Google (profil de l\'étape 3)' })
+  googleComplete(@Body() dto: GoogleCompleteDto) {
+    return this.authService.googleComplete(dto)
   }
 
   @Post('setup-first-admin')

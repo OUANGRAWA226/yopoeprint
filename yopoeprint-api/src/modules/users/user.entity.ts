@@ -74,6 +74,10 @@ export class User {
   @Column({ name: 'email_verified', default: false })
   emailVerified: boolean
 
+  // Date de naissance saisie à l'inscription (AAAA-MM-JJ) ; null pour les comptes plus anciens
+  @Column({ name: 'birth_date', type: 'date', nullable: true })
+  birthDate: string | null
+
   // Date d'acceptation des CGV et de la politique de confidentialité (inscription) ; null pour les comptes plus anciens
   @Column({ name: 'terms_accepted_at', type: 'timestamptz', nullable: true })
   termsAcceptedAt: Date | null

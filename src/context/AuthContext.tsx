@@ -10,6 +10,8 @@ interface AuthContextType {
  isLoggedIn: boolean
  login: (email: string, password: string) => Promise<void>
  register: (data: any) => Promise<void>
+ // Session ouverte par un autre moyen (Google) : tokens déjà enregistrés par authService
+ setSessionUser: (user: AuthUser) => void
  logout: () => Promise<void>
  refreshUser: () => Promise<void>
 }
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  isLoggedIn: !!user,
  login,
  register,
+ setSessionUser: setUser,
  logout,
  refreshUser,
  }}>

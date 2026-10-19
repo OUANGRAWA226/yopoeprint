@@ -1,385 +1,345 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuthContext } from '@/context/AuthContext'
-import { Eye, EyeOff, CheckCircle, Loader2, ArrowRight, PackageCheck, Smartphone, FileText, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Logo } from '@/components/shared/Logo'
 import { Alert } from '@/components/ui/Alert'
+import { GoogleButton, googleSignInAvailable } from '@/components/auth/GoogleButton'
+import { useAuthContext } from '@/context/AuthContext'
+import { authService } from '@/lib/auth.service'
+
+// Parcours inspiré de Jumia : 1. email (ou Google) → 2. mot de passe → 3. profil → compte créé (5 s) → accueil.
+// Une adresse déjà inscrite bascule sur la saisie du mot de passe pour se connecter.
+type Step = 'email' | 'login' | 'password' | 'profile' | 'done'
+
+const MIN_AGE = 13 // identique à l'API (auth.service.ts)
+const REDIRECT_SECONDS = 5
 
 // « +226 70 12-34.56 » → « +22670123456 » : même format pour la vérification et l'envoi (comme l'API)
 const cleanPhone = (phone: string) => phone.replace(/[\s.\-()]/g, '')
-
-// ─── Validation ───────────────────────────────────────────────
-function validate(form: typeof INITIAL_FORM) {
-  const errors: Record<string, string> = {}
-
-  if (!form.firstName.trim())
-    errors.firstName = 'Requis'
-
-  if (!form.lastName.trim())
-    errors.lastName = 'Requis'
-
-  if (!form.email.trim())
-    errors.email = 'Requis'
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-    errors.email = 'Email invalide'
-
-  if (!form.phone.trim())
-    errors.phone = 'Requis'
-  else if (!/^\+?[0-9]{8,15}$/.test(cleanPhone(form.phone)))
-    errors.phone = 'Numéro invalide'
-
-  if (!form.password)
-    errors.password = 'Requis'
-  else if (form.password.length < 8)
-    errors.password = 'Minimum 8 caractères'
-  else if (!/(?=.*[A-Z])(?=.*[0-9])/.test(form.password))
-    errors.password = 'Majuscule et chiffre requis'
-
-  if (form.password !== form.confirm)
-    errors.confirm = 'Ne correspond pas'
-
-  if (!form.cgv)
-    errors.cgv = 'Requis'
-
-  return errors
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+const maxBirthDate = () => {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - MIN_AGE)
+  return d.toISOString().slice(0, 10)
 }
 
-// ─── Indicateur force mot de passe ────────────────────────────
-function PasswordStrength({ password }: { password: string }) {
-  if (!password) return null
+const input = 'w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[15px] text-gray-900 outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors'
 
-  const checks = [
-    { ok: password.length >= 8, label: '8 caractères' },
-    { ok: /[A-Z]/.test(password), label: '1 majuscule' },
-    { ok: /[0-9]/.test(password), label: '1 chiffre' },
-    { ok: /[^A-Za-z0-9]/.test(password), label: '1 caractère spécial' },
-  ]
-  const score = checks.filter((c) => c.ok).length
-
-  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-emerald-500']
-  const labels = ['Faible', 'Moyen', 'Bon', 'Excellent']
-
+function Field({ label, error, children, hint }: { label: string; error?: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="mt-2.5">
-      <div className="flex gap-1.5 mb-2">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < score ? colors[score - 1] : 'bg-gray-100'}`} />
-        ))}
-      </div>
-      <div className="flex items-center justify-between">
-        <p className={`text-2xs font-bold uppercase tracking-wider ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-orange-500' : score === 3 ? 'text-yellow-600' : 'text-emerald-500'}`}>
-          {labels[score - 1] || 'Trop faible'}
-        </p>
-        <div className="flex gap-3">
-          {checks.map(({ ok, label }) => (
-            <div key={label} className={`flex items-center gap-1 text-2xs ${ok ? 'text-emerald-500' : 'text-gray-400'}`}>
-              {ok ? <CheckCircle size={10} /> : <div className="w-2.5 h-2.5 rounded-full border border-gray-200" />}
-              <span className="hidden sm:inline">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+    <label className="block space-y-1.5">
+      <span className="text-sm font-semibold text-gray-800">{label}</span>
+      {children}
+      {error ? <span role="alert" className="block text-xs text-red-600">{error}</span> : hint ? <span className="block text-xs text-gray-500">{hint}</span> : null}
+    </label>
+  )
+}
+
+function PasswordInput({ value, onChange, autoComplete, autoFocus }: {
+  value: string; onChange: (v: string) => void; autoComplete: string; autoFocus?: boolean
+}) {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="relative">
+      <input type={show ? 'text' : 'password'} value={value} onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete}
+        autoFocus={autoFocus} className={`${input} pr-12`} />
+      <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-900">
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
     </div>
   )
 }
 
-// ─── Champ de formulaire ──────────────────────────────────────
-function Field({
-  label, name, type = 'text', placeholder, value, error, onChange, required, hint, suffix
-}: {
-  label: string; name: string; type?: string; placeholder?: string
-  value: string; error?: string; onChange: (v: string) => void
-  required?: boolean; hint?: string; suffix?: React.ReactNode
-}) {
+const PASSWORD_RULES = [
+  { test: (p: string) => p.length >= 8, label: '8 caractères' },
+  { test: (p: string) => /[A-Z]/.test(p), label: '1 majuscule' },
+  { test: (p: string) => /[0-9]/.test(p), label: '1 chiffre' },
+]
+
+function Submit({ loading, children }: { loading: boolean; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="block text-2xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 flex justify-between">
-        <span>{label} {required && <span className="text-red-400">*</span>}</span>
-        {error && <span className="text-red-500 normal-case tracking-normal animate-in fade-in">{error}</span>}
-      </label>
-      <div className="relative">
-        <input
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full px-3.5 py-3 bg-gray-50 border rounded-xl text-sm
-            outline-none transition-all pr-${suffix ? '10' : '3.5'}
-            ${error
-              ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-4 focus:ring-red-100'
-              : 'border-gray-200 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'}`}
-        />
-        {suffix && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>
+    <button type="submit" disabled={loading}
+      className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-[15px] hover:bg-primary transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+      {loading ? <Loader2 size={18} className="animate-spin" /> : null}
+      {children}
+    </button>
+  )
+}
+
+function Onboarding() {
+  const router = useRouter()
+  const redirect = useSearchParams().get('redirect') || '/'
+  const { login, register, setSessionUser } = useAuthContext()
+
+  const [step, setStep] = useState<Step>('email')
+  const [form, setForm] = useState({ email: '', password: '', confirm: '', firstName: '', lastName: '', birthDate: '', phone: '', cgv: false })
+  const [googleCredential, setGoogleCredential] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [apiError, setApiError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [seconds, setSeconds] = useState(REDIRECT_SECONDS)
+
+  const set = (key: keyof typeof form) => (value: string | boolean) => {
+    setForm((f) => ({ ...f, [key]: value }))
+    setErrors((e) => { const next = { ...e }; delete next[key]; return next })
+  }
+  const go = (next: Step) => { setApiError(''); setErrors({}); setStep(next) }
+
+  // Compte créé : compte à rebours puis redirection
+  useEffect(() => {
+    if (step !== 'done') return
+    if (seconds <= 0) { router.push(redirect); return }
+    const t = setTimeout(() => setSeconds((s) => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [step, seconds, redirect, router])
+
+  const run = async (fn: () => Promise<void>) => {
+    setLoading(true); setApiError('')
+    try { await fn() } catch (err: any) {
+      setApiError(err?.response?.data?.message || err?.message || 'Une erreur est survenue. Réessayez.')
+    } finally { setLoading(false) }
+  }
+
+  // ── Étape 1 : email ──
+  const submitEmail = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isEmail(form.email)) { setErrors({ email: 'Saisissez une adresse email valide' }); return }
+    run(async () => {
+      const { exists } = await authService.checkEmail(form.email.trim().toLowerCase())
+      go(exists ? 'login' : 'password')
+    })
+  }
+
+  const onGoogle = (credential: string) => run(async () => {
+    const res = await authService.google(credential)
+    if (res.status === 'logged_in') {
+      setSessionUser(res.user)
+      router.push(redirect)
+      return
+    }
+    setGoogleCredential(credential)
+    setForm((f) => ({ ...f, email: res.email, firstName: f.firstName || res.firstName, lastName: f.lastName || res.lastName }))
+    go('profile')
+  })
+
+  // ── Compte existant : connexion ──
+  const submitLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.password) { setErrors({ password: 'Saisissez votre mot de passe' }); return }
+    run(async () => {
+      await login(form.email.trim().toLowerCase(), form.password)
+      router.push(redirect)
+    })
+  }
+
+  // ── Étape 2 : mot de passe ──
+  const submitPassword = (e: React.FormEvent) => {
+    e.preventDefault()
+    const errs: Record<string, string> = {}
+    if (!PASSWORD_RULES.every((r) => r.test(form.password))) errs.password = 'Le mot de passe doit respecter les règles ci-dessous'
+    if (form.confirm !== form.password) errs.confirm = 'Les deux mots de passe ne correspondent pas'
+    setErrors(errs)
+    if (!Object.keys(errs).length) go('profile')
+  }
+
+  // ── Étape 3 : profil et création ──
+  const submitProfile = (e: React.FormEvent) => {
+    e.preventDefault()
+    const errs: Record<string, string> = {}
+    if (!form.firstName.trim()) errs.firstName = 'Prénom requis'
+    if (!form.lastName.trim()) errs.lastName = 'Nom requis'
+    if (!form.birthDate) errs.birthDate = 'Date de naissance requise'
+    else if (form.birthDate > maxBirthDate()) errs.birthDate = `Vous devez avoir au moins ${MIN_AGE} ans`
+    if (!/^\+?[0-9]{8,15}$/.test(cleanPhone(form.phone))) errs.phone = 'Numéro de téléphone invalide'
+    if (!form.cgv) errs.cgv = 'Acceptez les conditions générales pour continuer'
+    setErrors(errs)
+    if (Object.keys(errs).length) return
+
+    const profile = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      birthDate: form.birthDate,
+      phone: cleanPhone(form.phone),
+      acceptTerms: true,
+    }
+    run(async () => {
+      if (googleCredential) {
+        const res = await authService.googleComplete({ ...profile, credential: googleCredential })
+        setSessionUser(res.user)
+      } else {
+        await register({ ...profile, email: form.email.trim().toLowerCase(), password: form.password })
+      }
+      setSeconds(REDIRECT_SECONDS)
+      go('done')
+    })
+  }
+
+  const stepNumber = step === 'email' ? 1 : step === 'password' ? 2 : step === 'profile' ? 3 : 0
+  const back = step === 'login' || step === 'password' ? () => go('email')
+    : step === 'profile' ? () => { if (googleCredential) { setGoogleCredential(null); go('email') } else go('password') }
+    : null
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 py-8 sm:py-14">
+      {/* Le logo est déjà un lien vers l'accueil */}
+      <div className="mb-6"><Logo theme="light" size="md" /></div>
+
+      <div className="w-full max-w-[420px] bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+        {step === 'done' ? (
+          <div className="text-center py-4" role="status" aria-live="polite">
+            <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-5">
+              <CheckCircle2 size={44} className="text-emerald-600" />
+            </div>
+            <h1 className="font-display text-2xl font-extrabold text-gray-900">Compte créé</h1>
+            <p className="text-gray-600 mt-2">Bienvenue {form.firstName.trim()} ! Votre compte YopoePrint est prêt.</p>
+            <p className="text-sm text-gray-500 mt-6">
+              Redirection vers l&apos;accueil dans <strong className="text-gray-900 tabular-nums">{seconds}</strong> seconde{seconds > 1 ? 's' : ''}…
+            </p>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3" aria-hidden="true">
+              <div className="h-full bg-primary transition-all duration-1000 ease-linear" style={{ width: `${((REDIRECT_SECONDS - seconds) / REDIRECT_SECONDS) * 100}%` }} />
+            </div>
+            <button type="button" onClick={() => router.push(redirect)} className="mt-6 text-sm font-bold text-primary hover:underline inline-flex items-center gap-1">
+              Continuer maintenant <ArrowRight size={15} />
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-5 min-h-[28px]">
+              {back ? (
+                <button type="button" onClick={back} aria-label="Étape précédente" className="p-1 -ml-1 text-gray-600 hover:text-gray-900">
+                  <ArrowLeft size={20} />
+                </button>
+              ) : <span />}
+              {stepNumber > 0 && (
+                <span className="flex items-center gap-1.5" aria-label={`Étape ${stepNumber} sur 3`}>
+                  {[1, 2, 3].map((n) => (
+                    <span key={n} className={`h-1.5 rounded-full transition-all ${n <= stepNumber ? 'w-6 bg-gray-900' : 'w-3 bg-gray-200'}`} />
+                  ))}
+                </span>
+              )}
+            </div>
+
+            {apiError && <Alert className="mb-5">{apiError}</Alert>}
+
+            {step === 'email' && (
+              <form onSubmit={submitEmail} className="space-y-5" noValidate>
+                <div>
+                  <h1 className="font-display text-2xl font-extrabold text-gray-900">Bienvenue sur YopoePrint</h1>
+                  <p className="text-sm text-gray-600 mt-1">Saisissez votre email pour vous connecter ou créer un compte.</p>
+                </div>
+                <Field label="Adresse email" error={errors.email}>
+                  <input type="email" inputMode="email" autoComplete="email" autoFocus value={form.email}
+                    onChange={(e) => set('email')(e.target.value)} placeholder="salimata@exemple.com" className={input} />
+                </Field>
+                <Submit loading={loading}>Continuer</Submit>
+                {googleSignInAvailable && (
+                  <>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <span className="h-px flex-1 bg-gray-200" /> ou <span className="h-px flex-1 bg-gray-200" />
+                    </div>
+                    <GoogleButton onCredential={onGoogle} />
+                  </>
+                )}
+              </form>
+            )}
+
+            {step === 'login' && (
+              <form onSubmit={submitLogin} className="space-y-5" noValidate>
+                <div>
+                  <h1 className="font-display text-2xl font-extrabold text-gray-900">Bon retour !</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Un compte existe pour <strong className="text-gray-900">{form.email.trim().toLowerCase()}</strong>. Saisissez votre mot de passe.
+                  </p>
+                </div>
+                <Field label="Mot de passe" error={errors.password}>
+                  <PasswordInput value={form.password} onChange={set('password')} autoComplete="current-password" autoFocus />
+                </Field>
+                <Submit loading={loading}>Se connecter</Submit>
+                <p className="text-center">
+                  <Link href="/mot-de-passe-oublie" className="text-sm font-semibold text-gray-700 hover:text-primary underline underline-offset-4">Mot de passe oublié ?</Link>
+                </p>
+              </form>
+            )}
+
+            {step === 'password' && (
+              <form onSubmit={submitPassword} className="space-y-5" noValidate>
+                <div>
+                  <h1 className="font-display text-2xl font-extrabold text-gray-900">Créez votre mot de passe</h1>
+                  <p className="text-sm text-gray-600 mt-1">Pour <strong className="text-gray-900">{form.email.trim().toLowerCase()}</strong></p>
+                </div>
+                <Field label="Mot de passe" error={errors.password}>
+                  <PasswordInput value={form.password} onChange={set('password')} autoComplete="new-password" autoFocus />
+                </Field>
+                <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Règles du mot de passe">
+                  {PASSWORD_RULES.map((r) => (
+                    <li key={r.label} className={`flex items-center gap-1 ${r.test(form.password) ? 'text-emerald-700' : 'text-gray-500'}`}>
+                      <CheckCircle2 size={13} /> {r.label}
+                    </li>
+                  ))}
+                </ul>
+                <Field label="Confirmez le mot de passe" error={errors.confirm}>
+                  <PasswordInput value={form.confirm} onChange={set('confirm')} autoComplete="new-password" />
+                </Field>
+                <Submit loading={false}>Continuer</Submit>
+              </form>
+            )}
+
+            {step === 'profile' && (
+              <form onSubmit={submitProfile} className="space-y-4" noValidate>
+                <div>
+                  <h1 className="font-display text-2xl font-extrabold text-gray-900">Vos informations</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Dernière étape{googleCredential ? <> — compte Google <strong className="text-gray-900">{form.email}</strong></> : null}.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Prénom" error={errors.firstName}>
+                    <input autoComplete="given-name" value={form.firstName} onChange={(e) => set('firstName')(e.target.value)} className={input} />
+                  </Field>
+                  <Field label="Nom" error={errors.lastName}>
+                    <input autoComplete="family-name" value={form.lastName} onChange={(e) => set('lastName')(e.target.value)} className={input} />
+                  </Field>
+                </div>
+                <Field label="Date de naissance" error={errors.birthDate}>
+                  <input type="date" autoComplete="bday" min="1900-01-01" max={maxBirthDate()} value={form.birthDate}
+                    onChange={(e) => set('birthDate')(e.target.value)} className={input} />
+                </Field>
+                <Field label="Numéro de téléphone" error={errors.phone} hint="Utilisé pour le suivi de commande et le paiement Mobile Money">
+                  <input type="tel" inputMode="tel" autoComplete="tel" placeholder="+226 70 00 00 00" value={form.phone}
+                    onChange={(e) => set('phone')(e.target.value)} className={input} />
+                </Field>
+                <label className="flex items-start gap-3 pt-1 cursor-pointer">
+                  <input type="checkbox" checked={form.cgv} onChange={(e) => set('cgv')(e.target.checked)} className="mt-0.5 w-4 h-4 accent-primary" />
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    J&apos;accepte les <Link href="/cgv" className="font-bold text-gray-900 hover:underline">conditions générales</Link> et
+                    la <Link href="/confidentialite" className="font-bold text-gray-900 hover:underline">politique de confidentialité</Link>.
+                  </span>
+                </label>
+                {errors.cgv && <p role="alert" className="text-xs text-red-600 -mt-2 ml-7">{errors.cgv}</p>}
+                <Submit loading={loading}>Valider mon compte</Submit>
+              </form>
+            )}
+          </>
         )}
       </div>
-      {hint && !error && <p className="text-2xs text-gray-600 mt-1">{hint}</p>}
-    </div>
-  )
-}
 
-// ─── Valeurs initiales ────────────────────────────────────────
-const INITIAL_FORM = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  password: '',
-  confirm: '',
-  cgv: false,
-  newsletter: false,
-}
-
-function InscriptionForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/mon-compte'
-  const { register } = useAuthContext()
-  const [form, setForm] = useState(INITIAL_FORM)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [apiError, setApiError] = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [success, setSuccess] = useState(false)
-
-  const set = (key: keyof typeof INITIAL_FORM) => (value: string | boolean) => {
-    setForm((f) => ({ ...f, [key]: value }))
-    // Clear error on typing
-    if (errors[key]) {
-      setErrors((e) => { const next = { ...e }; delete next[key]; return next })
-    }
-  }
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const errs = validate(form)
-    setErrors(errs)
-    if (Object.keys(errs).length > 0) return
-
-    setLoading(true)
-    setApiError('')
-
-    try {
-      await register({
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim().toLowerCase(),
-        phone: cleanPhone(form.phone),
-        password: form.password,
-        acceptTerms: form.cgv,
-      })
-      setSuccess(true)
-      setTimeout(() => router.push(redirect), 1800)
-    } catch (err: any) {
-      const msg = err.response?.data?.message
-      if (msg?.includes('already exists') || msg?.includes('duplicate')) {
-        setApiError('Un compte existe déjà avec cet email ou ce téléphone.')
-      } else {
-        setApiError(msg || 'Une erreur est survenue. Réessayez.')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ── Succès ────────────────────────────────────────────────
-  if (success) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="text-center max-w-md animate-in zoom-in duration-500">
-          <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={48} className="text-emerald-500" />
-          </div>
-          <h2 className="font-display text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">
-            Bienvenue à bord ! 🎉
-          </h2>
-          <p className="text-gray-500 text-base mb-8">
-            Votre compte <strong>{form.firstName}</strong> a été créé avec succès.
-          </p>
-          <div className="flex items-center justify-center gap-3 text-sm font-bold text-primary">
-            <Loader2 size={18} className="animate-spin" /> Redirection en cours...
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Formulaire ────────────────────────────────────────────
-  return (
-    <div className="min-h-screen flex bg-white">
-      {/* ─── LEFT PANEL (Studio Mockup & Branding) ─── */}
-      <div className="hidden lg:flex lg:w-5/12 relative bg-gray-950 overflow-hidden items-center justify-center">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity scale-105"
-          style={{ backgroundImage: 'url("/images/products/flyers-depliants.jpg")' }}
-        />
-        {/* Technical print grid */}
-        <div 
-          className="absolute inset-0 opacity-[0.06] pointer-events-none" 
-          style={{
-            backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
-            backgroundSize: '32px 32px'
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-gray-950/40" />
-        <div className="absolute bottom-10 left-10 w-72 h-72 bg-emerald-500/15 blur-[100px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 max-w-md px-10">
-          <div className="mb-10">
-            <Logo theme="dark" size="lg" />
-          </div>
-          
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-900 border border-gray-800 text-xs text-gray-300 mb-6">
-            <ShieldCheck size={14} className="text-emerald-400" />
-            <span>Compte client sécurisé • DGI Compliant</span>
-          </div>
-
-          <h2 className="text-3xl font-display font-bold text-white mb-6 leading-tight">
-            Rejoignez plus de 1 200 entreprises et créateurs.
-          </h2>
-          
-          <div className="space-y-5">
-            <div className="flex items-start gap-3.5 bg-gray-900/70 p-3.5 rounded-xl border border-gray-800/80">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary">
-                <PackageCheck size={18} />
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-sm">Suivi atelier en direct</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">Notification à chaque étape : validation BAT, tirage et mise sous pli.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3.5 bg-gray-900/70 p-3.5 rounded-xl border border-gray-800/80">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400">
-                <Smartphone size={18} />
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-sm">Paiement Mobile Money local</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">Réglez directement avec Orange Money ou Moov Africa sans frais cachés.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3.5 bg-gray-900/70 p-3.5 rounded-xl border border-gray-800/80">
-              <div className="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 text-sky-400">
-                <FileText size={18} />
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-sm">Facturation normalisée e-Sintax</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">Téléchargez instantanément vos factures avec sticker fiscal DGI.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── RIGHT PANEL (Form) ─── */}
-      <div className="w-full lg:w-7/12 flex items-center justify-center p-6 sm:p-10 lg:p-12 bg-white overflow-y-auto">
-        <div className="w-full max-w-[480px]">
-          
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <Logo theme="light" size="md" />
-          </div>
-
-          <div className="mb-8">
-            <h1 className="font-display text-3xl font-bold text-gray-900 mb-2">Créer un compte</h1>
-            <p className="text-gray-500 text-sm">Rapide, gratuit et sans engagement.</p>
-          </div>
-
-          {apiError && <Alert className="mb-6">{apiError}</Alert>}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Prénom" name="firstName" placeholder="Salimata" value={form.firstName} error={errors.firstName} onChange={set('firstName')} />
-              <Field label="Nom" name="lastName" placeholder="Kaboré" value={form.lastName} error={errors.lastName} onChange={set('lastName')} />
-            </div>
-
-            <Field label="Adresse email" name="email" type="email" placeholder="salimata@exemple.com" value={form.email} error={errors.email} onChange={set('email')} />
-            <Field label="Téléphone" name="phone" placeholder="+226 70 00 00 00" hint="Sera utilisé pour le paiement Mobile Money" value={form.phone} error={errors.phone} onChange={set('phone')} />
-
-            <div className="pt-2">
-              <Field label="Mot de passe" name="password" type={showPass ? 'text' : 'password'} placeholder="••••••••" value={form.password} error={errors.password} onChange={set('password')}
-                suffix={
-                  <button type="button" onClick={() => setShowPass(!showPass)} className="text-gray-400 hover:text-gray-600">
-                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
-              <PasswordStrength password={form.password} />
-            </div>
-
-            <div className="pt-2">
-              <Field label="Confirmer" name="confirm" type={showConfirm ? 'text' : 'password'} placeholder="••••••••" value={form.confirm} error={errors.confirm} onChange={set('confirm')}
-                suffix={
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400 hover:text-gray-600">
-                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
-            </div>
-
-            <div className="pt-4 space-y-3">
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" checked={form.cgv} onChange={(e) => set('cgv')(e.target.checked)}
-                  className="mt-1 w-4 h-4 accent-primary cursor-pointer border-gray-300 rounded" />
-                <span className="text-xs text-gray-500 leading-relaxed">
-                  J'accepte les <Link href="/cgv" className="text-gray-900 font-bold hover:underline">conditions générales</Link> et la <Link href="/confidentialite" className="text-gray-900 font-bold hover:underline">politique de confidentialité</Link>.
-                </span>
-              </label>
-              {errors.cgv && <p className="text-2xs text-red-500 ml-7 animate-in fade-in">{errors.cgv}</p>}
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" checked={form.newsletter} onChange={(e) => set('newsletter')(e.target.checked)}
-                  className="mt-1 w-4 h-4 accent-primary cursor-pointer border-gray-300 rounded" />
-                <span className="text-xs text-gray-500 leading-relaxed">
-                  Je souhaite recevoir des offres exclusives et nouveautés.
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-sm
-                         hover:bg-primary transition-colors hover:-translate-y-0.5 shadow-lg shadow-gray-900/20
-                         disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
-            >
-              {loading ? (
-                <><Loader2 size={18} className="animate-spin" /> Création...</>
-              ) : (
-                <>Créer mon compte <ArrowRight size={16} /></>
-              )}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-gray-500 mt-8">
-            Déjà un compte ?{' '}
-            <Link
-              href={`/connexion${redirect !== '/mon-compte' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
-              className="text-gray-900 font-bold hover:text-primary transition-colors underline underline-offset-4"
-            >
-              Se connecter
-            </Link>
-          </p>
-        </div>
-      </div>
+      {step === 'email' && (
+        <p className="text-xs text-gray-500 mt-6 text-center max-w-[420px]">
+          Paiement Orange Money, Moov Money ou carte · BAT gratuit avant chaque impression
+        </p>
+      )}
     </div>
   )
 }
 
 export default function InscriptionPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center p-12">
-        <Loader2 size={32} className="animate-spin text-primary" />
-      </div>
-    }>
-      <InscriptionForm />
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 size={28} className="animate-spin text-primary" /></div>}>
+      <Onboarding />
     </Suspense>
   )
 }

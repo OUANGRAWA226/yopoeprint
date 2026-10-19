@@ -41,14 +41,40 @@ export class RegisterDto {
   @MaxLength(100)
   password: string
 
+  @ApiProperty({ description: 'Date de naissance (AAAA-MM-JJ)', example: '1995-04-21' })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date de naissance invalide' })
+  birthDate: string
+
   @ApiProperty({ description: 'Acceptation des CGV et de la politique de confidentialité', example: true })
   @IsBoolean({ message: 'Acceptez les conditions générales pour créer un compte' })
   @Equals(true, { message: 'Acceptez les conditions générales pour créer un compte' })
   acceptTerms: boolean
 }
 
-// Premier administrateur (installation) : mêmes champs, sans les CGV clients
-export class SetupAdminDto extends OmitType(RegisterDto, ['acceptTerms'] as const) {}
+// Premier administrateur (installation) : mêmes champs, sans les CGV ni la date de naissance clients
+export class SetupAdminDto extends OmitType(RegisterDto, ['acceptTerms', 'birthDate'] as const) {}
+
+// Étape 1 de l'inscription : l'adresse a-t-elle déjà un compte ?
+export class CheckEmailDto {
+  @ApiProperty({ example: 'salimata@example.com' })
+  @Transform(normalizeEmail)
+  @IsEmail({}, { message: 'Adresse email invalide' })
+  email: string
+}
+
+// « Continuer avec Google » : jeton d'identité (JWT) renvoyé par Google Identity Services
+export class GoogleAuthDto {
+  @ApiProperty({ description: 'credential renvoyé par le bouton Google' })
+  @IsString() @MinLength(20) @MaxLength(4096)
+  credential: string
+}
+
+// Nouveau compte Google : profil de l'étape 3 (l'email vient de Google, pas de mot de passe)
+export class GoogleCompleteDto extends OmitType(RegisterDto, ['email', 'password'] as const) {
+  @ApiProperty({ description: 'credential renvoyé par le bouton Google' })
+  @IsString() @MinLength(20) @MaxLength(4096)
+  credential: string
+}
 
 // ─── Login ────────────────────────────────────────────────────
 export class LoginDto {

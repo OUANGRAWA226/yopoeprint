@@ -1,7 +1,8 @@
 import {
   Injectable, UnauthorizedException, BadRequestException,
-  ConflictException, NotFoundException, Logger,
+  ConflictException, NotFoundException, Logger, ServiceUnavailableException,
 } from '@nestjs/common'
+import axios from 'axios'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, MoreThan } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
@@ -10,10 +11,13 @@ import * as bcrypt from 'bcryptjs'
 import { randomBytes, createHash } from 'crypto'
 import { User, UserRole, BACK_OFFICE_ROLES } from '../users/user.entity'
 import { In } from 'typeorm'
-import { RegisterDto, SetupAdminDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
+import { RegisterDto, SetupAdminDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, GoogleCompleteDto } from './auth.dto'
 import { emailEquals, phoneEquals } from '../../common/identity'
 import { MailService } from '../mail/mail.service'
 import { v4 as uuidv4 } from 'uuid'
+
+// Âge minimum pour ouvrir un compte client
+const MIN_ACCOUNT_AGE = 13
 
 @Injectable()
 export class AuthService {
@@ -30,49 +34,112 @@ export class AuthService {
 
   // ─── Register ─────────────────────────────────────────────
   async register(dto: RegisterDto) {
-    // Check email uniqueness
-    const existing = await this.userRepo.findOne({ where: { email: emailEquals(dto.email) } })
-    if (existing) {
+    return this.createClientAccount({ ...dto, passwordHash: await bcrypt.hash(dto.password, 12), emailVerified: false })
+  }
+
+  // ─── Étape 1 de l'inscription : compte existant ? ────────
+  // Permet d'orienter vers la connexion ou la création de compte (limité en fréquence par le contrôleur)
+  async checkEmail(email: string) {
+    const user = await this.userRepo.findOne({ where: { email: emailEquals(email) } })
+    return { exists: !!user && user.isActive }
+  }
+
+  // ─── Continuer avec Google ────────────────────────────────
+  // Compte existant (même email) : connexion. Sinon : l'inscription se poursuit à l'étape 3 (profil).
+  async googleAuth(credential: string) {
+    const google = await this.verifyGoogleCredential(credential)
+    const user = await this.userRepo.findOne({ where: { email: emailEquals(google.email) } })
+    if (user) {
+      if (!user.isActive) throw new UnauthorizedException('Ce compte est désactivé')
+      if (!user.emailVerified) await this.userRepo.update(user.id, { emailVerified: true })
+      const tokens = await this.generateTokens(user)
+      await this.storeRefreshToken(user.id, tokens.refreshToken)
+      return { status: 'logged_in' as const, ...tokens, user: this.sanitizeUser(user) }
+    }
+    return { status: 'needs_profile' as const, email: google.email, firstName: google.firstName, lastName: google.lastName }
+  }
+
+  async googleComplete(dto: GoogleCompleteDto) {
+    const google = await this.verifyGoogleCredential(dto.credential)
+    // Pas de mot de passe : valeur aléatoire inutilisable ; « Mot de passe oublié » permet d'en définir un
+    const passwordHash = await bcrypt.hash(randomBytes(32).toString('hex'), 12)
+    return this.createClientAccount({ ...dto, email: google.email, passwordHash, emailVerified: true })
+  }
+
+  // Création d'un compte client (formulaire ou Google) : unicité, date de naissance, CGV, email de bienvenue
+  private async createClientAccount(data: {
+    email: string; firstName: string; lastName: string; phone?: string; birthDate: string
+    passwordHash: string; emailVerified: boolean
+  }) {
+    if (await this.userRepo.findOne({ where: { email: emailEquals(data.email) } })) {
       throw new ConflictException('Cet email est déjà utilisé')
     }
-
-    // Check phone uniqueness if provided
-    if (dto.phone) {
-      const existingPhone = await this.userRepo.findOne({ where: { phone: phoneEquals(dto.phone) } })
-      if (existingPhone) {
-        throw new ConflictException('Ce numéro de téléphone est déjà utilisé')
-      }
+    if (data.phone && await this.userRepo.findOne({ where: { phone: phoneEquals(data.phone) } })) {
+      throw new ConflictException('Ce numéro de téléphone est déjà utilisé')
     }
+    this.assertBirthDate(data.birthDate)
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(dto.password, 12)
-
-    // Create user
     const user = this.userRepo.create({
-      firstName:    dto.firstName,
-      lastName:     dto.lastName,
-      email:        dto.email,
-      phone:        dto.phone,
-      passwordHash,
-      role:         UserRole.CLIENT,
+      firstName:     data.firstName,
+      lastName:      data.lastName,
+      email:         data.email,
+      phone:         data.phone,
+      birthDate:     data.birthDate,
+      passwordHash:  data.passwordHash,
+      emailVerified: data.emailVerified,
+      role:          UserRole.CLIENT,
       loyaltyPoints: 0,
-      addresses:    [],
+      addresses:     [],
       // Preuve de l'acceptation des CGV et de la politique de confidentialité (case cochée à l'inscription)
       termsAcceptedAt: new Date(),
     })
-
     await this.userRepo.save(user)
 
     // Email de bienvenue : un échec d'envoi ne doit pas empêcher l'inscription (journalisé dans admin › Emails)
     this.mailService.sendWelcome(user.email, user.firstName).catch(() => undefined)
 
-    // Generate tokens
     const tokens = await this.generateTokens(user)
     await this.storeRefreshToken(user.id, tokens.refreshToken)
+    return { ...tokens, user: this.sanitizeUser(user) }
+  }
 
+  // Date réelle, pas dans le futur, et âge minimum pour ouvrir un compte en ligne
+  private assertBirthDate(value: string) {
+    const date = new Date(`${value}T00:00:00Z`)
+    if (isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value || date.getUTCFullYear() < 1900) {
+      throw new BadRequestException('Date de naissance invalide')
+    }
+    const minAgeDate = new Date()
+    minAgeDate.setUTCFullYear(minAgeDate.getUTCFullYear() - MIN_ACCOUNT_AGE)
+    if (date > minAgeDate) {
+      throw new BadRequestException(`Vous devez avoir au moins ${MIN_ACCOUNT_AGE} ans pour créer un compte`)
+    }
+  }
+
+  /**
+   * Vérifie le jeton Google auprès de Google (tokeninfo) : destinataire = notre client OAuth,
+   * émetteur Google, email vérifié, jeton non expiré. Le contenu envoyé par le navigateur n'est jamais cru tel quel.
+   */
+  private async verifyGoogleCredential(credential: string) {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID')
+    if (!clientId) throw new ServiceUnavailableException('La connexion avec Google n\'est pas encore disponible')
+    const url = this.configService.get<string>('GOOGLE_TOKENINFO_URL') || 'https://oauth2.googleapis.com/tokeninfo'
+    let info: any
+    try {
+      info = (await axios.get(url, { params: { id_token: credential }, timeout: 8000 })).data
+    } catch {
+      throw new UnauthorizedException('Connexion Google refusée, réessayez')
+    }
+    const verified = info?.email_verified === true || info?.email_verified === 'true'
+    const validIssuer = ['accounts.google.com', 'https://accounts.google.com'].includes(info?.iss)
+    const notExpired = Number(info?.exp) * 1000 > Date.now()
+    if (info?.aud !== clientId || !validIssuer || !notExpired || !verified || !info?.email) {
+      throw new UnauthorizedException('Connexion Google refusée, réessayez')
+    }
     return {
-      ...tokens,
-      user: this.sanitizeUser(user),
+      email: String(info.email).trim().toLowerCase(),
+      firstName: String(info.given_name || '').slice(0, 50),
+      lastName: String(info.family_name || '').slice(0, 50),
     }
   }
 
@@ -274,6 +341,7 @@ export class AuthService {
       firstName:     user.firstName,
       lastName:      user.lastName,
       phone:         user.phone,
+      birthDate:     user.birthDate,
       role:          user.role,
       loyaltyPoints: user.loyaltyPoints,
       addresses:     user.addresses,
