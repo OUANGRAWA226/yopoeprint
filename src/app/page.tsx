@@ -15,133 +15,9 @@ import {
 } from 'lucide-react'
 import { ProductCard } from '@/components/product/ProductCard'
 import { bannersService, BannerSlide, DEFAULT_BANNERS } from '@/lib/banners.service'
-import { useCatalogue, priceFor, referenceQuantity, productImage } from '@/lib/catalogue'
+import { useCatalogue, priceFor, referenceQuantity, productImage, categoryCards, eventCards, papersGuide } from '@/lib/catalogue'
 import { ProductScrollRail } from '@/components/product/ProductScrollRail'
 import { useContact } from '@/lib/settings.service'
-
-// ── 2. Les 8 Catégories Phares (Photos d'Atelier, Zéro Emojis) ───────────────
-const CATEGORIES_GRID = [
-  {
-    name: 'Cartes de Visite',
-    spec: 'Standard, Carrées, Soft Touch, Vernis 3D',
-    price: 'Dès 12 500 FCFA',
-    href: '/catalogue/cartes',
-    img: '/images/products/cartes-visite.jpg',
-  },
-  {
-    name: 'Flyers & Dépliants',
-    spec: 'A6, A5, A4, Dépliants 2 et 3 volets',
-    price: 'Dès 8 500 FCFA',
-    href: '/catalogue/flyers',
-    img: '/images/products/flyers-depliants.jpg',
-  },
-  {
-    name: 'Roll-ups & Salons',
-    spec: 'Enrouleurs alu, Photocalls, Stands SIAO',
-    price: 'Dès 28 000 FCFA',
-    href: '/catalogue/roll-up',
-    img: '/images/products/rollup-salons.jpg',
-  },
-  {
-    name: 'Affiches & Bâches',
-    spec: 'A3, A2, A1, Bâches œillets 510g, Panneaux',
-    price: 'Dès 6 500 FCFA',
-    href: '/catalogue/signaletique',
-    img: '/images/products/affiches-baches.jpg',
-  },
-  {
-    name: 'Brochures & Catalogues',
-    spec: 'Agrafées, Dos carré collé, Reliure Wire-O',
-    price: 'Dès 45 000 FCFA',
-    href: '/catalogue/brochures',
-    img: '/images/products/brochures-catalogues.jpg',
-  },
-  {
-    name: 'Textile Pro & Vêtements',
-    spec: 'T-shirts coton 190g, Polos piqué, Casquettes',
-    price: 'Dès 3 500 FCFA',
-    href: '/catalogue/textile',
-    img: '/images/products/textile-pro.jpg',
-  },
-  {
-    name: 'Goodies & Cadeaux VIP',
-    spec: 'Stylos laser, Mugs, Gourdes inox, Carnets',
-    price: 'Dès 450 FCFA',
-    href: '/catalogue/goodies',
-    img: '/images/products/goodies-vip.jpg',
-  },
-  {
-    name: 'Packaging & Sacs Kraft',
-    spec: 'Sacs boutiques, Boîtes carton, Stickers',
-    price: 'Dès 450 FCFA',
-    href: '/catalogue/sacs',
-    img: '/images/products/packaging-kraft.jpg',
-  },
-]
-
-// ── 3. Spécial Salons & Événements (Bloc Helloprint Signature) ───────────────
-const EXPO_STAND_PACKS = [
-  {
-    title: 'Roll-Up Deluxe Aluminium 85×200cm',
-    spec: 'Pied lourd renforcé, bâche Ferrari anti-reflet, housse',
-    price: '38 000 FCFA',
-    badge: 'Indispensable',
-    href: '/catalogue/roll-up',
-    img: '/images/products/rollup-salons.jpg',
-  },
-  {
-    title: 'Photocall Mur d’Image Textile 3×2,3m',
-    spec: 'Structure parapluie autoportante, tissu infroissable',
-    price: '185 000 FCFA',
-    badge: 'Grand Format',
-    href: '/catalogue/evenementiel',
-    img: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=400&auto=format&fit=crop',
-  },
-  {
-    title: 'Comptoir d’Accueil Pliable Personnalisé',
-    spec: 'Tablette bois thermoformée, visuel imprimé lavable',
-    price: '65 000 FCFA',
-    badge: 'Accueil Pro',
-    href: '/catalogue/evenementiel',
-    img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=400&auto=format&fit=crop',
-  },
-  {
-    title: '100 Badges Tours de Cou Satinés',
-    spec: 'Ruban satin quadri 20mm, mousqueton métal + étui',
-    price: '45 000 FCFA',
-    badge: 'Sécurité VIP',
-    href: '/catalogue/goodies',
-    img: '/images/products/goodies-vip.jpg',
-  },
-]
-
-// ── 4. Guide des Papiers & Matières d'Atelier ─────────────────────────────────
-const PAPERS_GUIDE = [
-  {
-    name: 'Couché Mat 350g',
-    badge: 'Standard Cartes & Chemises',
-    desc: 'Papier rigide de haute tenue, sans reflet gênant à la lumière. Parfait pour les cartes de visite et cartons d’invitation officiels.',
-    usage: 'Cartes de visite, chemises à rabats, intercalaires',
-  },
-  {
-    name: 'Couché Brillant 135g & 170g',
-    badge: 'Idéal Flyers & Dépliants',
-    desc: 'Rendu éclatant mettant en valeur les photographies et couleurs vives. Excellente prise en main pour les prospectus de masse.',
-    usage: 'Flyers promotionnels, dépliants 3 volets, affiches A3',
-  },
-  {
-    name: 'Pelliculage Soft Touch (Velours)',
-    badge: 'Finition Signature Luxe',
-    desc: 'Film thermique mat extra-doux au toucher semblable à la peau de pêche. Anti-traces de doigts et résistant aux frottements.',
-    usage: 'Cartes de dirigeants, packagings cosmétiques, menus VIP',
-  },
-  {
-    name: 'Bâche PVC 510g avec Œillets',
-    badge: 'Signalétique Extérieure',
-    desc: 'Toile enduite ultra-résistante au vent et aux fortes chaleurs sahéliennes. Encres Latex écologiques garanties 3 ans sans décoloration.',
-    usage: 'Banderoles chantiers, façades d’immeubles, foires SIAO',
-  },
-]
 
 // Visuel d'une bannière : version téléphone (660 × 330) sous 768 px quand elle existe, sinon le visuel
 // 1248 × 357 recadré au centre. <picture> : le navigateur ne télécharge que la version affichée.
@@ -172,6 +48,10 @@ export default function StorefrontHomePage() {
   const { products: catalogue } = useCatalogue()
   const offers = catalogue?.filter((p) => p.isHomeOffer) ?? null
   const calcProducts = catalogue?.filter((p) => p.inCalculator && p.quantities?.length) ?? null
+  // Catégories, salons et guide des papiers : également tirés du catalogue (blocs masqués s'ils sont vides)
+  const categoriesGrid = categoryCards(catalogue)
+  const expoCards = eventCards(catalogue)
+  const papers = papersGuide(catalogue)
 
   // Calculateur : sans choix explicite, premier produit, quantité de référence et première finition
   const [calcProdId, setCalcProdId] = useState<string | null>(null)
@@ -488,6 +368,7 @@ export default function StorefrontHomePage() {
       {/* ═════════════════════════════════════════════════════════════
           3. GRILLE DES CATÉGORIES POPULAIRES (Standard Helloprint)
       ═════════════════════════════════════════════════════════════ */}
+      {categoriesGrid.length > 0 && (
       <section className="py-12 bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
@@ -504,13 +385,13 @@ export default function StorefrontHomePage() {
               href="/catalogue"
               className="text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 group"
             >
-              <span>Voir tout le catalogue (200+ références)</span>
+              <span>Voir tout le catalogue{catalogue?.length ? ` (${catalogue.length} produits)` : ''}</span>
               <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {CATEGORIES_GRID.map((cat) => (
+            {categoriesGrid.map((cat) => (
               <Link
                 key={cat.name}
                 href={cat.href}
@@ -552,6 +433,7 @@ export default function StorefrontHomePage() {
 
         </div>
       </section>
+      )}
 
       {/* ═════════════════════════════════════════════════════════════
           4. CALCULATEUR DE PRIX (produits cochés « Calculateur de prix » dans l'admin,
@@ -737,6 +619,7 @@ export default function StorefrontHomePage() {
 {/* ═════════════════════════════════════════════════════════════
           6. SALONS & ÉVÉNEMENTS (Bloc Signature Helloprint)
       ═════════════════════════════════════════════════════════════ */}
+      {expoCards.length > 0 && (
       <section className="py-12 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
@@ -775,7 +658,7 @@ export default function StorefrontHomePage() {
 
             {/* 4 Produits phares salons à droite */}
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {EXPO_STAND_PACKS.map((item) => (
+              {expoCards.map((item) => (
                 <Link
                   key={item.title}
                   href={item.href}
@@ -819,10 +702,12 @@ export default function StorefrontHomePage() {
 
         </div>
       </section>
+      )}
 
       {/* ═════════════════════════════════════════════════════════════
           7. GUIDE DES MATIÈRES & PAPIERS D'ATELIER (Pédagogie Pro)
       ═════════════════════════════════════════════════════════════ */}
+      {papers.length > 0 && (
       <section className="py-12 bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
@@ -839,7 +724,7 @@ export default function StorefrontHomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {PAPERS_GUIDE.map((mat) => (
+            {papers.map((mat) => (
               <div
                 key={mat.name}
                 className="bg-white rounded-xl border border-gray-200 p-5 shadow-xs flex flex-col justify-between"
@@ -889,6 +774,7 @@ export default function StorefrontHomePage() {
 
         </div>
       </section>
+      )}
 
       {/* ═════════════════════════════════════════════════════════════
           9. ATELIER OUAGADOUGOU & HOTLINE ASSISTANCE

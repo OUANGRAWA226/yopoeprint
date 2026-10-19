@@ -39,6 +39,8 @@ export interface PlatformSettings {
   delivery: { freeThreshold: number; zones: DeliveryZone[] }
   resellerTiers: ResellerTier[]
   maintenance: { enabled: boolean; message: string }
+  // Mentions des devis PDF (raison sociale, RCCM, IFU)
+  legal: { companyName: string; rccm: string; ifu: string }
 }
 
 export interface SettingsResponse {

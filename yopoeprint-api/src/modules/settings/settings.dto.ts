@@ -1,9 +1,9 @@
 import {
   IsString, IsEmail, IsInt, IsBoolean, IsArray, Min, Max, MaxLength, MinLength, Matches,
-  ValidateNested, ArrayMinSize, ArrayMaxSize,
+  ValidateNested, ArrayMinSize, ArrayMaxSize, IsOptional,
 } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 const trim = ({ value }) => (typeof value === 'string' ? value.trim() : value)
 const SLUG = /^[a-z0-9_-]{2,30}$/
@@ -77,6 +77,17 @@ export class MaintenanceSettingsDto {
   message: string
 }
 
+export class LegalSettingsDto {
+  @ApiProperty() @Transform(trim) @IsString() @MaxLength(120)
+  companyName: string
+
+  @ApiProperty({ example: 'BF-OUA-01-2024-B12-01234' }) @Transform(trim) @IsString() @MaxLength(60)
+  rccm: string
+
+  @ApiProperty({ example: '00123456X' }) @Transform(trim) @IsString() @MaxLength(30)
+  ifu: string
+}
+
 export class UpdateSettingsDto {
   @ApiProperty({ type: ContactSettingsDto }) @ValidateNested() @Type(() => ContactSettingsDto)
   contact: ContactSettingsDto
@@ -91,4 +102,7 @@ export class UpdateSettingsDto {
 
   @ApiProperty({ type: MaintenanceSettingsDto }) @ValidateNested() @Type(() => MaintenanceSettingsDto)
   maintenance: MaintenanceSettingsDto
+
+  @ApiPropertyOptional({ type: LegalSettingsDto }) @IsOptional() @ValidateNested() @Type(() => LegalSettingsDto)
+  legal?: LegalSettingsDto
 }

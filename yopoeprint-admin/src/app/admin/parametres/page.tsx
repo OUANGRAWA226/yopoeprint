@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Save, Plus, Trash2, Truck, Phone, Briefcase, Wrench, Loader2 } from 'lucide-react'
+import { Save, Plus, Trash2, Truck, Phone, Briefcase, Wrench, Loader2, Landmark } from 'lucide-react'
 import { adminAuthService } from '@/lib/auth-admin.service'
 import { platformService, PlatformSettings, DeliveryZone, ResellerTier } from '@/lib/platform.service'
 
@@ -94,6 +94,20 @@ export default function ParametresPage() {
               <label key={k} className="text-xs font-semibold text-gray-700 space-y-1">
                 <span>{label}</span>
                 <input className={input} value={form.contact[k]} onChange={(e) => setContact(k, e.target.value)} />
+              </label>
+            ))}
+          </div>
+        </Section>
+
+        <Section icon={<Landmark size={18} />} title="Mentions légales" hint="Imprimées en pied des devis PDF générés par les clients. Laissez vide ce qui n'est pas encore attribué.">
+          <div className="grid sm:grid-cols-3 gap-3">
+            {([
+              ['companyName', 'Raison sociale', 'YopoePrint SARL'], ['rccm', 'N° RCCM', 'BF-OUA-01-2024-B12-01234'], ['ifu', 'N° IFU', '00123456X'],
+            ] as const).map(([k, label, placeholder]) => (
+              <label key={k} className="text-xs font-semibold text-gray-700 space-y-1">
+                <span>{label}</span>
+                <input className={input} placeholder={placeholder} value={form.legal?.[k] ?? ''}
+                  onChange={(e) => setForm({ ...form, legal: { ...form.legal, [k]: e.target.value } })} />
               </label>
             ))}
           </div>

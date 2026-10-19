@@ -17,7 +17,7 @@ export interface CatalogueProduct {
   basePrice: number
   minQuantity: number
   formats: { id: string; label: string; multiplier?: number }[]
-  papers: { id: string; label: string; priceExtra?: number }[]
+  papers: { id: string; label: string; description?: string; priceExtra?: number }[]
   quantities: number[]
   finishes: { id: string; label: string; priceModifier: number }[]
   deliveryDays: number
@@ -67,6 +67,83 @@ export function priceFor(p: CatalogueProduct, quantity = referenceQuantity(p), f
     p.formats?.[0]?.multiplier || 1,
     p.papers?.[0]?.priceExtra || 0,
   ).total
+}
+
+// ─── Blocs de l'accueil tirés du catalogue ─────────────────────────────────
+
+// Libellés des catégories de l'API (product.entity.ts), dans l'ordre d'affichage
+export const CATEGORY_LABELS: Record<string, string> = {
+  'cartes-de-visite': 'Cartes de visite',
+  'flyers': 'Flyers & dépliants',
+  'roll-up': 'Roll-ups & salons',
+  'affiches': 'Affiches & posters',
+  'signaletique': 'Signalétique & bâches',
+  'brochures': 'Brochures & catalogues',
+  'evenementiel': 'Événementiel',
+  'textile': 'Textile pro',
+  'goodies': 'Goodies & cadeaux',
+  'corporate': 'Papeterie d\'entreprise',
+}
+
+const BADGE_LABELS: Record<string, string> = { popular: 'Populaire', new: 'Nouveau', promo: 'Promo' }
+const fcfa = (n: number) => `${new Intl.NumberFormat('fr-FR').format(n)} FCFA`
+
+/** Une carte par catégorie ayant des produits : prix d'appel réel et exemples de produits. */
+export function categoryCards(products: CatalogueProduct[] | null) {
+  return Object.keys(CATEGORY_LABELS).flatMap((category) => {
+    const inCat = (products ?? []).filter((p) => p.category === category)
+    if (!inCat.length) return []
+    return [{
+      name: CATEGORY_LABELS[category],
+      spec: inCat.slice(0, 3).map((p) => p.name).join(', '),
+      // Prix d'appel : la plus petite quantité proposée de chaque produit, configuration de base
+      price: `Dès ${fcfa(Math.min(...inCat.map((p) => priceFor(p, p.quantities?.[0] || p.minQuantity))))}`,
+      href: `/catalogue/${category}`,
+      img: productImage(inCat[0]),
+    }]
+  })
+}
+
+/** Produits pour les salons (roll-ups et événementiel), 4 au plus. */
+export function eventCards(products: CatalogueProduct[] | null) {
+  return (products ?? [])
+    .filter((p) => p.category === 'roll-up' || p.category === 'evenementiel')
+    .slice(0, 4)
+    .map((p) => ({
+      title: p.name,
+      spec: p.shortDesc,
+      price: `${fcfa(priceFor(p))} · ${new Intl.NumberFormat('fr-FR').format(referenceQuantity(p))} ex.`,
+      badge: (p.badge && BADGE_LABELS[p.badge]) || CATEGORY_LABELS[p.category],
+      href: `/produit/${p.slug}`,
+      img: productImage(p),
+    }))
+}
+
+/**
+ * Guide des papiers : papiers saisis sur les produits (libellé et description de l'admin),
+ * avec les produits qui les proposent. Les papiers sans description sont ignorés.
+ */
+export function papersGuide(products: CatalogueProduct[] | null) {
+  const byLabel = new Map<string, { name: string; desc: string; products: string[] }>()
+  for (const p of products ?? []) {
+    for (const paper of p.papers ?? []) {
+      const desc = (paper.description || '').trim()
+      if (!desc) continue
+      const key = paper.label.trim().toLowerCase()
+      const entry = byLabel.get(key) ?? { name: paper.label.trim(), desc, products: [] }
+      if (!entry.products.includes(p.name)) entry.products.push(p.name)
+      byLabel.set(key, entry)
+    }
+  }
+  return [...byLabel.values()]
+    .sort((a, b) => b.products.length - a.products.length)
+    .slice(0, 4)
+    .map((e) => ({
+      name: e.name,
+      badge: `${e.products.length} produit${e.products.length > 1 ? 's' : ''}`,
+      desc: e.desc,
+      usage: e.products.slice(0, 3).join(', '),
+    }))
 }
 
 // Une seule requête par visite, partagée par l'accueil et le méga-menu

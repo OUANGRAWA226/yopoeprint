@@ -46,7 +46,12 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
   const printRef = useRef<HTMLDivElement>(null)
   // Coordonnées et seuil de livraison offerte : admin › Paramètres
   const contact = useContact()
-  const freeThreshold = usePublicSettings().settings?.delivery.freeThreshold ?? 0
+  const settings = usePublicSettings().settings
+  const freeThreshold = settings?.delivery.freeThreshold ?? 0
+  // Mentions légales (admin › Paramètres) : n'apparaissent que si elles sont renseignées
+  const legal = settings?.legal
+  const companyName = legal?.companyName || 'YopoePrint'
+  const legalLine = [legal?.rccm && `RCCM : ${legal.rccm}`, legal?.ifu && `IFU : ${legal.ifu}`].filter(Boolean).join(' · ')
   const devisNumber = generateDevisNumber()
   const tva = Math.round(total * 0.18)
   const totalHT = total - tva
@@ -237,7 +242,7 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                     {/* Émetteur */}
                     <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '14px 16px' }}>
                       <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>De</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 4 }}>YopoePrint SARL</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 4 }}>{companyName}</div>
                       <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📍 {contact.address}</div>
                       <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📞 {contact.phoneDisplay}</div>
                       <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>✉️ {contact.email}</div>
@@ -352,8 +357,8 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                       🖨️ YopoePrint — {contact.address}
                     </div>
                     <div style={{ fontSize: 9, color: '#d1d5db', textAlign: 'right' }}>
-                      www.yopoeprint.bf · {contact.email}<br />
-                      RC/BF/OUA/2024/B/XXXX · NIF : XXXXXXX
+                      www.yopoeprint.bf · {contact.email}
+                      {legalLine && <><br />{legalLine}</>}
                     </div>
                   </div>
 

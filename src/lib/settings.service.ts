@@ -27,6 +27,7 @@ export interface PublicSettings {
   delivery: { freeThreshold: number; zones: DeliveryZone[] }
   resellerTiers: PublicTier[]
   maintenance: { enabled: boolean; message: string }
+  legal: { companyName: string; rccm: string; ifu: string }
 }
 
 // Une seule requête partagée par toutes les pages de la session

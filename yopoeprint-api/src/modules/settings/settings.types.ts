@@ -34,6 +34,12 @@ export interface PlatformSettings {
     enabled: boolean // commandes suspendues
     message: string
   }
+  // Mentions des devis PDF et documents commerciaux (vides tant qu'elles ne sont pas renseignées)
+  legal: {
+    companyName: string // raison sociale
+    rccm: string        // Registre du commerce (RCCM)
+    ifu: string         // Identifiant financier unique (IFU)
+  }
 }
 
 export const DEFAULT_SETTINGS: PlatformSettings = {
@@ -63,5 +69,10 @@ export const DEFAULT_SETTINGS: PlatformSettings = {
   maintenance: {
     enabled: false,
     message: '',
+  },
+  legal: {
+    companyName: 'YopoePrint',
+    rccm: '',
+    ifu: '',
   },
 }

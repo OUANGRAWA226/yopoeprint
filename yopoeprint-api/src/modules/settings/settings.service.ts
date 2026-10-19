@@ -26,6 +26,7 @@ export class SettingsService {
       delivery: { ...DEFAULT_SETTINGS.delivery, ...(data.delivery || {}) },
       resellerTiers: data.resellerTiers?.length ? data.resellerTiers : DEFAULT_SETTINGS.resellerTiers,
       maintenance: { ...DEFAULT_SETTINGS.maintenance, ...(data.maintenance || {}) },
+      legal: { ...DEFAULT_SETTINGS.legal, ...(data.legal || {}) },
     }
     this.cache = { value, at: Date.now() }
     return value
@@ -44,6 +45,7 @@ export class SettingsService {
       delivery: { freeThreshold: s.delivery.freeThreshold, zones: s.delivery.zones.filter((z) => z.enabled) },
       resellerTiers: s.resellerTiers,
       maintenance: s.maintenance,
+      legal: s.legal,
     }
   }
 
@@ -60,11 +62,14 @@ export class SettingsService {
       throw new BadRequestException('La remise doit augmenter avec le palier')
     }
 
+    const current = await this.get()
     const data: PlatformSettings = {
       contact: { ...dto.contact },
       delivery: { freeThreshold: dto.delivery.freeThreshold, zones: dto.delivery.zones.map((z) => ({ ...z })) },
       resellerTiers: tiers.map((t) => ({ ...t })),
       maintenance: { ...dto.maintenance },
+      // Section facultative : un enregistrement sans elle conserve les mentions existantes
+      legal: dto.legal ? { ...dto.legal } : current.legal,
     }
     await this.repo.save({ id: 1, data: data as unknown as Record<string, unknown>, updatedBy: actorId })
     this.cache = null
