@@ -7,6 +7,7 @@ import { Repository, Not, ILike, FindOptionsWhere, In } from 'typeorm'
 import * as bcrypt from 'bcryptjs'
 import { User, UserRole, Address, BACK_OFFICE_ROLES, isBackOffice } from './user.entity'
 import { Order, PaymentStatus } from '../orders/order.entity'
+import { emailEquals, phoneEquals } from '../../common/identity'
 import {
   UpdateProfileDto, ChangePasswordDto, AdminUsersQueryDto, AdminUpdateUserDto,
   CreateTeamMemberDto,
@@ -29,14 +30,14 @@ export class UsersService {
     if (!user) throw new NotFoundException('Utilisateur introuvable')
 
     if (dto.email !== undefined && dto.email !== user.email) {
-      const taken = await this.userRepo.findOne({ where: { email: dto.email, id: Not(userId) } })
+      const taken = await this.userRepo.findOne({ where: { email: emailEquals(dto.email), id: Not(userId) } })
       if (taken) throw new ConflictException('Cet email est déjà utilisé')
       user.email = dto.email
     }
 
     if (dto.phone !== undefined && dto.phone !== user.phone) {
       if (dto.phone) {
-        const taken = await this.userRepo.findOne({ where: { phone: dto.phone, id: Not(userId) } })
+        const taken = await this.userRepo.findOne({ where: { phone: phoneEquals(dto.phone), id: Not(userId) } })
         if (taken) throw new ConflictException('Ce numéro de téléphone est déjà utilisé')
       }
       user.phone = dto.phone
@@ -166,8 +167,8 @@ export class UsersService {
   }
 
   async createTeamMember(dto: CreateTeamMemberDto) {
-    const email = dto.email.trim()
-    if (await this.userRepo.findOne({ where: { email } })) {
+    const email = dto.email.trim().toLowerCase()
+    if (await this.userRepo.findOne({ where: { email: emailEquals(email) } })) {
       throw new ConflictException('Cet email est déjà utilisé')
     }
     const user = this.userRepo.create({

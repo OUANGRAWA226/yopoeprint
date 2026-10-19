@@ -74,6 +74,10 @@ export class User {
   @Column({ name: 'email_verified', default: false })
   emailVerified: boolean
 
+  // Date d'acceptation des CGV et de la politique de confidentialité (inscription) ; null pour les comptes plus anciens
+  @Column({ name: 'terms_accepted_at', type: 'timestamptz', nullable: true })
+  termsAcceptedAt: Date | null
+
   @Column({ name: 'refresh_token', nullable: true })
   refreshToken: string
 

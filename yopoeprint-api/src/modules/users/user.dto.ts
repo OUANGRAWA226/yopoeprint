@@ -5,11 +5,10 @@ import {
 import { Transform, Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { UserRole } from './user.entity'
+// normalizePhone : "+226 70 00 00 00" → "+22670000000" ; "" → null (efface le numéro)
+import { normalizeEmail, normalizePhone } from '../../common/identity'
 
 const trim = ({ value }) => (typeof value === 'string' ? value.trim() : value)
-// "+226 70 00 00 00" → "+22670000000" ; "" → null (efface le numéro)
-const normalizePhone = ({ value }) =>
-  typeof value === 'string' ? (value.replace(/[\s.-]/g, '') || null) : value
 
 export class AddressDto {
   @ApiProperty()
@@ -86,7 +85,7 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @Transform(trim)
+  @Transform(normalizeEmail)
   @IsEmail({}, { message: 'Adresse email invalide' })
   email?: string
 
@@ -171,7 +170,7 @@ export class CreateTeamMemberDto {
   lastName: string
 
   @ApiProperty()
-  @Transform(trim)
+  @Transform(normalizeEmail)
   @IsEmail({}, { message: 'Adresse email invalide' })
   email: string
 

@@ -226,6 +226,31 @@ export class MailService {
     return this.sendMail(email, subject, html, 'resellerApproved');
   }
 
+  async sendWelcome(email: string, firstName: string) {
+    const site = (process.env.FRONTEND_URL || 'https://yopoeprint.bf').replace(/\/$/, '');
+    const subject = 'Bienvenue chez YopoePrint';
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
+        <h1 style="color: #111827; font-size: 20px; margin-bottom: 12px;">Bienvenue ${escapeHtml(firstName)} !</h1>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5;">
+          Votre compte YopoePrint est créé. Vous pouvez dès maintenant :
+        </p>
+        <ul style="color: #4b5563; font-size: 15px; line-height: 1.7; padding-left: 20px;">
+          <li>commander vos impressions et payer par Orange Money, Moov Money ou carte ;</li>
+          <li>valider le BAT (bon à tirer) de chaque commande avant l'impression ;</li>
+          <li>suivre vos commandes et vos devis depuis votre espace client.</li>
+        </ul>
+        <a href="${escapeHtml(site)}/catalogue" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: bold; font-size: 15px; margin: 24px 0;">
+          Découvrir le catalogue
+        </a>
+        <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
+          Vous n'avez pas créé ce compte ? Répondez simplement à cet email et nous le supprimerons.
+        </p>
+      </div>
+    `;
+    return this.sendMail(email, subject, html, 'welcome');
+  }
+
   async sendPasswordReset(email: string, firstName: string, resetUrl: string) {
     const subject = 'Réinitialisation de votre mot de passe - YopoePrint';
     const html = `

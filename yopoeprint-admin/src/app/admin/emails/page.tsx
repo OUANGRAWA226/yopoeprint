@@ -15,6 +15,7 @@ const TEMPLATES: Record<string, string> = {
   resellerApplicationReceived: 'Demande revendeur reçue',
   resellerApproved: 'Revendeur accepté',
   passwordReset: 'Mot de passe oublié',
+  welcome: 'Bienvenue (inscription)',
 }
 
 const STATUS: Record<EmailLog['status'], { label: string; cls: string }> = {

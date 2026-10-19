@@ -8,6 +8,9 @@ import { Eye, EyeOff, CheckCircle, Loader2, ArrowRight, PackageCheck, Smartphone
 import { Logo } from '@/components/shared/Logo'
 import { Alert } from '@/components/ui/Alert'
 
+// « +226 70 12-34.56 » → « +22670123456 » : même format pour la vérification et l'envoi (comme l'API)
+const cleanPhone = (phone: string) => phone.replace(/[\s.\-()]/g, '')
+
 // ─── Validation ───────────────────────────────────────────────
 function validate(form: typeof INITIAL_FORM) {
   const errors: Record<string, string> = {}
@@ -25,7 +28,7 @@ function validate(form: typeof INITIAL_FORM) {
 
   if (!form.phone.trim())
     errors.phone = 'Requis'
-  else if (!/^\+?[0-9]{8,15}$/.test(form.phone.replace(/\s/g, '')))
+  else if (!/^\+?[0-9]{8,15}$/.test(cleanPhone(form.phone)))
     errors.phone = 'Numéro invalide'
 
   if (!form.password)
@@ -165,8 +168,9 @@ function InscriptionForm() {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim(),
+        phone: cleanPhone(form.phone),
         password: form.password,
+        acceptTerms: form.cgv,
       })
       setSuccess(true)
       setTimeout(() => router.push(redirect), 1800)

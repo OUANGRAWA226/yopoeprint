@@ -10,7 +10,8 @@ import * as bcrypt from 'bcryptjs'
 import { randomBytes, createHash } from 'crypto'
 import { User, UserRole, BACK_OFFICE_ROLES } from '../users/user.entity'
 import { In } from 'typeorm'
-import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
+import { RegisterDto, SetupAdminDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
+import { emailEquals, phoneEquals } from '../../common/identity'
 import { MailService } from '../mail/mail.service'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -30,14 +31,14 @@ export class AuthService {
   // ─── Register ─────────────────────────────────────────────
   async register(dto: RegisterDto) {
     // Check email uniqueness
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } })
+    const existing = await this.userRepo.findOne({ where: { email: emailEquals(dto.email) } })
     if (existing) {
       throw new ConflictException('Cet email est déjà utilisé')
     }
 
     // Check phone uniqueness if provided
     if (dto.phone) {
-      const existingPhone = await this.userRepo.findOne({ where: { phone: dto.phone } })
+      const existingPhone = await this.userRepo.findOne({ where: { phone: phoneEquals(dto.phone) } })
       if (existingPhone) {
         throw new ConflictException('Ce numéro de téléphone est déjà utilisé')
       }
@@ -56,9 +57,14 @@ export class AuthService {
       role:         UserRole.CLIENT,
       loyaltyPoints: 0,
       addresses:    [],
+      // Preuve de l'acceptation des CGV et de la politique de confidentialité (case cochée à l'inscription)
+      termsAcceptedAt: new Date(),
     })
 
     await this.userRepo.save(user)
+
+    // Email de bienvenue : un échec d'envoi ne doit pas empêcher l'inscription (journalisé dans admin › Emails)
+    this.mailService.sendWelcome(user.email, user.firstName).catch(() => undefined)
 
     // Generate tokens
     const tokens = await this.generateTokens(user)
@@ -71,7 +77,7 @@ export class AuthService {
   }
 
   // ─── Setup First Admin (init only) ────────────────────────
-  async setupFirstAdmin(dto: RegisterDto) {
+  async setupFirstAdmin(dto: SetupAdminDto) {
     // Installation unique : refusée dès qu'un compte d'équipe existe
     const adminExists = await this.userRepo.findOne({
       where: { role: In(BACK_OFFICE_ROLES) },
@@ -82,14 +88,14 @@ export class AuthService {
     }
 
     // Check email uniqueness
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } })
+    const existing = await this.userRepo.findOne({ where: { email: emailEquals(dto.email) } })
     if (existing) {
       throw new ConflictException('Cet email est déjà utilisé')
     }
 
     // Check phone uniqueness if provided
     if (dto.phone) {
-      const existingPhone = await this.userRepo.findOne({ where: { phone: dto.phone } })
+      const existingPhone = await this.userRepo.findOne({ where: { phone: phoneEquals(dto.phone) } })
       if (existingPhone) {
         throw new ConflictException('Ce numéro de téléphone est déjà utilisé')
       }
@@ -125,7 +131,7 @@ export class AuthService {
 
   // ─── Login ────────────────────────────────────────────────
   async login(dto: LoginDto) {
-    const user = await this.userRepo.findOne({ where: { email: dto.email } })
+    const user = await this.userRepo.findOne({ where: { email: emailEquals(dto.email) } })
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Email ou mot de passe incorrect')
@@ -192,7 +198,7 @@ export class AuthService {
   // Réponse identique que le compte existe ou non (pas d'énumération des emails)
   async forgotPassword(dto: ForgotPasswordDto) {
     const message = 'Si un compte est associé à cette adresse, un email de réinitialisation vient d\'être envoyé.'
-    const user = await this.userRepo.findOne({ where: { email: dto.email.trim() } })
+    const user = await this.userRepo.findOne({ where: { email: emailEquals(dto.email) } })
     if (!user || !user.isActive) return { message }
 
     const token = randomBytes(32).toString('hex')
@@ -279,7 +285,7 @@ export class AuthService {
 
   // ─── Validate user (used by Passport) ────────────────────
   async validateUser(email: string, password: string) {
-    const user = await this.userRepo.findOne({ where: { email } })
+    const user = await this.userRepo.findOne({ where: { email: emailEquals(email) } })
     if (!user) return null
     const isValid = await bcrypt.compare(password, user.passwordHash)
     return isValid ? user : null

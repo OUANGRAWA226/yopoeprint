@@ -7,6 +7,8 @@ export interface RegisterData {
  email: string
  phone?: string
  password: string
+ // Case « J'accepte les conditions générales » : obligatoire, l'API enregistre la date d'acceptation
+ acceptTerms: boolean
 }
 
 export interface LoginData {

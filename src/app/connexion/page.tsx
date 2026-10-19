@@ -29,7 +29,7 @@ function ConnexionForm() {
     setLoading(true)
     setError('')
     try {
-      await login(form.email, form.password)
+      await login(form.email.trim().toLowerCase(), form.password)
       router.push(redirect)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Email ou mot de passe incorrect')

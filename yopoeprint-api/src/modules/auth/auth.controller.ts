@@ -5,7 +5,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
 import {
-  RegisterDto, LoginDto, RefreshTokenDto, ForgotPasswordDto, ResetPasswordDto,
+  RegisterDto, SetupAdminDto, LoginDto, RefreshTokenDto, ForgotPasswordDto, ResetPasswordDto,
 } from './auth.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { AdminGuard } from '../../common/guards/admin.guard'
@@ -28,7 +28,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: '[INIT ONLY] Créer le premier administrateur du système' })
-  async setupFirstAdmin(@Body() dto: RegisterDto) {
+  async setupFirstAdmin(@Body() dto: SetupAdminDto) {
     return this.authService.setupFirstAdmin(dto)
   }
 

@@ -1,27 +1,37 @@
 import {
-  IsEmail, IsString, IsOptional,
+  IsEmail, IsString, IsOptional, IsBoolean, Equals,
   MinLength, MaxLength, Matches,
 } from 'class-validator'
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger'
+import { normalizeEmail, normalizePhone } from '../../common/identity'
+
+const trim = ({ value }) => (typeof value === 'string' ? value.trim() : value)
 
 // ─── Register ─────────────────────────────────────────────────
 export class RegisterDto {
   @ApiProperty({ example: 'Salimata' })
+  @Transform(trim)
   @IsString()
+  @MinLength(1, { message: 'Prénom requis' })
   @MaxLength(50)
   firstName: string
 
   @ApiProperty({ example: 'Kaboré' })
+  @Transform(trim)
   @IsString()
+  @MinLength(1, { message: 'Nom requis' })
   @MaxLength(50)
   lastName: string
 
   @ApiProperty({ example: 'salimata@example.com' })
-  @IsEmail()
+  @Transform(normalizeEmail)
+  @IsEmail({}, { message: 'Adresse email invalide' })
   email: string
 
-  @ApiPropertyOptional({ example: '+22670000000' })
+  @ApiPropertyOptional({ example: '+226 70 00 00 00' })
   @IsOptional()
+  @Transform(normalizePhone)
   @Matches(/^\+?[0-9]{8,15}$/, { message: 'Numéro de téléphone invalide' })
   phone?: string
 
@@ -30,12 +40,21 @@ export class RegisterDto {
   @MinLength(8, { message: 'Mot de passe trop court (8 caractères minimum)' })
   @MaxLength(100)
   password: string
+
+  @ApiProperty({ description: 'Acceptation des CGV et de la politique de confidentialité', example: true })
+  @IsBoolean({ message: 'Acceptez les conditions générales pour créer un compte' })
+  @Equals(true, { message: 'Acceptez les conditions générales pour créer un compte' })
+  acceptTerms: boolean
 }
+
+// Premier administrateur (installation) : mêmes champs, sans les CGV clients
+export class SetupAdminDto extends OmitType(RegisterDto, ['acceptTerms'] as const) {}
 
 // ─── Login ────────────────────────────────────────────────────
 export class LoginDto {
   @ApiProperty({ example: 'salimata@example.com' })
-  @IsEmail()
+  @Transform(normalizeEmail)
+  @IsEmail({}, { message: 'Adresse email invalide' })
   email: string
 
   @ApiProperty({ example: 'MotDePasse123!' })
@@ -72,7 +91,8 @@ export class AuthResponseDto {
 // ─── Mot de passe oublié ──────────────────────────────────────
 export class ForgotPasswordDto {
   @ApiProperty({ example: 'salimata@example.com' })
-  @IsEmail()
+  @Transform(normalizeEmail)
+  @IsEmail({}, { message: 'Adresse email invalide' })
   email: string
 }
 
