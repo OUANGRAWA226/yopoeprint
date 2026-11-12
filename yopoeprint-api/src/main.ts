@@ -29,28 +29,20 @@ async function bootstrap() {
   const frontendUrl = config.get<string>('app.frontendUrl') || 'http://localhost:3000'
   const adminUrl    = config.get<string>('app.adminUrl') || 'http://localhost:3002'
   const extraOrigins = config.get<string[]>('app.allowedOrigins') || []
-  const productionOrigins = [
-    'https://yopoeprint.bf',
-    'https://www.yopoeprint.bf',
-    'https://admin.yopoeprint.bf',
-    'https://yopoeprint.com',
-    'https://www.yopoeprint.com',
-    'https://admin.yopoeprint.com',
-    'https://yopoeprint.vercel.app',
-  ]
+  // Aucun domaine en dur : en production, seules les origines déclarées par
+  // FRONTEND_URL, ADMIN_URL et ALLOWED_ORIGINS (ex. variante www) sont acceptées
   const devOrigins = [
     'http://localhost:3000',
     'http://localhost:3002',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3002',
   ]
-  const corsOrigins = new Set([
-    frontendUrl,
-    adminUrl,
-    ...extraOrigins,
-    ...productionOrigins,
-    ...(isProduction ? [] : devOrigins),
-  ])
+  // Un navigateur envoie l'origine sans « / » final : « https://exemple.bf/ » ne correspondrait jamais
+  const corsOrigins = new Set(
+    [frontendUrl, adminUrl, ...extraOrigins, ...(isProduction ? [] : devOrigins)]
+      .map((o) => o.trim().replace(/\/+$/, ''))
+      .filter(Boolean),
+  )
 
   app.enableCors({
     origin: (origin, callback) => {

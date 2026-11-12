@@ -2,14 +2,16 @@
 
 Boutique et back-office : **Vercel** · API : **Render** (Docker) · Base : **Supabase** (PostgreSQL)
 
-Les adresses ci-dessous supposent le domaine `yopoeprint.bf`. Si vous lancez sur un autre
-domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resend).
+**Aucun nom de domaine n'est encore acheté.** Les adresses ci-dessous sont des modèles :
+remplacez `<votre-domaine>` et `<api>` par les vraies adresses **partout** (boutique, admin, API,
+CinetPay, Google, Resend) une fois le domaine acheté. Aucune adresse n'est codée en dur dans le projet :
+tout passe par les variables d'environnement.
 
 | Service   | Adresse de production               |
 |-----------|-------------------------------------|
-| Boutique  | `https://yopoeprint.bf`             |
-| Admin     | `https://admin.yopoeprint.bf`       |
-| API       | `https://yopoeprint-api.onrender.com` (ou `https://api.yopoeprint.bf`) |
+| Boutique  | `https://<votre-domaine>`             |
+| Admin     | `https://admin.<votre-domaine>`       |
+| API       | `https://<api>` (ex. `https://api.<votre-domaine>`) |
 
 ---
 
@@ -51,14 +53,15 @@ domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resen
    |---|---|
    | `NODE_ENV` | `production` |
    | `BACKEND_URL` | URL publique de l'API (sert à la `notify_url` CinetPay) |
-   | `FRONTEND_URL` | `https://yopoeprint.bf` (CORS, liens des emails, retour paiement) |
-   | `ADMIN_URL` | `https://admin.yopoeprint.bf` |
+   | `FRONTEND_URL` | `https://<votre-domaine>` (CORS, liens des emails, retour paiement) |
+   | `ADMIN_URL` | `https://admin.<votre-domaine>` |
+   | `ALLOWED_ORIGINS` | autres origines autorisées, séparées par des virgules — au minimum `https://www.<votre-domaine>` |
    | `DB_HOST` · `DB_PORT` (`6543`) · `DB_USERNAME` · `DB_PASSWORD` · `DB_NAME` · `DB_SSL` (`true`) | Supabase › Settings › Database |
    | `JWT_SECRET` · `JWT_REFRESH_SECRET` | deux valeurs **différentes**, 32 caractères min. (commande ci-dessous) |
    | `ADMIN_SETUP_TOKEN` | code d'installation du premier admin (même commande) |
    | `CINETPAY_API_KEY` · `CINETPAY_SITE_ID` · `CINETPAY_SECRET_KEY` | tableau de bord CinetPay |
    | `CLOUDINARY_CLOUD_NAME` · `CLOUDINARY_API_KEY` · `CLOUDINARY_API_SECRET` | Cloudinary |
-   | `RESEND_API_KEY` · `EMAIL_FROM` | Resend ; ex. `YopoePrint <noreply@yopoeprint.bf>` |
+   | `RESEND_API_KEY` · `EMAIL_FROM` | Resend ; ex. `YopoePrint <noreply@<votre-domaine>>`. Sans domaine vérifié, l'expéditeur par défaut est `onboarding@resend.dev`, qui n'envoie qu'à l'adresse du compte Resend (tests uniquement) |
    | `GOOGLE_CLIENT_ID` | Google Cloud Console (voir étape 6) |
 
    Générer un secret :
@@ -81,13 +84,14 @@ domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resen
    | Variable | Valeur |
    |---|---|
    | `NEXT_PUBLIC_API_URL` | `https://<api>/api/v1` |
-   | `NEXT_PUBLIC_SITE_URL` | `https://yopoeprint.bf` (= `FRONTEND_URL` de l'API) |
+   | `NEXT_PUBLIC_SITE_URL` | `https://<votre-domaine>` (= `FRONTEND_URL` de l'API) |
    | `NEXT_PUBLIC_CONTACT_PHONE` | vrai numéro, ex. `+22670123456` (sinon numéro factice affiché) |
    | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | = `GOOGLE_CLIENT_ID` de l'API |
    | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | `dtie3vgyz` |
    | `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | `useProducts` |
 
-3. **Settings › Domains** : ajouter `yopoeprint.bf` et `www.yopoeprint.bf`.
+3. **Settings › Domains** : ajouter `<votre-domaine>` et `www.<votre-domaine>`
+   (déclarer la variante `www` dans `ALLOWED_ORIGINS` de l'API).
 4. Les variables `NEXT_PUBLIC_*` sont figées au build : **redéployer** après chaque modification.
 
 ---
@@ -97,13 +101,13 @@ domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resen
 1. Vercel › **Add New Project** › **même dépôt** · **Root Directory** : `yopoeprint-admin`
 2. Variables — modèle : [`yopoeprint-admin/.env.example`](yopoeprint-admin/.env.example)
    (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`)
-3. **Domains** : `admin.yopoeprint.bf` (doit correspondre à `ADMIN_URL` de l'API).
+3. **Domains** : `admin.<votre-domaine>` (doit correspondre à `ADMIN_URL` de l'API).
 
 ---
 
 ## Étape 5 — Premier administrateur (immédiatement après le déploiement)
 
-1. Ouvrir `https://admin.yopoeprint.bf/admin-setup` › **Créer un nouveau compte admin**.
+1. Ouvrir `https://admin.<votre-domaine>/admin-setup` › **Créer un nouveau compte admin**.
 2. Saisir le **code d'installation** (valeur de `ADMIN_SETUP_TOKEN`), puis vos informations.
    Ce compte devient **super administrateur**.
 3. La route se ferme d'elle-même dès qu'un compte d'équipe existe. Vous pouvez ensuite
@@ -118,7 +122,7 @@ domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resen
 
 **CinetPay** (tableau de bord)
 - Notify URL : `https://<api>/api/v1/payments/webhook` (vérifiée en `GET`, notifications en `POST` signées `x-token`)
-- Return URL : `https://yopoeprint.bf/commande/confirmation`
+- Return URL : `https://<votre-domaine>/commande/confirmation`
 - Faire **un vrai paiement** de faible montant avec Orange Money, Moov Money et une carte, puis
   vérifier dans l'admin › Paiements que la commande passe à « payée » sans intervention.
 
@@ -128,7 +132,7 @@ domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resen
 
 **Google Identity Services**
 - Google Cloud Console › Identifiants › ID client OAuth « Application Web » :
-  **Origines JavaScript autorisées** = `https://yopoeprint.bf` et `https://www.yopoeprint.bf`.
+  **Origines JavaScript autorisées** = `https://<votre-domaine>` et `https://www.<votre-domaine>`.
 
 **Surveillance**
 - UptimeRobot (ou équivalent) sur `https://<api>/api/v1/payments/webhook` et la boutique.
@@ -140,11 +144,11 @@ domaine, remplacez-le **partout** (boutique, admin, API, CinetPay, Google, Resen
 | Test | Attendu |
 |---|---|
 | Logs Render au démarrage | aucune ligne `[Config] … non définie` |
-| `https://yopoeprint.bf` · `/catalogue` · une fiche produit | pages et prix affichés |
+| `https://<votre-domaine>` · `/catalogue` · une fiche produit | pages et prix affichés |
 | Partage d'un lien sur WhatsApp | aperçu avec l'image YopoePrint |
 | Inscription email + « Continuer avec Google » | compte créé, email de bienvenue reçu |
 | Commande + paiement réel | statut « payée », email de confirmation, lien de suivi fonctionnel |
-| `https://admin.yopoeprint.bf/admin-setup` (après installation) | création refusée |
+| `https://admin.<votre-domaine>/admin-setup` (après installation) | création refusée |
 
 ---
 

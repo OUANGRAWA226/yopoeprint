@@ -199,7 +199,8 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Email Service Client */}
+                {/* Email Service Client (masqué tant qu'aucun email n'est saisi dans les paramètres) */}
+                {contact.email && (
                 <div className="py-4.5 group">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex gap-3.5">
@@ -214,7 +215,6 @@ export default function ContactPage() {
                         >
                           {contact.email}
                         </a>
-                        <p className="text-xs text-gray-500 mt-0.5">Devis : devis@yopoeprint.bf</p>
                       </div>
                     </div>
                     <button
@@ -227,6 +227,7 @@ export default function ContactPage() {
                     </button>
                   </div>
                 </div>
+                )}
 
                 {/* Adresse & Retrait atelier */}
                 <div className="py-4.5">

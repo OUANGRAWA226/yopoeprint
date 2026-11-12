@@ -235,7 +235,7 @@ export default function FAQContactPage() {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Email Support</p>
-                    <p className="text-sm text-gray-500 mt-0.5">{contact.email}</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{contact.email || 'Via le formulaire de contact'}</p>
                   </div>
                 </div>
 

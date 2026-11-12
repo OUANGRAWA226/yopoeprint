@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Download, Printer, ShieldCheck, Phone, Mail, MapPin, FileText } from 'lucide-react'
 import { CartItem } from '@/context/CartContext'
 import { usePublicSettings, useContact } from '@/lib/settings.service'
+import { SITE_HOST } from '@/lib/site'
 
 interface DevisPdfGeneratorProps {
   isOpen: boolean
@@ -245,7 +246,7 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 4 }}>{companyName}</div>
                       <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📍 {contact.address}</div>
                       <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>📞 {contact.phoneDisplay}</div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>✉️ {contact.email}</div>
+                      {contact.email && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>✉️ {contact.email}</div>}
                     </div>
                     {/* Destinataire */}
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '14px 16px' }}>
@@ -357,7 +358,7 @@ export function DevisPdfGenerator({ isOpen, onClose, items, total, clientInfo }:
                       🖨️ YopoePrint — {contact.address}
                     </div>
                     <div style={{ fontSize: 9, color: '#d1d5db', textAlign: 'right' }}>
-                      www.yopoeprint.bf · {contact.email}
+                      {[SITE_HOST, contact.email].filter(Boolean).join(' · ')}
                       {legalLine && <><br />{legalLine}</>}
                     </div>
                   </div>

@@ -6,7 +6,7 @@ const REQUIRED = ['DB_HOST', 'DB_PASSWORD', 'JWT_SECRET', 'JWT_REFRESH_SECRET'] 
 // Sans elles, une fonction de la boutique tombe en panne sans bruit : signalées à chaque démarrage
 const LAUNCH = [
   ['FRONTEND_URL',          'CORS, liens des emails et retour de paiement pointent vers localhost'],
-  ['ADMIN_URL',             'CORS de l\'admin limité aux domaines prévus dans main.ts'],
+  ['ADMIN_URL',             'le back-office est refusé par CORS'],
   ['BACKEND_URL',           'notify_url CinetPay = localhost : aucune confirmation de paiement'],
   ['CINETPAY_API_KEY',      'paiement en ligne impossible'],
   ['CINETPAY_SITE_ID',      'paiement en ligne impossible'],

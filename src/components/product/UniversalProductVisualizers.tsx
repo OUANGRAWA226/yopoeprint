@@ -227,10 +227,10 @@ export function BusinessCardVisualizer({
 
               {/* Coordonnées */}
               <text x={cardX + 25} y={cardY + 104} fontSize="6.5" fill={isKraft ? '#4A3415' : '#94A3B8'}>
-                📞 +226 70 00 00 00 · ✉ contact@yopoeprint.bf
+                📞 +226 70 00 00 00 · ✉ contact@votre-entreprise.com
               </text>
               <text x={cardX + 25} y={cardY + 114} fontSize="6.5" fill={isKraft ? '#4A3415' : '#94A3B8'}>
-                📍 Ouagadougou, Zone Commerciale · www.yopoeprint.bf
+                📍 Ouagadougou, Zone Commerciale · www.votre-entreprise.com
               </text>
             </g>
           )}
@@ -480,7 +480,7 @@ export function FlyerVisualizer({
               {/* Footer contact */}
               <rect x={fx} y={fy + fh - 18} width={fw} height="18" fill="#0B192C" />
               <text x={fx + fw / 2} y={fy + fh - 6} textAnchor="middle" fill="#38BDF8" fontSize="7" fontWeight="bold">
-                Ouagadougou · www.yopoeprint.bf
+                Ouagadougou · www.votre-entreprise.com
               </text>
             </g>
           )}

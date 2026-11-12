@@ -1,6 +1,6 @@
 import {
   IsString, IsEmail, IsInt, IsBoolean, IsArray, Min, Max, MaxLength, MinLength, Matches,
-  ValidateNested, ArrayMinSize, ArrayMaxSize, IsOptional,
+  ValidateNested, ArrayMinSize, ArrayMaxSize, IsOptional, ValidateIf,
 } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
@@ -15,7 +15,9 @@ export class ContactSettingsDto {
   @ApiProperty() @Transform(trim) @Matches(/^\+?[0-9 .-]{8,20}$/, { message: 'Numéro WhatsApp invalide' })
   whatsapp: string
 
-  @ApiProperty() @Transform(trim) @IsEmail({}, { message: 'Email de contact invalide' })
+  // Vide accepté tant qu'aucun domaine n'est choisi : l'email est alors masqué sur la boutique
+  @ApiProperty() @Transform(trim) @IsString() @MaxLength(254)
+  @ValidateIf((o) => o.email !== '') @IsEmail({}, { message: 'Email de contact invalide' })
   email: string
 
   @ApiProperty() @Transform(trim) @IsString() @MinLength(3) @MaxLength(200)

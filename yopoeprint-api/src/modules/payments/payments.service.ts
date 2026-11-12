@@ -76,7 +76,7 @@ export class PaymentsService {
       description:      `Commande YopoePrint ${order.orderNumber}`,
       customer_name:    order.deliveryAddress.fullName,
       customer_phone:   order.deliveryAddress.phone,
-      customer_email:   order.user?.email || 'client@yopoeprint.bf',
+      customer_email:   order.user?.email, // toute commande appartient à un compte client (email obligatoire)
       customer_address: order.deliveryAddress.street,
       customer_city:    order.deliveryAddress.city,
       customer_country: 'BF', // Burkina Faso

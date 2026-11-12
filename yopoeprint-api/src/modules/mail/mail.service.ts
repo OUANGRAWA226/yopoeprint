@@ -5,10 +5,11 @@ import { Resend } from 'resend';
 import { EmailLog } from './email-log.entity';
 
 // Adresse publique de la boutique (FRONTEND_URL), source unique des liens envoyés par email
-const siteUrl = () => (process.env.FRONTEND_URL || 'https://yopoeprint.bf').replace(/\/+$/, '');
-// EMAIL_FROM : « contact@domaine » ou « YopoePrint <contact@domaine> »
+const siteUrl = () => (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
+// EMAIL_FROM : « contact@domaine » ou « YopoePrint <contact@domaine> ».
+// Par défaut, l'expéditeur de test de Resend (aucun domaine vérifié pour l'instant)
 const senderAddress = () => {
-  const from = (process.env.EMAIL_FROM || 'noreply@yopoeprint.bf').trim();
+  const from = (process.env.EMAIL_FROM || 'onboarding@resend.dev').trim();
   return from.includes('<') ? from : `YopoePrint <${from}>`;
 };
 const trackingUrl = (orderNumber: string) => `${siteUrl()}/suivi?ref=${encodeURIComponent(orderNumber)}`;

@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...localBusinessJsonLd, telephone: contact.phone, email: contact.email }) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...localBusinessJsonLd, telephone: contact.phone, email: contact.email || undefined }) }}
         />
       </head>
       <body className="antialiased text-foreground bg-background">

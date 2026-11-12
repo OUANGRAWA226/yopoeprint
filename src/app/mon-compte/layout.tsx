@@ -108,7 +108,7 @@ export default function MonCompteLayout({ children }: { children: React.ReactNod
                 {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Compte Professionnel'}
               </h1>
               <p className="text-xs text-gray-400 mt-0.5">
-                {user?.email || 'client@yopoeprint.bf'}
+                {user?.email || ''}
               </p>
             </div>
           </div>

@@ -160,4 +160,4 @@ yopoeprint/
 
 ---
 
-*YopoePrint — contact@yopoeprint.bf · Ouagadougou, Burkina Faso*
+*YopoePrint — Ouagadougou, Burkina Faso*

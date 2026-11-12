@@ -22,7 +22,7 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   async redirects() {
-    const adminBase = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://yopoeprint-admin.vercel.app'
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002'
     return [
       {
         source: '/admin/:path*',

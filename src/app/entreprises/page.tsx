@@ -204,15 +204,17 @@ export default async function EntreprisesPage() {
                     </div>
                   </div>
 
+                  {contact.email && (
                   <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/5">
                     <Mail size={18} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs text-gray-400">Email service commercial :</p>
-                      <a href="mailto:entreprises@yopoeprint.bf" className="font-bold text-white hover:text-emerald-300 text-sm">
-                        entreprises@yopoeprint.bf
+                      <a href={`mailto:${contact.email}`} className="font-bold text-white hover:text-emerald-300 text-sm">
+                        {contact.email}
                       </a>
                     </div>
                   </div>
+                  )}
 
                   <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/5">
                     <Clock size={18} className="text-emerald-400 shrink-0 mt-0.5" />

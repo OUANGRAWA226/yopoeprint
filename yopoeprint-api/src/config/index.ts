@@ -53,5 +53,5 @@ export const cloudinaryConfig = registerAs('cloudinary', () => ({
 // ─── Email Config ─────────────────────────────────────────────
 export const emailConfig = registerAs('email', () => ({
   resendApiKey: process.env.RESEND_API_KEY,
-  from:         process.env.EMAIL_FROM || 'noreply@yopoeprint.bf',
+  from:         process.env.EMAIL_FROM || 'YopoePrint <onboarding@resend.dev>',
 }))

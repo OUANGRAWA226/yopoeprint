@@ -23,7 +23,8 @@ export interface ContactInfo {
 const FALLBACK: ContactSettings = {
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+22670000000',
   whatsapp: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+22670000000',
-  email: 'contact@yopoeprint.bf',
+  // Aucun domaine pour l'instant : email saisi dans l'admin (Paramètres), sinon masqué
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || '',
   address: 'Ouagadougou, Burkina Faso',
 }
 

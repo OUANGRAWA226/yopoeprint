@@ -46,7 +46,7 @@ export const DEFAULT_SETTINGS: PlatformSettings = {
   contact: {
     phone: '+22670000000',
     whatsapp: '+22670000000',
-    email: 'contact@yopoeprint.bf',
+    email: '', // à saisir dans l'admin une fois le domaine choisi
     address: 'Ouagadougou, Burkina Faso',
   },
   delivery: {

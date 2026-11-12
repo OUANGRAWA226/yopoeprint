@@ -240,4 +240,4 @@ export default api
 
 ---
 
-*YopoePrint API v1.0 · contact@yopoeprint.bf · Ouagadougou, Burkina Faso*
+*YopoePrint API v1.0 · Ouagadougou, Burkina Faso*
