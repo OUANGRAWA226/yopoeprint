@@ -8,6 +8,7 @@ import * as bcrypt from 'bcryptjs'
 import { User, UserRole, Address, BACK_OFFICE_ROLES, isBackOffice } from './user.entity'
 import { Order, PaymentStatus } from '../orders/order.entity'
 import { emailEquals, phoneEquals } from '../../common/identity'
+import { SessionsService } from '../sessions/sessions.service'
 import {
   UpdateProfileDto, ChangePasswordDto, AdminUsersQueryDto, AdminUpdateUserDto,
   CreateTeamMemberDto,
@@ -22,6 +23,7 @@ export class UsersService {
     private userRepo: Repository<User>,
     @InjectRepository(Order)
     private orderRepo: Repository<Order>,
+    private sessions: SessionsService,
   ) {}
 
   // ─── Profil (client connecté) ─────────────────────────────
@@ -68,7 +70,7 @@ export class UsersService {
     return this.toProfile(user)
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto) {
+  async changePassword(userId: string, dto: ChangePasswordDto, currentSessionId?: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } })
     if (!user) throw new NotFoundException('Utilisateur introuvable')
 
@@ -83,7 +85,9 @@ export class UsersService {
       passwordResetTokenHash: null,
       passwordResetExpiresAt: null,
     })
-    return { message: 'Mot de passe modifié' }
+    // Les autres appareils sont déconnectés ; celui qui vient de changer le mot de passe reste connecté
+    await this.sessions.revokeAll(userId, currentSessionId)
+    return { message: 'Mot de passe modifié. Vos autres appareils ont été déconnectés.' }
   }
 
   // ─── Admin : liste des clients avec statistiques ──────────
@@ -150,10 +154,10 @@ export class UsersService {
         throw new BadRequestException('Vous ne pouvez pas désactiver votre propre compte')
       }
       user.isActive = dto.isActive
-      if (!dto.isActive) user.refreshToken = null // coupe les sessions en cours au prochain refresh
     }
 
     await this.userRepo.save(user)
+    if (dto.isActive === false) await this.sessions.revokeAll(id) // déconnexion immédiate
     return this.findOneForAdmin(id)
   }
 
@@ -192,8 +196,8 @@ export class UsersService {
     if (!user) throw new NotFoundException('Utilisateur introuvable')
     if (user.role === UserRole.SUPERADMIN && role !== UserRole.SUPERADMIN) await this.assertNotLastSuperAdmin(id)
     user.role = role
-    if (!isBackOffice(role)) user.refreshToken = null // sort de l'équipe : sessions coupées au prochain refresh
     await this.userRepo.save(user)
+    if (!isBackOffice(role)) await this.sessions.revokeAll(id) // sort de l'équipe : déconnexion immédiate
     return this.toTeamMember(user)
   }
 
@@ -203,8 +207,8 @@ export class UsersService {
     if (!user || !isBackOffice(user.role)) throw new NotFoundException("Membre de l'équipe introuvable")
     if (!isActive && user.role === UserRole.SUPERADMIN) await this.assertNotLastSuperAdmin(id)
     user.isActive = isActive
-    if (!isActive) user.refreshToken = null
     await this.userRepo.save(user)
+    if (!isActive) await this.sessions.revokeAll(id)
     return this.toTeamMember(user)
   }
 

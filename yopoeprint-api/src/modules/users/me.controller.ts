@@ -23,6 +23,6 @@ export class MeController {
   @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } }) // anti brute-force du mot de passe actuel
   @ApiOperation({ summary: 'Changer mon mot de passe' })
   changePassword(@CurrentUser() user, @Body() dto: ChangePasswordDto) {
-    return this.usersService.changePassword(user.id, dto)
+    return this.usersService.changePassword(user.id, dto, user.sid)
   }
 }

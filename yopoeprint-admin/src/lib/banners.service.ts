@@ -1,5 +1,7 @@
 import { api } from './index'
 
+import { freshAccessToken } from './session'
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
 
 // Contrat de l'API : yopoeprint-api/src/modules/banners
@@ -41,12 +43,12 @@ export function readImageSize(file: File): Promise<{ width: number; height: numb
 
 /** Envoie un visuel ; l'API vérifie à nouveau les dimensions exactes avant Cloudinary. */
 function uploadImage(file: File, variant: BannerVariant, onProgress?: (percent: number) => void): Promise<string> {
-  return new Promise((resolve, reject) => {
+  // Jeton à jour avant l'envoi (une requête XHR ne peut pas être rejouée après un 401)
+  return freshAccessToken().then((token) => new Promise<string>((resolve, reject) => {
     const form = new FormData()
     form.append('image', file)
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${BASE}/admin/banners/image?variant=${variant}`)
-    const token = localStorage.getItem('admin_auth_token')
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100)) }
     xhr.onload = () => {
@@ -57,7 +59,7 @@ function uploadImage(file: File, variant: BannerVariant, onProgress?: (percent: 
     }
     xhr.onerror = () => reject(new Error('Erreur réseau pendant l\'envoi de l\'image'))
     xhr.send(form)
-  })
+  }))
 }
 
 export const bannersService = {

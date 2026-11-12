@@ -1,18 +1,10 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+import { authFetch } from './session'
 
 // Ne jamais journaliser le jeton ni le corps des requêtes : ils contiennent des mots de passe
 async function request<T = any>(method: string, path: string, body?: any): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_auth_token') : null
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  }
-  if (token) headers['Authorization'] = `Bearer ${token}`
-
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await authFetch(path, {
     method,
-    headers,
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
     credentials: 'include', // Permet les cookies cross-domain
   })

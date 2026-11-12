@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User } from '../users/user.entity'
+import { SessionsService } from '../sessions/sessions.service'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -12,6 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private sessions: SessionsService,
   ) {
     super({
       jwtFromRequest:   ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -25,6 +27,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (payload?.typ === 'refresh') {
       throw new UnauthorizedException('Token invalide')
     }
+    // Jeton lié à une session : refusé dès qu'elle est fermée (déconnexion, mot de passe changé, compte désactivé)
+    if (!payload?.sid || !(await this.sessions.isOpen(payload.sid, payload.sub))) {
+      throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.')
+    }
     const user = await this.userRepo.findOne({ where: { id: payload.sub } })
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Compte introuvable ou désactivé')
@@ -33,6 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id:    user.id,
       email: user.email,
       role:  user.role,
+      sid:   payload.sid as string,
     }
   }
 }

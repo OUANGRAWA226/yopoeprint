@@ -30,7 +30,8 @@ export const databaseConfig = registerAs('database', () => ({
 // ─── JWT Config ───────────────────────────────────────────────
 export const jwtConfig = registerAs('jwt', () => ({
   secret:         process.env.JWT_SECRET,
-  expiresIn:      process.env.JWT_EXPIRES_IN || '7d',
+  // Jeton d'accès court : renouvelé automatiquement par la boutique et l'admin
+  expiresIn:      process.env.JWT_EXPIRES_IN || '15m',
   refreshSecret:  process.env.JWT_REFRESH_SECRET,
   refreshExpires: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 }))

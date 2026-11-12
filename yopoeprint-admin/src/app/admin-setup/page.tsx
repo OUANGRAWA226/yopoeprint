@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib'
+import { saveSession } from '@/lib/session'
+import { adminAuthService } from '@/lib/auth-admin.service'
 import { AlertCircle, CheckCircle, LogIn } from 'lucide-react'
 
 export default function AdminSetupPage() {
@@ -55,11 +57,8 @@ export default function AdminSetupPage() {
         setupToken: createForm.setupToken.trim() || undefined,
       })
 
-      // Sauvegarder le token et l'utilisateur
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('admin_auth_token', registerRes.accessToken)
-        localStorage.setItem('admin_auth_user', JSON.stringify(registerRes.user))
-      }
+      // Session ouverte : jetons (renouvelables) et utilisateur
+      saveSession(registerRes.accessToken, registerRes.refreshToken, registerRes.user)
 
       setCreateSuccess(true)
       setTimeout(() => {
@@ -79,15 +78,11 @@ export default function AdminSetupPage() {
     setLoginLoading(true)
 
     try {
-      const response = await api.post('/auth/login', {
+      // Même connexion que la page /login : rôle d'équipe vérifié, session renouvelable
+      await adminAuthService.login({
         email: loginForm.email,
         password: loginForm.password,
       })
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('admin_auth_token', response.accessToken)
-        localStorage.setItem('admin_auth_user', JSON.stringify(response.user))
-      }
 
       // Rediriger vers admin
       router.push('/admin')

@@ -104,8 +104,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="px-2 py-4 border-t border-white/10">
           <button
-            onClick={() => {
-              adminAuthService.logout()
+            onClick={async () => {
+              await adminAuthService.logout()
               router.push('/login')
             }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl

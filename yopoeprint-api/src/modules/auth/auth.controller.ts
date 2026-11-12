@@ -96,7 +96,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Se déconnecter' })
   async logout(@CurrentUser() user) {
-    return this.authService.logout(user.id)
+    return this.authService.logout(user.id, user.sid)
   }
 
   @Get('me')

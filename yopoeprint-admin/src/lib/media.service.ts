@@ -1,5 +1,7 @@
 // Envoi d'images du back-office par l'API (POST /admin/media), qui signe l'envoi vers Cloudinary.
 // Remplace l'ancien envoi direct du navigateur avec un preset Cloudinary non signé.
+import { freshAccessToken } from './session'
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
 
 export type MediaFolder = 'products' | 'blog' | 'bat'
@@ -13,7 +15,8 @@ const RULES: Record<MediaFolder, { ext: RegExp; maxSize: number; formats: string
 
 /** Envoie le fichier et renvoie son URL Cloudinary ; `onProgress` reçoit un pourcentage. */
 export function uploadMedia(file: File, folder: MediaFolder, onProgress?: (percent: number) => void): Promise<string> {
-  return new Promise((resolve, reject) => {
+  // Jeton à jour avant l'envoi (une requête XHR ne peut pas être rejouée après un 401)
+  return freshAccessToken().then((token) => new Promise<string>((resolve, reject) => {
     const rule = RULES[folder]
     if (!rule.ext.test(file.name)) return reject(new Error(`Formats acceptés : ${rule.formats}`))
     if (file.size > rule.maxSize) return reject(new Error(`Fichier trop lourd (${rule.maxSize / 1024 / 1024} Mo maximum)`))
@@ -22,7 +25,6 @@ export function uploadMedia(file: File, folder: MediaFolder, onProgress?: (perce
     form.append('file', file)
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${BASE}/admin/media?folder=${folder}`)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_auth_token') : null
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100)) }
     xhr.onload = () => {
@@ -33,5 +35,5 @@ export function uploadMedia(file: File, folder: MediaFolder, onProgress?: (perce
     }
     xhr.onerror = () => reject(new Error('Erreur réseau pendant l\'envoi de l\'image'))
     xhr.send(form)
-  })
+  }))
 }

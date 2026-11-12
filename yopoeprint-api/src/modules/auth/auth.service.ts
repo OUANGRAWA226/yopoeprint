@@ -14,10 +14,20 @@ import { In } from 'typeorm'
 import { RegisterDto, SetupAdminDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, GoogleCompleteDto } from './auth.dto'
 import { emailEquals, phoneEquals } from '../../common/identity'
 import { MailService } from '../mail/mail.service'
+import { SessionsService } from '../sessions/sessions.service'
 import { v4 as uuidv4 } from 'uuid'
 
 // Âge minimum pour ouvrir un compte client
 const MIN_ACCOUNT_AGE = 13
+
+// « 30d », « 12h », « 15m », « 900s » ou un nombre de secondes (format des durées JWT)
+export function durationToMs(value: string | number | undefined, fallback: number): number {
+  if (typeof value === 'number') return value * 1000
+  const m = /^(\d+)\s*([smhd]?)$/.exec(String(value ?? '').trim())
+  if (!m) return fallback
+  const unit = { '': 1000, s: 1000, m: 60_000, h: 3600_000, d: 86_400_000 }[m[2]]
+  return Number(m[1]) * unit
+}
 
 @Injectable()
 export class AuthService {
@@ -30,6 +40,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailService: MailService,
+    private sessions: SessionsService,
   ) {}
 
   // ─── Register ─────────────────────────────────────────────
@@ -52,8 +63,7 @@ export class AuthService {
     if (user) {
       if (!user.isActive) throw new UnauthorizedException('Ce compte est désactivé')
       if (!user.emailVerified) await this.userRepo.update(user.id, { emailVerified: true })
-      const tokens = await this.generateTokens(user)
-      await this.storeRefreshToken(user.id, tokens.refreshToken)
+      const tokens = await this.issueSession(user)
       return { status: 'logged_in' as const, ...tokens, user: this.sanitizeUser(user) }
     }
     return { status: 'needs_profile' as const, email: google.email, firstName: google.firstName, lastName: google.lastName }
@@ -98,8 +108,7 @@ export class AuthService {
     // Email de bienvenue : un échec d'envoi ne doit pas empêcher l'inscription (journalisé dans admin › Emails)
     this.mailService.sendWelcome(user.email, user.firstName).catch(() => undefined)
 
-    const tokens = await this.generateTokens(user)
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    const tokens = await this.issueSession(user)
     return { ...tokens, user: this.sanitizeUser(user) }
   }
 
@@ -211,8 +220,7 @@ export class AuthService {
     await this.userRepo.save(user)
 
     // Generate tokens
-    const tokens = await this.generateTokens(user)
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    const tokens = await this.issueSession(user)
 
     return {
       ...tokens,
@@ -234,8 +242,7 @@ export class AuthService {
       throw new UnauthorizedException('Email ou mot de passe incorrect')
     }
 
-    const tokens = await this.generateTokens(user)
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    const tokens = await this.issueSession(user)
 
     return {
       ...tokens,
@@ -244,38 +251,40 @@ export class AuthService {
   }
 
   // ─── Refresh Tokens ───────────────────────────────────────
+  // Rotation : chaque renouvellement remplace le jeton de la session. Un ancien jeton
+  // présenté à nouveau (copié par un tiers) ferme la session.
   async refreshTokens(refreshToken: string) {
-    let payload: { sub?: string; typ?: string }
+    let payload: { sub?: string; sid?: string; typ?: string }
     try {
       payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.configService.get('jwt.refreshSecret'),
       })
     } catch {
-      throw new UnauthorizedException('Token invalide ou expiré')
+      throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.')
     }
-    if (!payload?.sub || payload.typ !== 'refresh') {
-      throw new UnauthorizedException('Token invalide')
+    // Sans « sid » : jeton émis avant les sessions multiples, reconnexion requise
+    if (!payload?.sub || !payload.sid || payload.typ !== 'refresh') {
+      throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.')
     }
 
     const user = await this.userRepo.findOne({ where: { id: payload.sub } })
-
-    if (!user || !user.isActive || !user.refreshToken) {
+    if (!user || !user.isActive) {
       throw new UnauthorizedException('Accès refusé')
     }
 
-    // Must match the last issued refresh token (rotation; logout revokes it)
-    const matches = await bcrypt.compare(refreshToken, user.refreshToken)
-    if (!matches) throw new UnauthorizedException('Token invalide')
+    const check = await this.sessions.verify(payload.sid, user.id, refreshToken)
+    if (check === 'reused') {
+      this.logger.warn(`Jeton de renouvellement réutilisé : session ${payload.sid} fermée (compte ${user.id})`)
+    }
+    if (check !== 'ok') throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.')
 
-    const tokens = await this.generateTokens(user)
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
-
-    return tokens
+    return this.signTokens(user, payload.sid)
   }
 
   // ─── Logout ───────────────────────────────────────────────
-  async logout(userId: string) {
-    await this.userRepo.update(userId, { refreshToken: null })
+  // Ferme uniquement la session de cet appareil
+  async logout(userId: string, sessionId?: string) {
+    if (sessionId) await this.sessions.revoke(sessionId, userId)
     return { message: 'Déconnecté avec succès' }
   }
 
@@ -326,8 +335,8 @@ export class AuthService {
       passwordHash:           await bcrypt.hash(dto.newPassword, 12),
       passwordResetTokenHash: null,
       passwordResetExpiresAt: null,
-      refreshToken:           null, // déconnecte les autres sessions
     })
+    await this.sessions.revokeAll(user.id) // déconnecte tous les appareils
 
     return { message: 'Mot de passe réinitialisé. Vous pouvez vous connecter.' }
   }
@@ -337,26 +346,32 @@ export class AuthService {
     return createHash('sha256').update(token).digest('hex')
   }
 
-  private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role }
+  // Nouvelle session (connexion, inscription) : une par appareil, sans limite de nombre
+  private async issueSession(user: User) {
+    const session = await this.sessions.open(user.id, this.refreshTtlMs())
+    return this.signTokens(user, session.id)
+  }
 
+  // Jetons liés à la session : l'accès (court) et le renouvellement (enregistré, tournant)
+  private async signTokens(user: User, sid: string) {
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync({ sub: user.id, email: user.email, role: user.role, sid }, {
         secret:    this.configService.get('jwt.secret'),
         expiresIn: this.configService.get('jwt.expiresIn'),
       }),
-      this.jwtService.signAsync({ ...payload, typ: 'refresh' }, {
+      this.jwtService.signAsync({ sub: user.id, sid, typ: 'refresh' }, {
         secret:    this.configService.get('jwt.refreshSecret'),
         expiresIn: this.configService.get('jwt.refreshExpires'),
+        // Deux renouvellements dans la même seconde donneraient sinon le même jeton
+        jwtid:     randomBytes(8).toString('hex'),
       }),
     ])
-
+    await this.sessions.setToken(sid, refreshToken, this.refreshTtlMs())
     return { accessToken, refreshToken }
   }
 
-  private async storeRefreshToken(userId: string, refreshToken: string) {
-    const hashedRefresh = await bcrypt.hash(refreshToken, 10)
-    await this.userRepo.update(userId, { refreshToken: hashedRefresh })
+  private refreshTtlMs() {
+    return durationToMs(this.configService.get<string>('jwt.refreshExpires'), 30 * 24 * 3600_000)
   }
 
   private sanitizeUser(user: User) {

@@ -1,5 +1,7 @@
 import { api } from './index'
 
+import { authFetch } from './session'
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
 
 // Contrats de l'API : yopoeprint-api/src/modules/{supervision,payments,mail}
@@ -65,8 +67,7 @@ const qs = (params: Record<string, string | number | undefined>) =>
 
 /** Télécharge un export CSV (requête authentifiée, enregistrement par le navigateur). */
 async function download(path: string, fallbackName: string) {
-  const token = localStorage.getItem('admin_auth_token')
-  const res = await fetch(`${BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  const res = await authFetch(path)
   if (!res.ok) {
     const data = await res.json().catch(() => null)
     throw new Error(data?.message || `Export impossible (erreur ${res.status})`)

@@ -82,6 +82,7 @@ export class User {
   @Column({ name: 'terms_accepted_at', type: 'timestamptz', nullable: true })
   termsAcceptedAt: Date | null
 
+  // Obsolète : remplacée par la table user_sessions (une session par appareil). Vidée, plus utilisée.
   @Column({ name: 'refresh_token', nullable: true })
   refreshToken: string
 

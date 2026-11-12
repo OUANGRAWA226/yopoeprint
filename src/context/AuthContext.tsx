@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { authService, AuthUser } from '@/lib/auth.service'
-import { isAuthenticated, clearAuth } from '@/lib/api'
+import { isAuthenticated, clearAuth, AUTH_EXPIRED_EVENT } from '@/lib/api'
 
 interface AuthContextType {
  user: AuthUser | null
@@ -37,6 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  })
  }
  setLoading(false)
+
+ // Session fermée côté serveur (déconnexion d'un autre appareil, mot de passe changé…)
+ const onExpired = () => setUser(null)
+ window.addEventListener(AUTH_EXPIRED_EVENT, onExpired)
+ return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired)
  }, [])
 
  const login = async (email: string, password: string) => {

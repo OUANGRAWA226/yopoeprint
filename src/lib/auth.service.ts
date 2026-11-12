@@ -51,7 +51,6 @@ export const authService = {
  async register(data: RegisterData): Promise<AuthResponse> {
  const response = await api.post<AuthResponse>('/auth/register', data)
  // Sauvegarder les tokens automatiquement
- console.log('[auth.register] Response:', response)
  saveAuth(response.accessToken, response.refreshToken)
  saveUser(response.user)
  return response
@@ -80,7 +79,6 @@ export const authService = {
  // Se connecter
  async login(data: LoginData): Promise<AuthResponse> {
  const response = await api.post<AuthResponse>('/auth/login', data)
- console.log('[auth.login] Response:', response)
  saveAuth(response.accessToken, response.refreshToken)
  saveUser(response.user)
  return response
@@ -98,7 +96,6 @@ export const authService = {
  // Obtenir le profil connecté
  async getMe(): Promise<AuthUser> {
  const response = await api.get<AuthUser>('/auth/me')
- console.log('[auth.getMe] Response:', response)
  saveUser(response)
  return response
  },
