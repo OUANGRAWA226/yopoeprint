@@ -22,7 +22,8 @@ export class Post {
   @Column({ length: 60 })
   category: string
 
-  @Column({ name: 'author_name', length: 80, default: 'L\'équipe YopoePrint' })
+  // Défaut en SQL brut : TypeORM n'échappe pas l'apostrophe d'une chaîne (synchronize plantait sur une base sans table posts)
+  @Column({ name: 'author_name', length: 80, default: () => "'L''équipe YopoePrint'" })
   authorName: string
 
   @Column({ name: 'cover_url', type: 'text', nullable: true })
