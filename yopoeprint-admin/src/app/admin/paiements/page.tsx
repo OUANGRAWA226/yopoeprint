@@ -25,6 +25,7 @@ const EVENT: Record<string, { label: string; cls: string }> = {
   check_failed:        { label: 'CinetPay injoignable',   cls: 'bg-amber-50 text-amber-800' },
   unknown_transaction: { label: 'Transaction inconnue',   cls: 'bg-red-100 text-red-800' },
   invalid_signature:   { label: 'Signature invalide',     cls: 'bg-red-100 text-red-800' },
+  duplicate_payment:   { label: 'Payé deux fois',         cls: 'bg-red-100 text-red-800' },
 }
 
 const RESULT: Record<string, string> = {

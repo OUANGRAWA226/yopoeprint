@@ -11,6 +11,7 @@ export type PaymentEventType =
   | 'unknown_transaction'
   | 'invalid_signature' // notification à la signature invalide
   | 'manual_paid'       // encaissement saisi dans l'admin (virement, espèces…)
+  | 'duplicate_payment' // autre transaction acceptée alors que la commande était déjà payée
 
 // Journal des paiements : rapprochement CinetPay et anomalies, consultable dans l'admin (Paiements)
 @Entity('payment_events')

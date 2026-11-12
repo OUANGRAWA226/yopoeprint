@@ -69,7 +69,7 @@ export class SupervisionService {
       this.orders.count({
         where: { paymentStatus: PaymentStatus.PENDING, paymentTransactionId: Not(IsNull()), status: Not(In(CLOSED)), createdAt: LessThan(ago(0.5)) },
       }),
-      this.payments.count({ where: { type: In(['amount_mismatch', 'invalid_signature', 'unknown_transaction']), createdAt: MoreThan(ago(24 * 7)) } as any }),
+      this.payments.count({ where: { type: In(['amount_mismatch', 'invalid_signature', 'unknown_transaction', 'duplicate_payment']), createdAt: MoreThan(ago(24 * 7)) } as any }),
       this.emails.count({ where: { status: 'failed', createdAt: MoreThan(ago(24 * 7)) } }),
     ])
 
@@ -77,7 +77,7 @@ export class SupervisionService {
       {
         id: 'payment-anomalies', severity: 'high', count: anomalies,
         title: 'Anomalies de paiement (7 jours)',
-        hint: 'Montant différent de la commande, signature invalide ou transaction inconnue : à vérifier dans le journal.',
+        hint: 'Montant différent de la commande, double paiement, signature invalide ou transaction inconnue : à vérifier dans le journal.',
         href: '/admin/paiements', sample: [],
       },
       {

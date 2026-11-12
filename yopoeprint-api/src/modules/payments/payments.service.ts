@@ -154,6 +154,7 @@ export class PaymentsService {
   private async reconcile(order: Order, transactionId: string, source: 'webhook' | 'admin', actor?: Actor) {
     // Idempotency: replayed or duplicate notifications are no-ops
     if (order.paymentStatus === PaymentStatus.PAID) {
+      await this.flagDuplicatePayment(order, transactionId, source)
       return { status: 'already_paid' }
     }
 
@@ -165,7 +166,8 @@ export class PaymentsService {
     if (check.code !== '00' || check.status !== 'ACCEPTED') {
       this.logger.warn(`Payment not accepted: ${transactionId} — ${check.status ?? check.code}`)
       if (check.status === 'REFUSED') {
-        await this.ordersService.markPaymentFailed(order.id)
+        // An abandoned earlier attempt must not fail the order while a retry is under way
+        if (transactionId === order.paymentTransactionId) await this.ordersService.markPaymentFailed(order.id)
         await this.log('refused', source, { order, transactionId, actor, message: 'Refusé par CinetPay' })
         return { status: 'failed' }
       }
@@ -238,7 +240,7 @@ export class PaymentsService {
       .andWhere('e.created_at >= :since', { since })
       .getRawOne()
     const anomalies = await this.events.count({
-      where: { type: In(['amount_mismatch', 'invalid_signature', 'check_failed', 'unknown_transaction'] as PaymentEventType[]), createdAt: MoreThan(since) },
+      where: { type: In(['amount_mismatch', 'invalid_signature', 'check_failed', 'unknown_transaction', 'duplicate_payment'] as PaymentEventType[]), createdAt: MoreThan(since) },
     })
     const issues = await this.issues()
     return {
@@ -261,12 +263,25 @@ export class PaymentsService {
     return { data, total, page, limit }
   }
 
-  /** Revérifie auprès de CinetPay un paiement dont la notification n'est pas arrivée. */
+  /**
+   * Revérifie auprès de CinetPay un paiement dont la notification n'est pas arrivée.
+   * Toutes les tentatives de la commande sont interrogées, la plus récente d'abord :
+   * le client a pu payer une transaction antérieure à sa dernière relance.
+   */
   async recheck(orderId: string, actor: Actor) {
     const order = await this.ordersService.findById(orderId)
     if (!order.paymentTransactionId) throw new BadRequestException('Aucun paiement CinetPay n\'a été initialisé pour cette commande')
     if (order.paymentStatus === PaymentStatus.PAID) throw new ConflictException('Cette commande est déjà payée')
-    return this.reconcile(order, order.paymentTransactionId, 'admin', actor)
+
+    const history = await this.ordersService.listPaymentTransactionIds(order.id)
+    const candidates = [order.paymentTransactionId, ...history.filter((t) => t !== order.paymentTransactionId)]
+    let current: { status: string } | null = null
+    for (const transactionId of candidates) {
+      const result = await this.reconcile(order, transactionId, 'admin', actor)
+      if (['success', 'already_paid', 'amount_mismatch'].includes(result.status)) return result
+      current ??= result // otherwise the admin sees the answer for the latest attempt
+    }
+    return current
   }
 
   /** Encaissement hors CinetPay (virement, espèces au retrait…), saisi par un gestionnaire. */
@@ -278,6 +293,20 @@ export class PaymentsService {
     await this.ordersService.confirmPayment(order.id, ref)
     await this.log('manual_paid', 'admin', { order, transactionId: ref, actor, amount: order.total, message: reference })
     return { status: 'success' }
+  }
+
+  // Order already paid with another transaction: if this one was accepted too, the
+  // customer paid twice and must be refunded. Logged once; the order is left as is.
+  private async flagDuplicatePayment(order: Order, transactionId: string, source: 'webhook' | 'admin') {
+    if (!transactionId || transactionId === order.paymentTransactionId) return
+    if (await this.events.count({ where: { type: 'duplicate_payment', transactionId } })) return
+    const check = await this.checkTransaction(transactionId)
+    if (check?.code !== '00' || check.status !== 'ACCEPTED') return
+    this.logger.error(`Double payment for ${order.orderNumber}: ${transactionId} accepted, order paid by ${order.paymentTransactionId}`)
+    await this.log('duplicate_payment', source, {
+      order, transactionId, amount: check.amount ?? null,
+      message: `Déjà payée par ${order.paymentTransactionId} : ${check.amount} ${check.currency} à rembourser`,
+    })
   }
 
   // ─── Verify CinetPay x-token HMAC ─────────────────────────

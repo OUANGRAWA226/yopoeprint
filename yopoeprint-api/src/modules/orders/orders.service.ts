@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Not, Repository, QueryFailedError, Brackets } from 'typeorm'
 import { randomInt } from 'crypto'
 import { Order, OrderStatus, PaymentStatus, OrderItem } from './order.entity'
+import { PaymentTransaction } from './payment-transaction.entity'
 import { User, UserRole, isBackOffice } from '../users/user.entity'
 import {
   CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto,
@@ -19,6 +20,23 @@ import { PromosService } from '../promos/promos.service'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+// "Awa Traoré" → "A. T***" : enough for the customer to recognise their order
+export function maskName(fullName?: string | null): string {
+  const parts = String(fullName ?? '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return ''
+  if (parts.length === 1) return `${parts[0][0].toUpperCase()}***`
+  return `${parts[0][0].toUpperCase()}. ${parts[parts.length - 1][0].toUpperCase()}***`
+}
+
+// "+226 70 12 34 45" → "+226 ** ** ** 45" (last 2 digits only, country code kept)
+export function maskPhone(phone?: string | null): string {
+  let digits = String(phone ?? '').replace(/\D/g, '')
+  if (digits.startsWith('00')) digits = digits.slice(2)
+  if (digits.length < 4) return digits ? '** ** ** **' : ''
+  const country = digits.length > 8 ? `+${digits.slice(0, digits.length - 8)} ` : ''
+  return `${country}** ** ** ${digits.slice(-2)}`
+}
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -28,6 +46,8 @@ export class OrdersService {
     private userRepo: Repository<User>,
     @InjectRepository(Quote)
     private quoteRepo: Repository<Quote>,
+    @InjectRepository(PaymentTransaction)
+    private paymentTxRepo: Repository<PaymentTransaction>,
     private productsService: ProductsService,
     private mailService: MailService,
     private resellerService: ResellerService,
@@ -384,17 +404,33 @@ export class OrdersService {
   }
 
   // ─── Get order by CinetPay transaction ID (webhook) ───────
+  // Any attempt counts, not only the latest: a customer may pay an earlier
+  // transaction after a retry, and its notification must still land.
   async findByPaymentTransactionId(transactionId: string) {
-    return this.orderRepo.findOne({ where: { paymentTransactionId: transactionId } })
+    const current = await this.orderRepo.findOne({ where: { paymentTransactionId: transactionId } })
+    if (current) return current
+    const known = await this.paymentTxRepo.findOne({ where: { transactionId } })
+    return known ? this.orderRepo.findOne({ where: { id: known.orderId } }) : null
+  }
+
+  /** Transactions CinetPay de la commande, de la plus récente à la plus ancienne. */
+  async listPaymentTransactionIds(orderId: string): Promise<string[]> {
+    const rows = await this.paymentTxRepo.find({ where: { orderId }, order: { createdAt: 'DESC' } })
+    return rows.map((r) => r.transactionId)
   }
 
   // ─── Get order by number (public tracking) ────────────────
   async findByOrderNumber(orderNumber: string) {
     const order = await this.orderRepo.findOne({ where: { orderNumber } })
     if (!order) throw new NotFoundException('Commande introuvable')
-    // Return tracking info including BAT data
+    return OrdersService.toPublicTracking(order)
+  }
+
+  // Anyone holding the order number (old sequential ones are guessable) sees this:
+  // statuses, dates, totals and BAT only. No street, full name or phone, no internal IDs.
+  private static toPublicTracking(order: Order) {
+    const address = order.deliveryAddress
     return {
-      id:                   order.id,
       orderNumber:          order.orderNumber,
       status:               order.status,
       paymentStatus:        order.paymentStatus,
@@ -406,17 +442,23 @@ export class OrdersService {
       deliveryCost:         order.deliveryCost,
       discount:             order.discount,
       total:                order.total,
-      deliveryAddress:      order.deliveryAddress,
+      deliveryAddress:      address ? {
+        fullName: maskName(address.fullName),
+        phone:    maskPhone(address.phone),
+        city:     address.city ?? null,
+        zone:     address.zone ?? null,
+      } : null,
       // BAT fields
       batUrl:               order.batUrl,
       batVersoUrl:          order.batVersoUrl,
       batStatus:            order.batStatus,
       batNotes:             order.batNotes,
       batApprovedAt:        order.batApprovedAt,
-      batApprovedBy:        order.batApprovedBy,
       batRejectedReason:    order.batRejectedReason,
       batCorrectionFileUrl: order.batCorrectionFileUrl,
-      batHistory:           order.batHistory,
+      batHistory:           Array.isArray(order.batHistory)
+        ? order.batHistory.map(({ action, date, notes }: any) => ({ action, date, notes }))
+        : [],
       items:                order.items.map((i) => ({
         productName:  i.productName,
         productId:    i.productId,
@@ -555,14 +597,12 @@ export class OrdersService {
   // Lien public : pas de coordonnées client dans la réponse
   async approveBatByOrderNumber(orderNumber: string, dto: ApproveBatDto) {
     const order = await this.findOrderForPublicBat(orderNumber)
-    const { user: _user, ...updated } = await this.approveBat(order.id, { id: order.userId, role: 'customer' }, dto)
-    return updated
+    return OrdersService.toPublicTracking(await this.approveBat(order.id, { id: order.userId, role: 'customer' }, dto))
   }
 
   async rejectBatByOrderNumber(orderNumber: string, dto: RejectBatDto) {
     const order = await this.findOrderForPublicBat(orderNumber)
-    const { user: _user, ...updated } = await this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto)
-    return updated
+    return OrdersService.toPublicTracking(await this.rejectBat(order.id, { id: order.userId, role: 'customer' }, dto))
   }
 
   // Legacy sequential numbers (YP-2025-000123) are guessable: their BAT can only
@@ -603,7 +643,10 @@ export class OrdersService {
 
   // ─── Save CinetPay init data ──────────────────────────────
   async setPaymentInit(orderId: string, cinetpayToken: string, transactionId: string) {
-    await this.orderRepo.update(orderId, { cinetpayToken, paymentTransactionId: transactionId })
+    await this.orderRepo.manager.transaction(async (em) => {
+      await em.insert(PaymentTransaction, { orderId, transactionId })
+      await em.update(Order, orderId, { cinetpayToken, paymentTransactionId: transactionId })
+    })
   }
 
   // ─── Confirm payment (idempotent) ─────────────────────────

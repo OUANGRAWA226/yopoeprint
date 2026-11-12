@@ -462,20 +462,20 @@ function SuiviContent() {
  <div key={i} className="flex items-center gap-4 px-6 py-4">
  <div className="w-12 h-12 bg-secondary rounded-xl flex items-center
  justify-center text-2xl shrink-0">
- {item.emoji || '📦'}
+ {item.productEmoji || '📦'}
  </div>
  <div className="flex-1 min-w-0">
  <p className="font-bold text-foreground text-sm truncate">
  {item.productName}
  </p>
  <p className="text-xs text-gray-400 mt-0.5">
- {item.formatId && `Format : ${item.formatId} · `}
+ {item.format && `Format : ${item.format} · `}
  Qté : {new Intl.NumberFormat('fr-FR').format(item.quantity)}
  {item.rectoverso ? ' · Recto/Verso' : ' · Recto'}
  </p>
  </div>
  <p className="font-bold text-foreground text-sm shrink-0">
- {formatPrice(item.price)} FCFA
+ {formatPrice(item.totalPrice)} FCFA
  </p>
  </div>
  ))}
@@ -514,26 +514,23 @@ function SuiviContent() {
  {/* Colonne latérale */}
  <aside className="space-y-4">
 
- {/* Adresse de livraison */}
+ {/* Livraison : nom et téléphone masqués par l'API (suivi public) */}
  {order.deliveryAddress && (
  <div className="bg-white border border-gray-100 rounded-2xl shadow-card p-5">
  <div className="flex items-center gap-2 mb-3">
  <MapPin size={16} className="text-primary" />
- <h3 className="font-bold text-foreground text-sm">Adresse de livraison</h3>
+ <h3 className="font-bold text-foreground text-sm">Livraison</h3>
  </div>
  <div className="text-sm text-gray-600 space-y-0.5">
- <p className="font-bold text-foreground">
- {order.deliveryAddress.fullName}
- </p>
- <p>{order.deliveryAddress.phone}</p>
- {order.deliveryAddress.street && (
- <p>{order.deliveryAddress.street}</p>
+ {order.deliveryAddress.fullName && (
+ <p className="font-bold text-foreground">{order.deliveryAddress.fullName}</p>
  )}
- <p>
- {order.deliveryAddress.neighborhood && `${order.deliveryAddress.neighborhood}, `}
- {order.deliveryAddress.city}
- </p>
+ {order.deliveryAddress.phone && <p>{order.deliveryAddress.phone}</p>}
+ {order.deliveryAddress.city && <p>{order.deliveryAddress.city}</p>}
  </div>
+ <p className="text-xs text-gray-400 mt-3">
+ Coordonnées masquées pour votre sécurité. L&apos;adresse complète est visible dans votre espace client.
+ </p>
  </div>
  )}
 

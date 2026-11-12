@@ -36,6 +36,7 @@ import { Banner } from './modules/banners/banner.entity'
 import { PromoCode } from './modules/promos/promo-code.entity'
 import { Post } from './modules/posts/post.entity'
 import { PaymentEvent } from './modules/payments/payment-event.entity'
+import { PaymentTransaction } from './modules/orders/payment-transaction.entity'
 import { EmailLog } from './modules/mail/email-log.entity'
 
 @Module({
@@ -69,7 +70,7 @@ import { EmailLog } from './modules/mail/email-log.entity'
         password:    cs.get('database.password'),
         database:    cs.get('database.name'),
         ssl:         cs.get('database.ssl') ? { rejectUnauthorized: false } : false,
-        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow, Banner, PromoCode, Post, PaymentEvent, EmailLog],
+        entities:    [User, Product, Order, Quote, AuditLog, PlatformSettingsRow, Banner, PromoCode, Post, PaymentEvent, PaymentTransaction, EmailLog],
         synchronize: cs.get('app.nodeEnv') === 'development', // Auto-create tables in dev
         logging:     cs.get('app.nodeEnv') === 'development',
       }),
