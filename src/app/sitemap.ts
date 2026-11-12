@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next'
 import { PRODUCTS } from '@/lib/data'
+import { SITE_URL } from '@/lib/site'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://yopoeprint.bf'
+  const baseUrl = SITE_URL
   const currentDate = new Date().toISOString()
 
   // 1. Pages maîtresses

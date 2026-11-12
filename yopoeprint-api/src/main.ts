@@ -1,3 +1,4 @@
+import 'dotenv/config' // .env chargé avant la vérification de configuration (sans écraser les variables du système)
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { ValidationPipe, Logger } from '@nestjs/common'
@@ -5,8 +6,12 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
+import { checkProductionEnv } from './config/env-check'
 
 async function bootstrap() {
+  // Configuration de production vérifiée avant toute connexion à la base
+  if ((process.env.NODE_ENV || 'production') === 'production') checkProductionEnv()
+
   const app    = await NestFactory.create<NestExpressApplication>(AppModule)
   const config = app.get(ConfigService)
   const logger = new Logger('Bootstrap')

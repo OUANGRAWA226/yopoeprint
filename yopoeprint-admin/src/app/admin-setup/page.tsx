@@ -16,6 +16,7 @@ export default function AdminSetupPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    setupToken: '',
   })
   const [createLoading, setCreateLoading] = useState(false)
   const [createError, setCreateError] = useState('')
@@ -38,8 +39,8 @@ export default function AdminSetupPage() {
       return
     }
 
-    if (createForm.password.length < 6) {
-      setCreateError('Le mot de passe doit contenir au moins 6 caractères')
+    if (createForm.password.length < 8) {
+      setCreateError('Le mot de passe doit contenir au moins 8 caractères')
       return
     }
 
@@ -51,10 +52,9 @@ export default function AdminSetupPage() {
         lastName: createForm.lastName,
         email: createForm.email,
         password: createForm.password,
+        setupToken: createForm.setupToken.trim() || undefined,
       })
 
-      console.log('Admin créé:', registerRes)
-      
       // Sauvegarder le token et l'utilisateur
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_auth_token', registerRes.accessToken)
@@ -67,7 +67,6 @@ export default function AdminSetupPage() {
         window.location.href = '/admin'
       }, 1500)
     } catch (err: any) {
-      console.error('Erreur:', err)
       setCreateError(err.message || 'Erreur lors de la création du compte')
     } finally {
       setCreateLoading(false)
@@ -84,8 +83,6 @@ export default function AdminSetupPage() {
         email: loginForm.email,
         password: loginForm.password,
       })
-
-      console.log('Connexion réussie:', response)
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_auth_token', response.accessToken)
@@ -166,6 +163,17 @@ export default function AdminSetupPage() {
               value={createForm.email}
               onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
               required
+              disabled={createLoading || createSuccess}
+              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
+                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
+            />
+
+            <input
+              type="password"
+              placeholder="Code d'installation (ADMIN_SETUP_TOKEN du serveur)"
+              value={createForm.setupToken}
+              onChange={(e) => setCreateForm({ ...createForm, setupToken: e.target.value })}
+              autoComplete="off"
               disabled={createLoading || createSuccess}
               className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
                          text-sm outline-none focus:border-blue-mid disabled:opacity-50"

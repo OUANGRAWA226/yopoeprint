@@ -4,6 +4,15 @@ import { Repository } from 'typeorm';
 import { Resend } from 'resend';
 import { EmailLog } from './email-log.entity';
 
+// Adresse publique de la boutique (FRONTEND_URL), source unique des liens envoyés par email
+const siteUrl = () => (process.env.FRONTEND_URL || 'https://yopoeprint.bf').replace(/\/+$/, '');
+// EMAIL_FROM : « contact@domaine » ou « YopoePrint <contact@domaine> »
+const senderAddress = () => {
+  const from = (process.env.EMAIL_FROM || 'noreply@yopoeprint.bf').trim();
+  return from.includes('<') ? from : `YopoePrint <${from}>`;
+};
+const trackingUrl = (orderNumber: string) => `${siteUrl()}/suivi?ref=${encodeURIComponent(orderNumber)}`;
+
 @Injectable()
 export class MailService {
   private resend: Resend;
@@ -37,7 +46,7 @@ export class MailService {
           Vous pouvez suivre l'avancement de votre commande en temps réel sur notre site :
         </p>
         
-        <a href="https://yopoeprint.com/suivi?ref=${orderNumber}" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+        <a href="${trackingUrl(orderNumber)}" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: bold; font-size: 16px;">
           Suivre ma commande
         </a>
       </div>
@@ -86,7 +95,7 @@ export class MailService {
           ${message}
         </p>
 
-        <a href="https://yopoeprint.com/suivi?ref=${orderNumber}" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+        <a href="${trackingUrl(orderNumber)}" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
           Suivre ma commande
         </a>
       </div>
@@ -115,7 +124,7 @@ export class MailService {
           Merci de vérifier attentivement le cadrage, les marges de coupe et les textes sur notre visualiseur interactif avant de confirmer pour impression.
         </p>
 
-        <a href="https://yopoeprint.com/suivi?ref=${orderNumber}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 15px;">
+        <a href="${trackingUrl(orderNumber)}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 15px;">
           Examiner et Valider mon BAT en ligne →
         </a>
       </div>
@@ -134,7 +143,7 @@ export class MailService {
         <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 16px; border-radius: 8px; margin: 24px 0;">
           <p style="margin: 0; font-size: 14px; color: #065f46; font-weight: bold;">Statut : En cours de production 🖨️</p>
         </div>
-        <a href="https://yopoeprint.com/suivi?ref=${orderNumber}" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+        <a href="${trackingUrl(orderNumber)}" style="display: inline-block; background-color: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
           Suivre l'impression
         </a>
       </div>
@@ -227,7 +236,7 @@ export class MailService {
   }
 
   async sendWelcome(email: string, firstName: string) {
-    const site = (process.env.FRONTEND_URL || 'https://yopoeprint.bf').replace(/\/$/, '');
+    const site = siteUrl();
     const subject = 'Bienvenue chez YopoePrint';
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb;">
@@ -279,7 +288,7 @@ export class MailService {
 
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'YopoePrint <hello@yopoeprint.com>', // Nécessite un domaine vérifié sur Resend
+        from: senderAddress(), // Le domaine d'EMAIL_FROM doit être vérifié sur Resend
         to,
         subject,
         html,

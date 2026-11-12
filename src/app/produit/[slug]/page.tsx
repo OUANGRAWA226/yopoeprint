@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { getProductBySlug } from '@/lib/products.service'
 import { PRODUCTS } from '@/lib/data'
 import { ProductPageClient } from './ProductPageClient'
+import { SITE_URL, OG_IMAGE_URL } from '@/lib/site'
 import Link from 'next/link'
 
 interface Props {
@@ -221,13 +222,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${product.name} — Imprimerie en Ligne Burkina Faso | YopoePrint`,
     description: `${product.shortDesc || product.description || 'Impression haute qualité à Ouagadougou'}. Configurez vos options et commandez en ligne en toute sécurité.`,
     alternates: {
-      canonical: `https://yopoeprint.bf/produit/${slug}`,
+      canonical: `${SITE_URL}/produit/${slug}`,
     },
     openGraph: {
       title: `${product.name} — YopoePrint Burkina Faso`,
       description: product.shortDesc || product.description,
       type: 'article',
-      url: `https://yopoeprint.bf/produit/${slug}`,
+      url: `${SITE_URL}/produit/${slug}`,
       siteName: 'YopoePrint',
       images: product.imageUrl ? [
         { 
@@ -294,7 +295,7 @@ export default async function Page({ params }: Props) {
     '@type': 'Product',
     name: product.name,
     description: product.shortDesc || product.description || `Impression personnalisée de ${product.name} à Ouagadougou, Burkina Faso.`,
-    image: product.imageUrl ? [product.imageUrl] : ['https://yopoeprint.bf/images/og-image.jpg'],
+    image: product.imageUrl ? [product.imageUrl] : [OG_IMAGE_URL],
     sku: product.slug,
     mpn: product.slug,
     brand: {
@@ -303,7 +304,7 @@ export default async function Page({ params }: Props) {
     },
     offers: {
       '@type': 'Offer',
-      url: `https://yopoeprint.bf/produit/${slug}`,
+      url: `${SITE_URL}/produit/${slug}`,
       priceCurrency: 'XOF',
       price: product.basePrice || 12500,
       priceValidUntil: '2028-12-31',
@@ -324,25 +325,25 @@ export default async function Page({ params }: Props) {
         '@type': 'ListItem',
         position: 1,
         name: 'Accueil',
-        item: 'https://yopoeprint.bf',
+        item: SITE_URL,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Catalogue',
-        item: 'https://yopoeprint.bf/catalogue',
+        item: `${SITE_URL}/catalogue`,
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: product.category || 'Impression',
-        item: `https://yopoeprint.bf/catalogue/${product.category || 'all'}`,
+        item: `${SITE_URL}/catalogue/${product.category || 'all'}`,
       },
       {
         '@type': 'ListItem',
         position: 4,
         name: product.name,
-        item: `https://yopoeprint.bf/produit/${slug}`,
+        item: `${SITE_URL}/produit/${slug}`,
       },
     ],
   }

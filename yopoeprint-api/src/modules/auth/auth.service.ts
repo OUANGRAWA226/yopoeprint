@@ -1,6 +1,6 @@
 import {
   Injectable, UnauthorizedException, BadRequestException,
-  ConflictException, NotFoundException, Logger, ServiceUnavailableException,
+  ConflictException, NotFoundException, Logger, ServiceUnavailableException, ForbiddenException,
 } from '@nestjs/common'
 import { OAuth2Client } from 'google-auth-library'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -8,7 +8,7 @@ import { Repository, MoreThan } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
-import { randomBytes, createHash } from 'crypto'
+import { randomBytes, createHash, timingSafeEqual } from 'crypto'
 import { User, UserRole, BACK_OFFICE_ROLES } from '../users/user.entity'
 import { In } from 'typeorm'
 import { RegisterDto, SetupAdminDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, GoogleCompleteDto } from './auth.dto'
@@ -122,6 +122,23 @@ export class AuthService {
    */
   private googleClient: OAuth2Client | null = null
 
+  // Installation du premier administrateur : code ADMIN_SETUP_TOKEN exigé dès qu'il est défini,
+  // et obligatoire en production (sans lui, la route est fermée)
+  private assertSetupToken(token?: string) {
+    const expected = this.configService.get<string>('ADMIN_SETUP_TOKEN')
+    if (!expected) {
+      if (this.configService.get('app.nodeEnv') === 'production') {
+        throw new ForbiddenException('Installation fermée : définissez ADMIN_SETUP_TOKEN sur le serveur')
+      }
+      return
+    }
+    const received = Buffer.from(String(token ?? ''), 'utf8')
+    const wanted = Buffer.from(expected, 'utf8')
+    if (received.length !== wanted.length || !timingSafeEqual(received, wanted)) {
+      throw new ForbiddenException('Code d\'installation invalide')
+    }
+  }
+
   // Vérification du jeton « Se connecter avec Google » par la librairie officielle de Google :
   // signature (clés publiques de Google), destinataire (notre identifiant client), émetteur et expiration.
   private async verifyGoogleCredential(credential: string) {
@@ -151,6 +168,8 @@ export class AuthService {
 
   // ─── Setup First Admin (init only) ────────────────────────
   async setupFirstAdmin(dto: SetupAdminDto) {
+    this.assertSetupToken(dto.setupToken)
+
     // Installation unique : refusée dès qu'un compte d'équipe existe
     const adminExists = await this.userRepo.findOne({
       where: { role: In(BACK_OFFICE_ROLES) },

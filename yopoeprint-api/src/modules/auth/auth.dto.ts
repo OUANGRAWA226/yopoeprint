@@ -52,7 +52,13 @@ export class RegisterDto {
 }
 
 // Premier administrateur (installation) : mêmes champs, sans les CGV ni la date de naissance clients
-export class SetupAdminDto extends OmitType(RegisterDto, ['acceptTerms', 'birthDate'] as const) {}
+export class SetupAdminDto extends OmitType(RegisterDto, ['acceptTerms', 'birthDate'] as const) {
+  // Code d'installation (variable ADMIN_SETUP_TOKEN du serveur) : sans lui, n'importe quel
+  // visiteur arrivé le premier sur /admin-setup deviendrait super administrateur
+  @ApiPropertyOptional({ description: 'Valeur de ADMIN_SETUP_TOKEN (obligatoire en production)' })
+  @IsOptional() @IsString() @MaxLength(200)
+  setupToken?: string
+}
 
 // Étape 1 de l'inscription : l'adresse a-t-elle déjà un compte ?
 export class CheckEmailDto {
