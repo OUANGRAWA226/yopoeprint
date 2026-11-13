@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { History } from 'lucide-react'
 import { platformService, AuditEntry, ROLE_LABELS } from '@/lib/platform.service'
+import { Card, ErrorAlert, LoadingRow, Pager, TableMessage } from '@/components/ui'
 
 const ACTION_LABELS: Record<string, string> = {
   'product.create': 'Produit créé',
@@ -51,6 +52,13 @@ const FILTERS = [
   { id: 'user', label: 'Clients' },
 ]
 
+// Couleur du badge selon le domaine de l'action
+const DOMAIN_BADGE: Record<string, string> = {
+  settings: 'text-bg-danger', team: 'text-bg-danger', export: 'text-bg-warning', payment: 'text-bg-warning',
+  product: 'text-bg-primary', banner: 'text-bg-info', promo: 'text-bg-info', post: 'text-bg-info',
+  order: 'text-bg-success', quote: 'text-bg-success', reseller: 'text-bg-secondary', user: 'text-bg-secondary',
+}
+
 const PAGE_SIZE = 50
 
 // Résumé lisible des données envoyées (sans les objets volumineux)
@@ -91,62 +99,56 @@ export default function JournalPage() {
   const pages = Math.max(Math.ceil(total / PAGE_SIZE), 1)
 
   return (
-    <div className="max-w-6xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-600">Actions sensibles réalisées depuis le back-office (les tentatives refusées ne sont pas inscrites).</p>
-        <select value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1) }} aria-label="Filtrer par type d'action"
-          className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white">
-          {FILTERS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-        </select>
-      </div>
+    <>
+      <ErrorAlert message={error} onRetry={load} />
 
-      {error && <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>}
-
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-100 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">
-              <th className="px-4 py-3">Date</th><th className="px-4 py-3">Auteur</th><th className="px-4 py-3">Action</th><th className="px-4 py-3">Cible</th><th className="px-4 py-3">Détail</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-500">Chargement…</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-500">Aucune action enregistrée.</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="align-top">
-                <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">{new Date(r.createdAt).toLocaleString('fr-FR')}</td>
-                <td className="px-4 py-3">
-                  <p className="text-gray-900">{r.actorEmail || '—'}</p>
-                  <p className="text-xs text-gray-500">{ROLE_LABELS[r.actorRole || ''] || r.actorRole}</p>
-                </td>
-                <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{ACTION_LABELS[r.action] || r.action}</td>
-                <td className="px-4 py-3 text-xs text-gray-600 font-mono">{r.targetId ? `${r.targetType || ''} ${r.targetId.slice(0, 8)}` : '—'}</td>
-                <td className="px-4 py-3 text-xs text-gray-700 max-w-[360px]">
-                  <button onClick={() => setOpen(open === r.id ? null : r.id)} className="text-left hover:underline" aria-expanded={open === r.id}>
-                    {summary(r.details)}
-                  </button>
-                  {open === r.id && r.details && (
-                    <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-[11px] whitespace-pre-wrap break-all max-h-64 overflow-auto">{JSON.stringify(r.details, null, 2)}</pre>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-600">
-          <span>{total} action(s){pages > 1 ? ` · page ${page} / ${pages}` : ''}</span>
-          {pages > 1 && (
-            <div className="flex gap-1">
-              <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page <= 1} aria-label="Page précédente"
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-200 disabled:opacity-40"><ChevronLeft size={15} /></button>
-              <button onClick={() => setPage((p) => Math.min(p + 1, pages))} disabled={page >= pages} aria-label="Page suivante"
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-200 disabled:opacity-40"><ChevronRight size={15} /></button>
-            </div>
-          )}
+      <Card title="Journal des actions" icon={<History size={18} />} noPadding
+        tools={
+          <select value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1) }} aria-label="Filtrer par type d'action"
+            className="form-select form-select-sm" style={{ width: 'auto' }}>
+            {FILTERS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+        }
+        footer={
+          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <small className="text-secondary">{total} action(s) · les tentatives refusées ne sont pas inscrites.</small>
+            <Pager page={page} pages={pages} onChange={setPage} />
+          </div>
+        }>
+        <div className="table-responsive">
+          <table className="table table-striped align-middle mb-0">
+            <thead><tr><th>Date</th><th>Auteur</th><th>Action</th><th>Cible</th><th>Détail</th></tr></thead>
+            <tbody>
+              {loading ? <LoadingRow colSpan={5} /> : rows.length === 0 ? (
+                <TableMessage colSpan={5}>Aucune action enregistrée.</TableMessage>
+              ) : rows.map((r) => (
+                <tr key={r.id}>
+                  <td className="small text-secondary text-nowrap">{new Date(r.createdAt).toLocaleString('fr-FR')}</td>
+                  <td>
+                    <div>{r.actorEmail || '—'}</div>
+                    <small className="text-secondary">{ROLE_LABELS[r.actorRole || ''] || r.actorRole}</small>
+                  </td>
+                  <td className="text-nowrap">
+                    <span className={`badge ${DOMAIN_BADGE[r.action.split('.')[0]] || 'text-bg-secondary'}`}>{ACTION_LABELS[r.action] || r.action}</span>
+                  </td>
+                  <td className="small text-secondary font-mono">{r.targetId ? `${r.targetType || ''} ${r.targetId.slice(0, 8)}` : '—'}</td>
+                  <td className="small" style={{ maxWidth: 380 }}>
+                    <button type="button" onClick={() => setOpen(open === r.id ? null : r.id)} aria-expanded={open === r.id}
+                      className="btn btn-link btn-sm p-0 text-start text-decoration-none">
+                      {summary(r.details)}
+                    </button>
+                    {open === r.id && r.details && (
+                      <pre className="mt-2 p-2 bg-body-tertiary border rounded small mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', maxHeight: 260, overflow: 'auto' }}>
+                        {JSON.stringify(r.details, null, 2)}
+                      </pre>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
-    </div>
+      </Card>
+    </>
   )
 }

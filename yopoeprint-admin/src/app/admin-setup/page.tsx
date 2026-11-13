@@ -1,302 +1,103 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { CheckCircle2, UserPlus } from 'lucide-react'
 import { api } from '@/lib'
 import { saveSession } from '@/lib/session'
-import { adminAuthService } from '@/lib/auth-admin.service'
-import { AlertCircle, CheckCircle, LogIn } from 'lucide-react'
+import { AuthBox } from '@/components/AuthBox'
+import { Spinner } from '@/components/ui'
 
+const EMPTY = { firstName: '', lastName: '', email: '', password: '', confirmPassword: '', setupToken: '' }
+
+/** Installation : création du premier super administrateur (une seule fois, code ADMIN_SETUP_TOKEN). */
 export default function AdminSetupPage() {
-  const router = useRouter()
-  const [step, setStep] = useState<'choice' | 'create' | 'login'>('choice')
-  
-  // Form Create Admin
-  const [createForm, setCreateForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    setupToken: '',
-  })
-  const [createLoading, setCreateLoading] = useState(false)
-  const [createError, setCreateError] = useState('')
-  const [createSuccess, setCreateSuccess] = useState(false)
-  
-  // Form Login
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: '',
-  })
-  const [loginLoading, setLoginLoading] = useState(false)
-  const [loginError, setLoginError] = useState('')
+  const [form, setForm] = useState(EMPTY)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value })
 
-  const handleCreateAdmin = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setCreateError('')
+    setError('')
+    if (form.password !== form.confirmPassword) return setError('Les mots de passe ne correspondent pas')
+    if (form.password.length < 8) return setError('Le mot de passe doit contenir au moins 8 caractères')
 
-    if (createForm.password !== createForm.confirmPassword) {
-      setCreateError('Les mots de passe ne correspondent pas')
-      return
-    }
-
-    if (createForm.password.length < 8) {
-      setCreateError('Le mot de passe doit contenir au moins 8 caractères')
-      return
-    }
-
-    setCreateLoading(true)
+    setLoading(true)
     try {
-      // Créer un compte ADMIN directement
-      const registerRes = await api.post('/auth/setup-first-admin', {
-        firstName: createForm.firstName,
-        lastName: createForm.lastName,
-        email: createForm.email,
-        password: createForm.password,
-        setupToken: createForm.setupToken.trim() || undefined,
+      const res = await api.post('/auth/setup-first-admin', {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+        setupToken: form.setupToken.trim() || undefined,
       })
-
       // Session ouverte : jetons (renouvelables) et utilisateur
-      saveSession(registerRes.accessToken, registerRes.refreshToken, registerRes.user)
-
-      setCreateSuccess(true)
-      setTimeout(() => {
-        // Redirection directe vers admin après création réussie
-        window.location.href = '/admin'
-      }, 1500)
+      saveSession(res.accessToken, res.refreshToken, res.user)
+      setSuccess(true)
+      setTimeout(() => { window.location.href = '/admin' }, 1200)
     } catch (err: any) {
-      setCreateError(err.message || 'Erreur lors de la création du compte')
+      setError(err?.message || 'Erreur lors de la création du compte')
     } finally {
-      setCreateLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginError('')
-    setLoginLoading(true)
-
-    try {
-      // Même connexion que la page /login : rôle d'équipe vérifié, session renouvelable
-      await adminAuthService.login({
-        email: loginForm.email,
-        password: loginForm.password,
-      })
-
-      // Rediriger vers admin
-      router.push('/admin')
-    } catch (err: any) {
-      setLoginError(err.message || 'Erreur de connexion')
-    } finally {
-      setLoginLoading(false)
-    }
-  }
+  const locked = loading || success
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-pale to-[#C5D4F0] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-pale rounded-2xl mb-4">
-            <span className="text-4xl">🖨️</span>
+    <AuthBox subtitle="Installation du back-office" wide>
+      <p className="login-box-msg">Créez le premier compte : il devient super administrateur.</p>
+
+      <form onSubmit={submit}>
+        <div className="row g-2 mb-2">
+          <div className="col-sm-6">
+            <label htmlFor="s-first" className="form-label small mb-1">Prénom</label>
+            <input id="s-first" className="form-control" required disabled={locked} value={form.firstName} onChange={set('firstName')} autoComplete="given-name" />
           </div>
-          <h1 className="text-3xl font-bold text-blue-deep">YopoePrint</h1>
-          <p className="text-sm text-gray-400 mt-1">Configuration Administrateur</p>
+          <div className="col-sm-6">
+            <label htmlFor="s-last" className="form-label small mb-1">Nom</label>
+            <input id="s-last" className="form-control" required disabled={locked} value={form.lastName} onChange={set('lastName')} autoComplete="family-name" />
+          </div>
+        </div>
+        <div className="mb-2">
+          <label htmlFor="s-email" className="form-label small mb-1">Email</label>
+          <input id="s-email" type="email" className="form-control" required disabled={locked} value={form.email} onChange={set('email')} autoComplete="username" />
+        </div>
+        <div className="mb-2">
+          <label htmlFor="s-token" className="form-label small mb-1">Code d&apos;installation</label>
+          <input id="s-token" type="password" className="form-control" disabled={locked} value={form.setupToken} onChange={set('setupToken')} autoComplete="off" aria-describedby="s-token-help" />
+          <div id="s-token-help" className="form-text">Valeur de la variable ADMIN_SETUP_TOKEN du serveur (obligatoire en production).</div>
+        </div>
+        <div className="row g-2 mb-3">
+          <div className="col-sm-6">
+            <label htmlFor="s-pass" className="form-label small mb-1">Mot de passe</label>
+            <input id="s-pass" type="password" className="form-control" required minLength={8} disabled={locked} value={form.password} onChange={set('password')} autoComplete="new-password" />
+          </div>
+          <div className="col-sm-6">
+            <label htmlFor="s-confirm" className="form-label small mb-1">Confirmation</label>
+            <input id="s-confirm" type="password" className="form-control" required disabled={locked} value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" />
+          </div>
         </div>
 
-        {/* Choice Step */}
-        {step === 'choice' && (
-          <div className="space-y-4">
-            <p className="text-center text-sm text-gray-600 mb-6">
-              Que souhaitez-vous faire?
-            </p>
-            <button
-              onClick={() => setStep('create')}
-              className="w-full py-3 bg-blue-mid text-white font-bold rounded-xl
-                         hover:bg-blue-deep transition-all">
-              ✓ Créer un nouveau compte admin
-            </button>
-            <button
-              onClick={() => setStep('login')}
-              className="w-full py-3 bg-gray-100 text-gray-700 font-bold rounded-xl
-                         hover:bg-gray-200 transition-all">
-              → Me connecter avec mon compte
-            </button>
+        {error && <div role="alert" className="alert alert-danger py-2 small">{error}</div>}
+        {success && (
+          <div role="status" className="alert alert-success py-2 small d-flex align-items-center gap-2">
+            <CheckCircle2 size={16} /> Compte créé. Ouverture du back-office…
           </div>
         )}
 
-        {/* Create Admin Step */}
-        {step === 'create' && (
-          <form onSubmit={handleCreateAdmin} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                placeholder="Prénom"
-                value={createForm.firstName}
-                onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })}
-                required
-                disabled={createLoading || createSuccess}
-                className="px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                           text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-              />
-              <input
-                type="text"
-                placeholder="Nom"
-                value={createForm.lastName}
-                onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })}
-                required
-                disabled={createLoading || createSuccess}
-                className="px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                           text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-              />
-            </div>
+        <div className="d-grid">
+          <button type="submit" disabled={locked} className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
+            {loading ? <><Spinner /> Création en cours…</> : <><UserPlus size={17} /> Créer le compte</>}
+          </button>
+        </div>
+      </form>
 
-            <input
-              type="email"
-              placeholder="Email"
-              value={createForm.email}
-              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-              required
-              disabled={createLoading || createSuccess}
-              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-            />
-
-            <input
-              type="password"
-              placeholder="Code d'installation (ADMIN_SETUP_TOKEN du serveur)"
-              value={createForm.setupToken}
-              onChange={(e) => setCreateForm({ ...createForm, setupToken: e.target.value })}
-              autoComplete="off"
-              disabled={createLoading || createSuccess}
-              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-            />
-
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              value={createForm.password}
-              onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-              required
-              disabled={createLoading || createSuccess}
-              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-            />
-
-            <input
-              type="password"
-              placeholder="Confirmer le mot de passe"
-              value={createForm.confirmPassword}
-              onChange={(e) => setCreateForm({ ...createForm, confirmPassword: e.target.value })}
-              required
-              disabled={createLoading || createSuccess}
-              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-            />
-
-            {createError && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
-                <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
-                <p className="text-sm text-red-700">{createError}</p>
-              </div>
-            )}
-
-            {createSuccess && (
-              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
-                <CheckCircle size={16} className="text-green-600 flex-shrink-0" />
-                <p className="text-sm text-green-700">Compte créé avec succès! Redirection...</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={createLoading || createSuccess}
-              className="w-full py-3 bg-blue-mid text-white font-bold rounded-xl
-                         hover:bg-blue-deep transition-all disabled:opacity-50
-                         flex items-center justify-center gap-2">
-              {createLoading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Création en cours…
-                </>
-              ) : (
-                <>
-                  Créer le compte
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { setStep('choice'); setCreateError(''); }}
-              className="w-full py-2 text-gray-500 text-sm hover:text-gray-700 transition-all">
-              Retour
-            </button>
-          </form>
-        )}
-
-        {/* Login Step */}
-        {step === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={loginForm.email}
-              onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-              required
-              disabled={loginLoading}
-              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-            />
-
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              value={loginForm.password}
-              onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-              required
-              disabled={loginLoading}
-              className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl
-                         text-sm outline-none focus:border-blue-mid disabled:opacity-50"
-            />
-
-            {loginError && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
-                <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
-                <p className="text-sm text-red-700">{loginError}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loginLoading}
-              className="w-full py-3 bg-blue-mid text-white font-bold rounded-xl
-                         hover:bg-blue-deep transition-all disabled:opacity-50
-                         flex items-center justify-center gap-2">
-              {loginLoading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Connexion en cours…
-                </>
-              ) : (
-                <>
-                  <LogIn size={18} />
-                  Se connecter
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { setStep('choice'); setLoginError(''); }}
-              className="w-full py-2 text-gray-500 text-sm hover:text-gray-700 transition-all">
-              Retour
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+      <p className="text-center small mt-4 mb-0">
+        Déjà un compte ? <Link href="/login" className="link-primary">Se connecter</Link>
+      </p>
+    </AuthBox>
   )
 }

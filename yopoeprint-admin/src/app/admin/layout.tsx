@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
-  Tag, FileText, Settings, LogOut, Menu, X,
-  ChevronRight, ClipboardList, Image as ImageIcon, Briefcase, ShieldCheck, History, Lock, CreditCard, Mail,
+  Tag, FileText, Settings, LogOut, Menu,
+  ClipboardList, Image as ImageIcon, Briefcase, ShieldCheck, History, Lock, CreditCard, Mail,
+  ExternalLink, ChevronDown, UserCircle,
 } from 'lucide-react'
 import { adminAuthService } from '@/lib/auth-admin.service'
 import { Role, ROLE_LABELS } from '@/lib/platform.service'
@@ -15,38 +16,56 @@ const ALL: Role[] = ['superadmin', 'admin', 'staff']
 const MANAGERS: Role[] = ['superadmin', 'admin']
 const SUPER: Role[] = ['superadmin']
 
+type NavItem = { href: string; icon: React.ReactNode; label: string; roles: Role[] }
+
 // Qui voit quoi : le staff atelier gère commandes, BAT et devis ; l'équipe et le journal sont réservés au superadmin
-const NAV: { href: string; icon: React.ReactNode; label: string; roles: Role[] }[] = [
-  { href: '/admin',            icon: <LayoutDashboard size={18} />, label: 'Dashboard',              roles: ALL },
-  { href: '/admin/commandes',  icon: <ShoppingCart size={18} />,    label: 'Commandes',              roles: ALL },
-  { href: '/admin/devis',      icon: <ClipboardList size={18} />,   label: 'Devis',                  roles: ALL },
-  { href: '/admin/paiements',  icon: <CreditCard size={18} />,      label: 'Paiements',              roles: ALL },
-  { href: '/admin/clients',    icon: <Users size={18} />,           label: 'Clients',                roles: ALL },
-  { href: '/admin/revendeurs', icon: <Briefcase size={18} />,       label: 'Revendeurs',             roles: ALL },
-  { href: '/admin/produits',   icon: <Package size={18} />,         label: 'Produits',               roles: MANAGERS },
-  { href: '/admin/bannieres',  icon: <ImageIcon size={18} />,       label: 'Carrousels & Bannières', roles: MANAGERS },
-  { href: '/admin/promotions', icon: <Tag size={18} />,             label: 'Promotions',             roles: MANAGERS },
-  { href: '/admin/blog',       icon: <FileText size={18} />,        label: 'Blog',                   roles: MANAGERS },
-  { href: '/admin/emails',     icon: <Mail size={18} />,            label: 'Emails envoyés',         roles: MANAGERS },
-  { href: '/admin/equipe',     icon: <ShieldCheck size={18} />,     label: 'Équipe',                 roles: SUPER },
-  { href: '/admin/journal',    icon: <History size={18} />,         label: 'Journal des actions',    roles: SUPER },
-  { href: '/admin/parametres', icon: <Settings size={18} />,        label: 'Paramètres',             roles: ALL },
+const NAV_GROUPS: { header: string | null; items: NavItem[] }[] = [
+  { header: null, items: [
+    { href: '/admin', icon: <LayoutDashboard size={17} />, label: 'Tableau de bord', roles: ALL },
+  ] },
+  { header: 'Ventes', items: [
+    { href: '/admin/commandes', icon: <ShoppingCart size={17} />,  label: 'Commandes', roles: ALL },
+    { href: '/admin/devis',     icon: <ClipboardList size={17} />, label: 'Devis',     roles: ALL },
+    { href: '/admin/paiements', icon: <CreditCard size={17} />,    label: 'Paiements', roles: ALL },
+  ] },
+  { header: 'Clients', items: [
+    { href: '/admin/clients',    icon: <Users size={17} />,     label: 'Clients',    roles: ALL },
+    { href: '/admin/revendeurs', icon: <Briefcase size={17} />, label: 'Revendeurs', roles: ALL },
+  ] },
+  { header: 'Catalogue & contenu', items: [
+    { href: '/admin/produits',   icon: <Package size={17} />,   label: 'Produits',               roles: MANAGERS },
+    { href: '/admin/bannieres',  icon: <ImageIcon size={17} />, label: 'Carrousels & bannières', roles: MANAGERS },
+    { href: '/admin/promotions', icon: <Tag size={17} />,       label: 'Promotions',             roles: MANAGERS },
+    { href: '/admin/blog',       icon: <FileText size={17} />,  label: 'Blog',                   roles: MANAGERS },
+  ] },
+  { header: 'Administration', items: [
+    { href: '/admin/emails',     icon: <Mail size={17} />,        label: 'Emails envoyés',      roles: MANAGERS },
+    { href: '/admin/equipe',     icon: <ShieldCheck size={17} />, label: 'Équipe',              roles: SUPER },
+    { href: '/admin/journal',    icon: <History size={17} />,     label: 'Journal des actions', roles: SUPER },
+    { href: '/admin/parametres', icon: <Settings size={17} />,    label: 'Paramètres',          roles: ALL },
+  ] },
 ]
 
+const NAV = NAV_GROUPS.flatMap((g) => g.items.map((item) => ({ ...item, group: g.header })))
 const navItemFor = (pathname: string) =>
   NAV.find((n) => n.href === pathname) ?? NAV.find((n) => n.href !== '/admin' && pathname.startsWith(n.href))
+
+// Classes du <body> attendues par AdminLTE 4 (barre latérale fixe, dépliée à partir de lg)
+const BODY_CLASSES = ['layout-fixed', 'sidebar-expand-lg', 'sidebar-mini', 'bg-body-tertiary']
+const LG = 992
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL || 'http://localhost:3000'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router   = useRouter()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLLIElement>(null)
 
   // Vérifier l'authentification au montage
   useEffect(() => {
-    const authenticated = adminAuthService.isAuthenticated()
-    if (!authenticated) {
+    if (!adminAuthService.isAuthenticated()) {
       router.push('/login')
     } else {
       setIsAuthenticated(true)
@@ -54,106 +73,205 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [router])
 
+  // Mise en page AdminLTE sur <body>, retirée en quittant l'admin (page de connexion)
+  useEffect(() => {
+    document.body.classList.add(...BODY_CLASSES)
+    try {
+      if (localStorage.getItem('yp.sidebar') === 'collapsed' && window.innerWidth >= LG) document.body.classList.add('sidebar-collapse')
+    } catch { /* stockage indisponible */ }
+    return () => document.body.classList.remove(...BODY_CLASSES, 'sidebar-collapse', 'sidebar-open')
+  }, [])
+
+  // Sur mobile, le tiroir se referme à chaque changement de page
+  useEffect(() => {
+    document.body.classList.remove('sidebar-open')
+    setMenuOpen(false)
+  }, [pathname])
+
+  // Menu utilisateur : fermeture au clic extérieur et sur Échap
+  useEffect(() => {
+    if (!menuOpen) return
+    const onClick = (e: MouseEvent) => { if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey) }
+  }, [menuOpen])
+
+  // Bouton ☰ : réduit la barre (desktop) ou ouvre le tiroir (mobile)
+  const toggleSidebar = useCallback(() => {
+    const body = document.body
+    if (window.innerWidth >= LG) {
+      const collapsed = body.classList.toggle('sidebar-collapse')
+      try { localStorage.setItem('yp.sidebar', collapsed ? 'collapsed' : 'open') } catch { /* rien */ }
+    } else {
+      body.classList.toggle('sidebar-open')
+    }
+  }, [])
+
+  const logout = async () => {
+    await adminAuthService.logout()
+    router.push('/login')
+  }
+
   const role = String(user?.role || '').toLowerCase() as Role
-  const visibleNav = NAV.filter((n) => n.roles.includes(role))
   const current = navItemFor(pathname)
   const allowed = !current || current.roles.includes(role)
-  const pageTitle = current?.label ?? 'Dashboard'
+  const pageTitle = current?.label ?? 'Tableau de bord'
+  const initial = user?.firstName?.charAt(0)?.toUpperCase() || 'A'
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Administrateur'
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="app-wrapper">
+      {/* ── Navbar ───────────────────────────────────────── */}
+      <nav className="app-header navbar navbar-expand bg-body" aria-label="Barre supérieure">
+        <div className="container-fluid">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <button type="button" className="nav-link btn btn-link" onClick={toggleSidebar} aria-label="Afficher ou réduire le menu">
+                <Menu size={20} />
+              </button>
+            </li>
+            <li className="nav-item d-none d-md-block">
+              <Link href="/admin" className="nav-link">Tableau de bord</Link>
+            </li>
+            <li className="nav-item d-none d-md-block">
+              <a href={STORE_URL} target="_blank" rel="noreferrer" className="nav-link d-inline-flex align-items-center gap-1">
+                Voir la boutique <ExternalLink size={13} />
+              </a>
+            </li>
+          </ul>
 
-      {/* ── Sidebar ───────────────────────────────────────── */}
-      <aside className={`${sidebarOpen ? 'w-60' : 'w-16'} shrink-0 bg-blue-deep
-                         flex flex-col transition-all duration-300 relative z-20`}>
-
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-          {sidebarOpen && (
-            <Link href="/" className="font-display text-xl font-bold text-white">
-              Yopoe<span className="text-gold">Print</span>
-            </Link>
-          )}
-          <button onClick={() => setSidebarOpen((s) => !s)} aria-label={sidebarOpen ? 'Réduire le menu' : 'Ouvrir le menu'}
-            className={`${sidebarOpen ? 'ml-auto' : 'mx-auto'} w-8 h-8 flex items-center
-                         justify-center rounded-lg hover:bg-white/10 text-white/60
-                         hover:text-white transition-all`}>
-            {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
-          </button>
+          <ul className="navbar-nav ms-auto">
+            <li ref={menuRef} className={`nav-item dropdown user-menu ${menuOpen ? 'show' : ''}`}>
+              <button type="button" className="nav-link btn btn-link d-flex align-items-center gap-2"
+                aria-expanded={menuOpen} aria-haspopup="menu" aria-label={`Menu du compte de ${fullName}`} onClick={() => setMenuOpen((o) => !o)}>
+                <span className="user-avatar" aria-hidden="true">{initial}</span>
+                <span className="d-none d-md-inline">{fullName}</span>
+                <ChevronDown size={14} className="d-none d-md-inline" />
+              </button>
+              <ul className={`dropdown-menu dropdown-menu-lg dropdown-menu-end ${menuOpen ? 'show' : ''}`} role="menu"
+                style={menuOpen ? { right: 0, left: 'auto' } : undefined}>
+                <li className="user-header text-bg-primary">
+                  <span className="user-avatar mx-auto mb-2 bg-navy" style={{ width: 64, height: 64, fontSize: '1.6rem' }} aria-hidden="true">{initial}</span>
+                  <p className="mb-0">
+                    {fullName}
+                    <small>{ROLE_LABELS[role] || role}{user?.email ? ` · ${user.email}` : ''}</small>
+                  </p>
+                </li>
+                <li className="user-footer d-flex justify-content-between">
+                  {role === 'superadmin' || role === 'admin' || role === 'staff' ? (
+                    <Link href="/admin/parametres" className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+                      <UserCircle size={15} /> Paramètres
+                    </Link>
+                  ) : <span />}
+                  <button type="button" onClick={logout} className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+                    <LogOut size={15} /> Déconnexion
+                  </button>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
+      </nav>
 
-        <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto" aria-label="Administration">
-          {visibleNav.map(({ href, icon, label }) => {
-            const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
-            return (
-              <Link key={href} href={href} title={sidebarOpen ? undefined : label}
-                aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl
-                             font-medium text-sm transition-all group
-                             ${active
-                               ? 'bg-white/15 text-white'
-                               : 'text-white/70 hover:bg-white/10 hover:text-white'}`}>
-                <span className={`shrink-0 ${active ? 'text-gold' : 'group-hover:text-gold transition-colors'}`}>
-                  {icon}
-                </span>
-                {sidebarOpen && <span>{label}</span>}
-                {sidebarOpen && active && <ChevronRight size={14} className="ml-auto text-gold" />}
-              </Link>
-            )
-          })}
-        </nav>
-
-        <div className="px-2 py-4 border-t border-white/10">
-          <button
-            onClick={async () => {
-              await adminAuthService.logout()
-              router.push('/login')
-            }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-                       text-white/70 hover:bg-red-500/20 hover:text-red-200
-                       text-sm transition-all">
-            <LogOut size={18} className="shrink-0" />
-            {sidebarOpen && 'Déconnexion'}
-          </button>
+      {/* ── Barre latérale ───────────────────────────────── */}
+      <aside className="app-sidebar shadow" data-bs-theme="dark">
+        <div className="sidebar-brand">
+          <Link href="/admin" className="brand-link d-flex align-items-center gap-2">
+            <span className="brand-mark" aria-hidden="true">Y</span>
+            <span className="brand-text fw-semibold">Yopoe<span className="text-gold">Print</span></span>
+          </Link>
+        </div>
+        <div className="sidebar-wrapper">
+          <div className="user-panel d-flex align-items-center gap-2 px-3 py-3">
+            <span className="avatar" aria-hidden="true">{initial}</span>
+            <div className="user-info min-w-0">
+              <div className="text-white text-truncate small fw-semibold">{fullName}</div>
+              <div className="text-white-50 small">{ROLE_LABELS[role] || role}</div>
+            </div>
+          </div>
+          <nav className="mt-2" aria-label="Administration">
+            <ul className="nav sidebar-menu flex-column" role="list">
+              {NAV_GROUPS.map((group) => {
+                const items = group.items.filter((n) => n.roles.includes(role))
+                if (!items.length) return null
+                return [
+                  group.header && <li key={`h-${group.header}`} className="nav-header">{group.header.toUpperCase()}</li>,
+                  ...items.map(({ href, icon, label }) => {
+                    const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
+                    return (
+                      <li key={href} className="nav-item">
+                        <Link href={href} className={`nav-link ${active ? 'active' : ''}`} aria-current={active ? 'page' : undefined} title={label}>
+                          <span className="nav-icon">{icon}</span>
+                          <p>{label}</p>
+                        </Link>
+                      </li>
+                    )
+                  }),
+                ]
+              })}
+              <li className="nav-header">SESSION</li>
+              <li className="nav-item">
+                <button type="button" onClick={logout} className="nav-link w-100 text-start border-0 bg-transparent" title="Déconnexion">
+                  <span className="nav-icon"><LogOut size={17} /></span>
+                  <p>Déconnexion</p>
+                </button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </aside>
 
-      {/* ── Contenu principal ─────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-100 px-6 py-4
-                           flex items-center justify-between sticky top-0 z-10 shadow-sm">
-          <div>
-            <h1 className="font-display text-xl font-bold text-blue-deep">{pageTitle}</h1>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-gray-900">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-gray-500">{ROLE_LABELS[role] || role}</p>
-            </div>
-            <div className="w-9 h-9 bg-blue-mid rounded-xl text-white text-sm font-bold flex items-center justify-center">
-              {user?.firstName?.charAt(0)?.toUpperCase() || 'A'}
+      {/* ── Contenu ──────────────────────────────────────── */}
+      <main className="app-main">
+        <div className="app-content-header">
+          <div className="container-fluid">
+            <div className="row">
+              <div className="col-sm-6"><h3 className="mb-0">{pageTitle}</h3></div>
+              <div className="col-sm-6">
+                <ol className="breadcrumb float-sm-end mb-0">
+                  <li className="breadcrumb-item"><Link href="/admin">Accueil</Link></li>
+                  {current?.group && <li className="breadcrumb-item">{current.group}</li>}
+                  {pathname !== '/admin' && <li className="breadcrumb-item active" aria-current="page">{pageTitle}</li>}
+                </ol>
+              </div>
             </div>
           </div>
-        </header>
+        </div>
 
-        <main className="flex-1 p-6 overflow-auto">
-          {/* Pas de rendu (ni d'appels API) avant la vérification de la session */}
-          {!isAuthenticated ? (
-            <div className="h-64 flex items-center justify-center text-sm text-gray-500">Vérification de la session…</div>
-          ) : allowed ? children : (
-            <div className="max-w-md mx-auto mt-16 bg-white border border-gray-100 rounded-2xl p-8 text-center space-y-3">
-              <Lock size={28} className="mx-auto text-gray-400" />
-              <h2 className="font-display text-xl font-bold text-blue-deep">Accès réservé</h2>
-              <p className="text-sm text-gray-600">
-                Cette page n&apos;est pas accessible avec le rôle « {ROLE_LABELS[role] || role} ».
-              </p>
-              <Link href="/admin" className="inline-block text-sm font-bold text-blue-mid hover:underline">Retour au tableau de bord</Link>
-            </div>
-          )}
-        </main>
-      </div>
+        <div className="app-content">
+          <div className="container-fluid">
+            {/* Pas de rendu (ni d'appels API) avant la vérification de la session */}
+            {!isAuthenticated ? (
+              <div className="d-flex align-items-center justify-content-center text-secondary py-5">
+                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" /> Vérification de la session…
+              </div>
+            ) : allowed ? children : (
+              <div className="row justify-content-center">
+                <div className="col-md-6 col-lg-5">
+                  <div className="card card-outline card-danger mt-4 text-center">
+                    <div className="card-body py-5">
+                      <Lock size={30} className="text-secondary mb-3" />
+                      <h4 className="text-navy">Accès réservé</h4>
+                      <p className="text-secondary">Cette page n&apos;est pas accessible avec le rôle « {ROLE_LABELS[role] || role} ».</p>
+                      <Link href="/admin" className="btn btn-primary">Retour au tableau de bord</Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <footer className="app-footer small">
+        <div className="float-end d-none d-sm-inline text-secondary">Back-office</div>
+        <strong>YopoePrint</strong> <span className="text-secondary">— imprimerie en ligne</span>
+      </footer>
+
+      {/* Fond sombre du tiroir mobile : un clic le referme */}
+      <div className="sidebar-overlay" onClick={() => document.body.classList.remove('sidebar-open')} aria-hidden="true" />
     </div>
   )
 }

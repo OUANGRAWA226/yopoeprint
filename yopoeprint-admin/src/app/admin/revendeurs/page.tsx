@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Briefcase, Check, X, PauseCircle, RotateCcw, Mail, Phone } from 'lucide-react'
 import { resellersService, ResellerAccount, ResellerStatus } from '@/lib/resellers.service'
+import { Card, ErrorAlert, Spinner } from '@/components/ui'
+import { fcfa, dateFr } from '@/components/status'
 
 const TABS: { id: ResellerStatus | 'all'; label: string }[] = [
   { id: 'pending', label: 'À examiner' },
@@ -12,18 +14,13 @@ const TABS: { id: ResellerStatus | 'all'; label: string }[] = [
   { id: 'all', label: 'Tous' },
 ]
 
-const STATUS_CLS: Record<ResellerStatus, string> = {
-  pending: 'bg-amber-50 text-amber-800 border-amber-200',
-  approved: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  suspended: 'bg-gray-100 text-gray-700 border-gray-200',
-  rejected: 'bg-red-50 text-red-700 border-red-200',
-}
-const STATUS_LABEL: Record<ResellerStatus, string> = {
-  pending: 'À examiner', approved: 'Actif', suspended: 'Suspendu', rejected: 'Refusé',
+const STATUS: Record<ResellerStatus, { label: string; badge: string; card: string }> = {
+  pending:   { label: 'À examiner', badge: 'text-bg-warning',   card: 'card-warning' },
+  approved:  { label: 'Actif',      badge: 'text-bg-success',   card: 'card-success' },
+  suspended: { label: 'Suspendu',   badge: 'text-bg-secondary', card: 'card-secondary' },
+  rejected:  { label: 'Refusé',     badge: 'text-bg-danger',    card: 'card-danger' },
 }
 const VOLUME_LABEL = { low: '< 100 000 FCFA/mois', medium: '100 000 – 500 000 FCFA/mois', high: '> 500 000 FCFA/mois' }
-
-const fcfa = (n: number) => `${new Intl.NumberFormat('fr-FR').format(n || 0)} FCFA`
 
 export default function AdminRevendeursPage() {
   const [tab, setTab] = useState<ResellerStatus | 'all'>('pending')
@@ -50,105 +47,100 @@ export default function AdminRevendeursPage() {
     const verb = action === 'approve' ? 'valider' : action === 'reject' ? 'refuser' : 'suspendre'
     if (!window.confirm(`${verb.charAt(0).toUpperCase() + verb.slice(1)} le compte revendeur de ${r.companyName} ?`)) return
     setBusyId(r.id)
+    setError('')
     try {
       await resellersService.decide(r.id, action)
       await load(tab)
     } catch (e: any) {
-      window.alert(e?.message || 'Action impossible')
+      setError(e?.message || 'Action impossible')
     } finally {
       setBusyId(null)
     }
   }
 
   return (
-    <div className="space-y-5 max-w-6xl">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-blue-deep flex items-center gap-2">
-          <Briefcase size={22} /> Revendeurs
-        </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Validez les agences : elles obtiennent −15 % (jusqu&apos;à −20 % selon leur CA payé sur 12 mois) et la livraison en marque blanche.
-        </p>
+    <>
+      <div className="callout callout-info mb-3">
+        Les agences validées obtiennent −15 % (jusqu&apos;à −20 % selon leur CA payé sur 12 mois) et la livraison en marque blanche.
       </div>
 
-      <div className="flex gap-1.5 p-1 bg-gray-100 rounded-xl w-fit overflow-x-auto" role="tablist">
+      <ul className="nav nav-pills mb-3 flex-nowrap overflow-auto" role="tablist">
         {TABS.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-              tab === t.id ? 'bg-white text-blue-deep shadow-sm' : 'text-gray-600 hover:text-gray-900'
-            }`}>
-            {t.label}
-          </button>
+          <li key={t.id} className="nav-item">
+            <button type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
+              className={`nav-link text-nowrap ${tab === t.id ? 'active' : ''}`}>{t.label}</button>
+          </li>
         ))}
-      </div>
+      </ul>
 
-      {error && (
-        <div role="alert" className="p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700 flex items-center justify-between gap-3">
-          <span>{error}</span>
-          <button onClick={() => load(tab)} className="font-bold underline shrink-0">Réessayer</button>
-        </div>
-      )}
+      <ErrorAlert message={error} onRetry={() => load(tab)} />
 
       {loading ? (
-        <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-2xl bg-white border border-gray-100 animate-pulse" />)}</div>
+        <div className="text-center text-secondary py-5"><Spinner className="me-2" />Chargement…</div>
       ) : rows.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-2xl p-10 text-center text-sm text-gray-600">
-          {tab === 'pending' ? 'Aucune demande à examiner.' : 'Aucun revendeur dans cette catégorie.'}
-        </div>
+        <Card title="Revendeurs" icon={<Briefcase size={18} />}>
+          <p className="text-center text-secondary py-4 mb-0">
+            {tab === 'pending' ? 'Aucune demande à examiner.' : 'Aucun revendeur dans cette catégorie.'}
+          </p>
+        </Card>
       ) : (
-        <ul className="space-y-3">
-          {rows.map((r) => (
-            <li key={r.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-card">
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="min-w-0 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-blue-deep text-base">{r.companyName}</p>
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${STATUS_CLS[r.status]}`}>{STATUS_LABEL[r.status]}</span>
-                    {r.tier && <span className="text-xs font-semibold text-gray-600">Palier {r.tier.label} (−{r.tier.rate} %)</span>}
+        <div className="row">
+          {rows.map((r) => {
+            const s = STATUS[r.status]
+            const busy = busyId === r.id
+            return (
+              <div key={r.id} className="col-xl-6">
+                <div className={`card card-outline ${s.card} mb-4`}>
+                  <div className="card-header">
+                    <h3 className="card-title d-inline-flex align-items-center gap-2">
+                      <Briefcase size={17} /> {r.companyName}
+                    </h3>
+                    <div className="card-tools d-flex align-items-center gap-2">
+                      {r.tier && <span className="badge text-bg-light">Palier {r.tier.label} (−{r.tier.rate} %)</span>}
+                      <span className={`badge ${s.badge}`}>{s.label}</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-700">
-                    {r.profile.contactName || `${r.firstName} ${r.lastName}`}
-                    {r.profile.volume && <span className="text-gray-500"> · {VOLUME_LABEL[r.profile.volume]}</span>}
-                  </p>
-                  <p className="text-xs text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
-                    <a href={`mailto:${r.email}`} className="inline-flex items-center gap-1 hover:underline"><Mail size={12} /> {r.email}</a>
-                    {(r.profile.phone || r.phone) && (
-                      <a href={`tel:${r.profile.phone || r.phone}`} className="inline-flex items-center gap-1 hover:underline"><Phone size={12} /> {r.profile.phone || r.phone}</a>
+                  <div className="card-body">
+                    <p className="mb-1 fw-semibold">
+                      {r.profile.contactName || `${r.firstName} ${r.lastName}`}
+                      {r.profile.volume && <span className="fw-normal text-secondary"> · {VOLUME_LABEL[r.profile.volume]}</span>}
+                    </p>
+                    <ul className="list-inline small text-secondary mb-2">
+                      <li className="list-inline-item"><a href={`mailto:${r.email}`} className="d-inline-flex align-items-center gap-1"><Mail size={12} /> {r.email}</a></li>
+                      {(r.profile.phone || r.phone) && (
+                        <li className="list-inline-item"><a href={`tel:${r.profile.phone || r.phone}`} className="d-inline-flex align-items-center gap-1"><Phone size={12} /> {r.profile.phone || r.phone}</a></li>
+                      )}
+                      {r.appliedAt && <li className="list-inline-item">Demande du {dateFr(r.appliedAt)}</li>}
+                      {r.status === 'approved' && <li className="list-inline-item">CA payé 12 mois : <b>{fcfa(r.revenue12m)}</b></li>}
+                    </ul>
+                    {r.profile.message && (
+                      <blockquote className="small bg-body-tertiary border-start border-3 px-3 py-2 mb-0" style={{ whiteSpace: 'pre-wrap' }}>{r.profile.message}</blockquote>
                     )}
-                    {r.appliedAt && <span>Demande du {new Date(r.appliedAt).toLocaleDateString('fr-FR')}</span>}
-                    {r.status === 'approved' && <span>CA payé 12 mois : {fcfa(r.revenue12m)}</span>}
-                  </p>
-                  {r.profile.message && (
-                    <p className="text-sm text-gray-700 bg-gray-50 border border-gray-100 rounded-lg p-3 mt-2 whitespace-pre-wrap">{r.profile.message}</p>
-                  )}
-                </div>
-
-                <div className="flex gap-2 shrink-0">
-                  {(r.status === 'pending' || r.status === 'rejected' || r.status === 'suspended') && (
-                    <button onClick={() => decide(r, 'approve')} disabled={busyId === r.id}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50">
-                      {r.status === 'pending' ? <Check size={14} /> : <RotateCcw size={14} />}
-                      {r.status === 'pending' ? 'Valider' : 'Réactiver'}
-                    </button>
-                  )}
-                  {r.status === 'pending' && (
-                    <button onClick={() => decide(r, 'reject')} disabled={busyId === r.id}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-red-200 text-red-700 bg-white hover:bg-red-50 disabled:opacity-50">
-                      <X size={14} /> Refuser
-                    </button>
-                  )}
-                  {r.status === 'approved' && (
-                    <button onClick={() => decide(r, 'suspend')} disabled={busyId === r.id}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
-                      <PauseCircle size={14} /> Suspendre
-                    </button>
-                  )}
+                  </div>
+                  <div className="card-footer d-flex justify-content-end gap-2">
+                    {(r.status === 'pending' || r.status === 'rejected' || r.status === 'suspended') && (
+                      <button type="button" onClick={() => decide(r, 'approve')} disabled={busy} className="btn btn-success btn-sm d-inline-flex align-items-center gap-1">
+                        {busy ? <Spinner /> : r.status === 'pending' ? <Check size={14} /> : <RotateCcw size={14} />}
+                        {r.status === 'pending' ? 'Valider' : 'Réactiver'}
+                      </button>
+                    )}
+                    {r.status === 'pending' && (
+                      <button type="button" onClick={() => decide(r, 'reject')} disabled={busy} className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1">
+                        <X size={14} /> Refuser
+                      </button>
+                    )}
+                    {r.status === 'approved' && (
+                      <button type="button" onClick={() => decide(r, 'suspend')} disabled={busy} className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+                        <PauseCircle size={14} /> Suspendre
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </li>
-          ))}
-        </ul>
+            )
+          })}
+        </div>
       )}
-    </div>
+    </>
   )
 }

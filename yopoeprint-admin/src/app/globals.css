@@ -1,13 +1,241 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+/*
+ * Thème YopoePrint pour AdminLTE 4 (Bootstrap 5.3).
+ * AdminLTE est chargé dans app/layout.tsx ; ce fichier ne fait que remplacer
+ * ses couleurs par celles de la marque (bleu nuit + or) et ajouter quelques utilitaires.
+ */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root,
+[data-bs-theme='light'] {
+  --yp-navy: #0e2347;
+  --yp-blue: #1a3a6b;
+  --yp-blue-light: #2a5298;
+  --yp-blue-pale: #e8eef8;
+  --yp-gold: #c9a84c;
+  --yp-gold-light: #e2c46e;
+  --yp-gold-pale: #fdf6e3;
 
-@layer base {
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: #F7F8FA;
-    color: #2A2D3A;
-  }
+  --bs-primary: #1a3a6b;
+  --bs-primary-rgb: 26, 58, 107;
+  --bs-primary-text-emphasis: #0e2347;
+  --bs-primary-bg-subtle: #e8eef8;
+  --bs-primary-border-subtle: #b8c6de;
+  --bs-link-color: #1a3a6b;
+  --bs-link-color-rgb: 26, 58, 107;
+  --bs-link-hover-color: #0e2347;
+  --bs-link-hover-color-rgb: 14, 35, 71;
+  --bs-focus-ring-color: rgba(26, 58, 107, 0.25);
+  --bs-body-font-family: var(--font-source-sans), 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* ── Boutons ─────────────────────────────────────────────── */
+.btn-primary {
+  --bs-btn-bg: #1a3a6b;
+  --bs-btn-border-color: #1a3a6b;
+  --bs-btn-hover-bg: #0e2347;
+  --bs-btn-hover-border-color: #0e2347;
+  --bs-btn-active-bg: #0e2347;
+  --bs-btn-active-border-color: #0e2347;
+  --bs-btn-disabled-bg: #1a3a6b;
+  --bs-btn-disabled-border-color: #1a3a6b;
+  --bs-btn-focus-shadow-rgb: 26, 58, 107;
+}
+.btn-outline-primary {
+  --bs-btn-color: #1a3a6b;
+  --bs-btn-border-color: #1a3a6b;
+  --bs-btn-hover-bg: #1a3a6b;
+  --bs-btn-hover-border-color: #1a3a6b;
+  --bs-btn-active-bg: #0e2347;
+  --bs-btn-active-border-color: #0e2347;
+  --bs-btn-disabled-color: #1a3a6b;
+  --bs-btn-disabled-border-color: #1a3a6b;
+  --bs-btn-focus-shadow-rgb: 26, 58, 107;
+}
+/* Accent or de la marque (actions mises en avant) */
+.btn-gold {
+  --bs-btn-color: #0e2347;
+  --bs-btn-bg: #c9a84c;
+  --bs-btn-border-color: #c9a84c;
+  --bs-btn-hover-color: #0e2347;
+  --bs-btn-hover-bg: #e2c46e;
+  --bs-btn-hover-border-color: #e2c46e;
+  --bs-btn-active-color: #0e2347;
+  --bs-btn-active-bg: #b8963d;
+  --bs-btn-active-border-color: #b8963d;
+  --bs-btn-disabled-color: #0e2347;
+  --bs-btn-disabled-bg: #c9a84c;
+  --bs-btn-disabled-border-color: #c9a84c;
+  --bs-btn-focus-shadow-rgb: 201, 168, 76;
+  font-weight: 600;
+}
+.btn .lucide,
+.btn svg { vertical-align: -0.15em; }
+
+/* ── Formulaires ─────────────────────────────────────────── */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: #7f97c0;
+  box-shadow: 0 0 0 0.25rem rgba(26, 58, 107, 0.2);
+}
+.form-check-input:checked {
+  background-color: #1a3a6b;
+  border-color: #1a3a6b;
+}
+.form-switch .form-check-input:focus {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%237f97c0'/%3e%3c/svg%3e");
+}
+
+/* ── Pagination, onglets, listes ─────────────────────────── */
+.pagination {
+  --bs-pagination-active-bg: #1a3a6b;
+  --bs-pagination-active-border-color: #1a3a6b;
+  --bs-pagination-color: #1a3a6b;
+}
+.nav-pills {
+  --bs-nav-pills-link-active-bg: #1a3a6b;
+}
+.nav-link { --bs-nav-link-color: #1a3a6b; }
+.list-group { --bs-list-group-active-bg: #1a3a6b; --bs-list-group-active-border-color: #1a3a6b; }
+
+/* ── Barre latérale ──────────────────────────────────────── */
+.app-sidebar {
+  --lte-sidebar-color: rgba(255, 255, 255, 0.72);
+  --lte-sidebar-hover-color: #fff;
+  --lte-sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+  --lte-sidebar-active-color: #fff;
+  --lte-sidebar-menu-active-bg: rgba(201, 168, 76, 0.18);
+  --lte-sidebar-menu-active-color: #fff;
+  --lte-sidebar-header-color: rgba(201, 168, 76, 0.85);
+  background-color: var(--yp-navy) !important;
+}
+.app-sidebar .sidebar-brand {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+.app-sidebar .brand-link {
+  color: #fff;
+  text-decoration: none;
+}
+.app-sidebar .brand-mark {
+  width: 33px;
+  height: 33px;
+  border-radius: 0.5rem;
+  background: var(--yp-gold);
+  color: var(--yp-navy);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.app-sidebar .brand-text .text-gold { color: var(--yp-gold); }
+.app-sidebar .sidebar-menu .nav-link.active {
+  box-shadow: inset 3px 0 0 var(--yp-gold);
+}
+.app-sidebar .sidebar-menu .nav-link.active .nav-icon { color: var(--yp-gold); }
+.app-sidebar .nav-icon { display: inline-flex; align-items: center; justify-content: center; }
+.app-sidebar .user-panel {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.app-sidebar .user-panel .avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--yp-blue-light);
+  color: #fff;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+/* Mode replié (desktop) : seules les icônes restent visibles */
+.sidebar-collapse .app-sidebar .user-panel .user-info { display: none; }
+
+/* ── En-tête et contenu ──────────────────────────────────── */
+.app-header .user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--yp-blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-content-header h3 { color: var(--yp-navy); font-weight: 600; }
+
+/* Cartes : variantes aux couleurs de la marque (AdminLTE les code en dur) */
+.card-primary,
+.text-bg-primary {
+  --lte-card-variant-bg: #1a3a6b;
+  --lte-card-variant-bg-rgb: 26, 58, 107;
+}
+.card-navy {
+  --lte-card-variant-bg: #0e2347;
+  --lte-card-variant-bg-rgb: 14, 35, 71;
+  --lte-card-variant-color: #fff;
+  --lte-card-variant-color-rgb: 255, 255, 255;
+}
+.card-gold {
+  --lte-card-variant-bg: #c9a84c;
+  --lte-card-variant-bg-rgb: 201, 168, 76;
+  --lte-card-variant-color: #0e2347;
+  --lte-card-variant-color-rgb: 14, 35, 71;
+}
+.card-header .card-title { font-weight: 600; }
+
+/* En-tête de carte souple : les outils (recherche, filtres, boutons) passent à la ligne
+   au lieu de déborder ; sur téléphone ils occupent toute la largeur */
+.card > .card-header:has(> .card-tools) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card > .card-header:has(> .card-tools)::after { display: none; }
+.card > .card-header > .card-tools {
+  float: none;
+  margin: 0 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 575.98px) {
+  .card > .card-header > .card-tools { width: 100%; justify-content: flex-start; }
+  .card > .card-header > .card-tools > .input-group { width: 100% !important; }
+  .card > .card-header > .card-tools > .form-select { flex: 1 1 auto; width: auto !important; }
+}
+
+/* Tuiles KPI : couleur de la marque */
+.small-box.text-bg-navy { background-color: var(--yp-navy) !important; color: #fff !important; }
+.small-box.text-bg-gold { background-color: var(--yp-gold) !important; color: var(--yp-navy) !important; }
+.small-box .small-box-icon svg { width: 70px; height: 70px; }
+.info-box .info-box-icon svg { width: 28px; height: 28px; }
+
+/* Tableaux */
+.table > :not(caption) > * > th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--bs-secondary-color); white-space: nowrap; }
+.table td { vertical-align: middle; }
+
+/* ── Utilitaires ─────────────────────────────────────────── */
+.text-navy { color: var(--yp-navy) !important; }
+.text-gold { color: var(--yp-gold) !important; }
+.bg-navy { background-color: var(--yp-navy) !important; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.font-mono { font-family: var(--bs-font-monospace); }
+.min-w-0 { min-width: 0; }
+.cursor-pointer { cursor: pointer; }
+.spin { animation: yp-spin 0.8s linear infinite; }
+@keyframes yp-spin { to { transform: rotate(360deg); } }
+.placeholder-box { background: var(--bs-secondary-bg); border-radius: var(--bs-border-radius); animation: yp-pulse 1.4s ease-in-out infinite; }
+@keyframes yp-pulse { 50% { opacity: 0.5; } }
+@media (prefers-reduced-motion: reduce) {
+  .spin, .placeholder-box { animation: none; }
+}
+
+/* Page de connexion : fond de la marque */
+.login-page {
+  background: linear-gradient(135deg, var(--yp-navy) 0%, var(--yp-blue) 100%) !important;
+}
+.login-page .login-logo-mark { font-weight: 800; color: var(--yp-navy); text-decoration: none; }
+.login-page .login-logo-mark .text-gold { color: var(--yp-gold); }
